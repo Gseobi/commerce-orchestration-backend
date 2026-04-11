@@ -27,6 +27,9 @@
 | Orchestration happy path | Implemented | 상태 전이, step, outbox 생성 검증 |
 | Settlement failure compensation | Implemented | payment cancel compensation 검증 |
 | Notification failure branch | Implemented | compensation step `READY` 검증 |
+| Notification ignore policy | Implemented | ignore 가능한 실패는 주문 완료 유지 |
+| Admin notification reprocessing | Implemented | retry 후 주문 `COMPLETED` 복구 |
+| Admin outbox reprocessing | Implemented | dead-letter 즉시 재발행 검증 |
 | Outbox publish unit test | Implemented | `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER` 전이 검증 |
 | PostgreSQL/Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
 | PostgreSQL/Kafka outbox dead-letter path | Implemented | retry 후 dead-letter 전환 검증 |

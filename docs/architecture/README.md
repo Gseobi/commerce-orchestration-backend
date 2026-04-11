@@ -12,6 +12,7 @@
 
 - 비즈니스 외부 진입점은 `OrderController`입니다.
 - `AuthController`는 데모 JWT 발급용 보조 진입점입니다.
+- `AdminController`는 운영 재처리용 admin 진입점입니다.
 - `CommerceOrchestrationService`는 전체 흐름 제어를 담당합니다.
 - `OrderService`, `PaymentService`, `SettlementService`, `NotificationService`는 각자 자기 repository를 내부적으로 소유합니다.
 - `OutboxService`는 저장, `OutboxPublisherService`는 발행을 담당합니다.
@@ -33,5 +34,6 @@
 - Docker Compose 기반 로컬 인프라
 - Flyway migration 기반 스키마 관리
 - outbox retry/backoff/dead-letter
+- notification 정책 분류와 admin 재처리
 - Testcontainers 통합 테스트
 - unit/integration CI 분리

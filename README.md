@@ -17,6 +17,7 @@
 - 결제 provider는 `PaymentProviderClient` 인터페이스 아래 `mock` / `external` 구현으로 분리되어 있습니다.
 - outbox는 `READY -> RETRY_WAIT -> PUBLISHED / DEAD_LETTER` 상태를 사용합니다.
 - settlement 실패와 notification 실패는 동일 보상 정책으로 처리하지 않습니다.
+- admin은 `notification-events`, `outbox-events` 단위로 명시적 재처리를 수행할 수 있습니다.
 - DB 스키마의 소스 오브 트루스는 이제 Flyway migration입니다.
 
 ## 2. 아키텍처 요약
@@ -86,6 +87,17 @@
   payment/settlement를 되돌리지 않고 `FAILED` 상태와 `manual intervention / retry required` 성격의 compensation step을 남깁니다.
 
 notification 운영 정책은 현재 1차 분리까지만 완료된 상태이며, 채널별 재전송/무시/운영자 개입 정책은 TODO입니다.
+
+### Admin Reprocessing
+
+- `POST /api/admin/notification-events/{id}/retry`
+  notification 실패 건을 재전송 성공으로 처리하고 주문을 `COMPLETED`로 복구합니다.
+- `POST /api/admin/notification-events/{id}/ignore`
+  무시 가능한 notification 실패 건을 `IGNORED`로 정리하고 주문을 `COMPLETED`로 복구합니다.
+- `POST /api/admin/outbox-events/{id}/retry`
+  `DEAD_LETTER` outbox event만 대상으로 즉시 재발행을 시도합니다.
+
+현재 admin 재처리는 전체 orchestration 재실행이 아니라, 실패한 하위 처리 단위를 명시적으로 복구하는 방식입니다.
 
 ## 5. 로컬 실행
 
@@ -162,7 +174,23 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - `integration-test`
   `integrationTest`, integration report upload
 
-## 8. 남아 있는 TODO
+## 8. Notification 운영 정책
+
+- `AUTO_RETRY`
+  일시적 실패로 간주하며 notification event를 `RETRY_SCHEDULED`로 남깁니다.
+- `MANUAL_INTERVENTION`
+  운영자 확인이 필요하며 notification event를 `MANUAL_INTERVENTION_REQUIRED`로 남깁니다.
+- `IGNORE`
+  현재 범위에서 주문 완료를 막지 않아도 되는 실패로 보고 `IGNORED` 처리합니다.
+
+현재 mock 분기 기준은 아래 description 토큰으로 시뮬레이션합니다.
+
+- `FAIL_NOTIFICATION_RETRY`
+- `FAIL_NOTIFICATION_MANUAL`
+- `FAIL_NOTIFICATION_IGNORE`
+- `FAIL_NOTIFICATION`
+
+## 9. 남아 있는 TODO
 
 - 실제 payment provider별 timeout / retry / error mapping 구체화
 - notification 운영 정책 세분화
@@ -170,7 +198,7 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - refresh token / key rotation / user store 연동
 - dead-letter 이벤트의 운영 자동화
 
-## 9. Docs
+## 10. Docs
 
 - [Architecture Notes](docs/architecture/README.md)
 - [Flow Notes](docs/flows/README.md)

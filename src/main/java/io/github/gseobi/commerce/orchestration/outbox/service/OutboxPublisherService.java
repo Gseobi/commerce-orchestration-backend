@@ -4,6 +4,8 @@ import io.github.gseobi.commerce.orchestration.config.OutboxProperties;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
 import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
+import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
+import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,19 +38,34 @@ public class OutboxPublisherService {
         );
         int publishedCount = 0;
         for (OutboxEvent readyEvent : readyEvents) {
-            try {
-                SendResult<String, String> result = kafkaTemplate
-                        .send(readyEvent.getTopic(), String.valueOf(readyEvent.getOrderId()), readyEvent.getPayload())
-                        .get(outboxProperties.publishTimeout().toSeconds(), TimeUnit.SECONDS);
-                if (result != null) {
-                    readyEvent.markPublished();
-                    publishedCount++;
-                }
-            } catch (Exception exception) {
-                handlePublishFailure(readyEvent, exception);
+            String previousStatus = readyEvent.getStatus().name();
+            publishEvent(readyEvent);
+            if (!previousStatus.equals(readyEvent.getStatus().name()) && readyEvent.getStatus() == OutboxStatus.PUBLISHED) {
+                publishedCount++;
             }
         }
         return publishedCount;
+    }
+
+    @Transactional
+    public OutboxEvent publishEvent(Long outboxEventId) {
+        OutboxEvent outboxEvent = outboxEventRepository.findById(outboxEventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
+        publishEvent(outboxEvent);
+        return outboxEvent;
+    }
+
+    private void publishEvent(OutboxEvent outboxEvent) {
+        try {
+            SendResult<String, String> result = kafkaTemplate
+                    .send(outboxEvent.getTopic(), String.valueOf(outboxEvent.getOrderId()), outboxEvent.getPayload())
+                    .get(outboxProperties.publishTimeout().toSeconds(), TimeUnit.SECONDS);
+            if (result != null) {
+                outboxEvent.markPublished();
+            }
+        } catch (Exception exception) {
+            handlePublishFailure(outboxEvent, exception);
+        }
     }
 
     private void handlePublishFailure(OutboxEvent outboxEvent, Exception exception) {

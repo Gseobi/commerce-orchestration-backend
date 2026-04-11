@@ -8,6 +8,9 @@ alter table outbox_events
     add column if not exists next_attempt_at timestamp not null default current_timestamp;
 
 alter table outbox_events
+    alter column next_attempt_at drop not null;
+
+alter table outbox_events
     add column if not exists last_attempt_at timestamp null;
 
 alter table outbox_events

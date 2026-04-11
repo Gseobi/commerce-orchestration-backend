@@ -50,13 +50,25 @@
 - settlement 실패는 현재 payment 취소 보상까지 연결되어 있습니다.
 - notification 실패는 payment/settlement를 되돌리지 않고 재시도 또는 운영자 개입 대상으로 남깁니다.
 
-## 9. `integrationTest`가 로컬에서 실패하는 경우
+## 9. notification 실패가 모두 같은 상태로 보이지 않는 경우
+
+- 현재 notification 실패는 `RETRY_SCHEDULED`, `MANUAL_INTERVENTION_REQUIRED`, `IGNORED`로 나뉠 수 있습니다.
+- `RETRY_SCHEDULED`는 일시적 실패, `MANUAL_INTERVENTION_REQUIRED`는 운영자 확인 필요, `IGNORED`는 주문 완료를 막지 않는 실패를 뜻합니다.
+- 운영 점검/수동 처리 SQL은 `docs/sql/notification-admin-operations.sql`을 참고합니다.
+
+## 10. admin 재처리가 기대한 대상을 다시 태우지 않는 경우
+
+- notification admin 재처리는 전체 order orchestration 재실행이 아닙니다.
+- `notification-events/{id}/retry` 또는 `ignore`는 실패한 notification 처리 단위만 복구하고, 성공 시 주문 상태를 `COMPLETED`로 복구합니다.
+- `outbox-events/{id}/retry`는 `DEAD_LETTER` outbox event만 즉시 재발행 대상으로 허용합니다.
+
+## 11. `integrationTest`가 로컬에서 실패하는 경우
 
 - Docker daemon이 켜져 있어야 합니다.
 - `integrationTest`는 PostgreSQL / Kafka Testcontainers를 사용합니다.
 - 로컬에서는 `./gradlew test`와 `./gradlew integrationTest`를 구분해서 보는 편이 맞습니다.
 
-## 10. module boundary warning과 구조 문제를 구분하고 싶은 경우
+## 12. module boundary warning과 구조 문제를 구분하고 싶은 경우
 
 - 현재 modulith warning은 일부 보류 상태입니다.
 - 하지만 cross-domain repository 직접 참조를 늘리지 않는 방향은 유지하고 있습니다.

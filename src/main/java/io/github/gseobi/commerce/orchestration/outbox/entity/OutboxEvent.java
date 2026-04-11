@@ -40,7 +40,7 @@ public class OutboxEvent extends BaseTimeEntity {
     @Column(name = "retry_count", nullable = false)
     private int retryCount;
 
-    @Column(name = "next_attempt_at", nullable = false)
+    @Column(name = "next_attempt_at")
     private LocalDateTime nextAttemptAt;
 
     @Column(name = "last_attempt_at")
@@ -98,5 +98,16 @@ public class OutboxEvent extends BaseTimeEntity {
         this.nextAttemptAt = null;
         this.failureCode = failureCode;
         this.failureReason = failureReason;
+    }
+
+    public void resetForAdminRetry() {
+        this.status = OutboxStatus.READY;
+        this.retryCount = 0;
+        this.nextAttemptAt = LocalDateTime.now();
+        this.lastAttemptAt = null;
+        this.deadLetteredAt = null;
+        this.failureCode = null;
+        this.failureReason = null;
+        this.publishedAt = null;
     }
 }

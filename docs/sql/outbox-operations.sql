@@ -70,6 +70,17 @@ set status = 'READY',
 where id = :outbox_event_id
   and status = 'DEAD_LETTER';
 
+-- admin API 재처리 전 확인
+select id,
+       order_id,
+       status,
+       retry_count,
+       dead_lettered_at,
+       failure_code,
+       failure_reason
+from outbox_events
+where id = :outbox_event_id;
+
 -- 수동 재처리 예시: 특정 주문의 재시도 대기 이벤트를 즉시 실행 대상으로 전환
 update outbox_events
 set status = 'READY',

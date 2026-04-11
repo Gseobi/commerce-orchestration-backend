@@ -25,7 +25,7 @@ public class Order extends BaseTimeEntity {
             OrderStatus.PAID, EnumSet.of(OrderStatus.SETTLEMENT_REQUESTED, OrderStatus.FAILED, OrderStatus.CANCELLED),
             OrderStatus.SETTLEMENT_REQUESTED, EnumSet.of(OrderStatus.NOTIFICATION_REQUESTED, OrderStatus.FAILED, OrderStatus.CANCELLED),
             OrderStatus.NOTIFICATION_REQUESTED, EnumSet.of(OrderStatus.COMPLETED, OrderStatus.FAILED),
-            OrderStatus.FAILED, EnumSet.of(OrderStatus.CANCELLED),
+            OrderStatus.FAILED, EnumSet.of(OrderStatus.CANCELLED, OrderStatus.COMPLETED),
             OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class),
             OrderStatus.COMPLETED, EnumSet.noneOf(OrderStatus.class)
     );

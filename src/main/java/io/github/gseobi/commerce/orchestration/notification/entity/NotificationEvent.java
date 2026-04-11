@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
@@ -27,11 +28,30 @@ public class NotificationEvent extends BaseTimeEntity {
     @Column(nullable = false, length = 50)
     private NotificationEventStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "handling_policy", nullable = false, length = 50)
+    private NotificationHandlingPolicy handlingPolicy;
+
     @Column(length = 100)
     private String channel;
 
     @Column(length = 255)
     private String payload;
+
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount;
+
+    @Column(name = "next_attempt_at")
+    private LocalDateTime nextAttemptAt;
+
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
+
+    @Column(name = "failure_code", length = 100)
+    private String failureCode;
+
+    @Column(name = "failure_reason", length = 255)
+    private String failureReason;
 
     protected NotificationEvent() {
     }
@@ -39,7 +59,55 @@ public class NotificationEvent extends BaseTimeEntity {
     public NotificationEvent(Long orderId, NotificationEventStatus status, String channel, String payload) {
         this.orderId = orderId;
         this.status = status;
+        this.handlingPolicy = NotificationHandlingPolicy.NONE;
         this.channel = channel;
         this.payload = payload;
+        this.retryCount = 0;
+    }
+
+    public void scheduleRetry(String failureCode, String failureReason, LocalDateTime nextAttemptAt) {
+        this.status = NotificationEventStatus.RETRY_SCHEDULED;
+        this.handlingPolicy = NotificationHandlingPolicy.AUTO_RETRY;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = nextAttemptAt;
+        this.failureCode = failureCode;
+        this.failureReason = failureReason;
+    }
+
+    public void requireManualIntervention(String failureCode, String failureReason) {
+        this.status = NotificationEventStatus.MANUAL_INTERVENTION_REQUIRED;
+        this.handlingPolicy = NotificationHandlingPolicy.MANUAL_INTERVENTION;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
+        this.failureCode = failureCode;
+        this.failureReason = failureReason;
+    }
+
+    public void markIgnored(String failureCode, String failureReason) {
+        this.status = NotificationEventStatus.IGNORED;
+        this.handlingPolicy = NotificationHandlingPolicy.IGNORE;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
+        this.failureCode = failureCode;
+        this.failureReason = failureReason;
+    }
+
+    public void markSentByAdminRetry() {
+        this.status = NotificationEventStatus.SENT;
+        this.handlingPolicy = NotificationHandlingPolicy.NONE;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
+        this.failureCode = null;
+        this.failureReason = null;
+    }
+
+    public void markIgnoredByAdmin() {
+        this.status = NotificationEventStatus.IGNORED;
+        this.handlingPolicy = NotificationHandlingPolicy.IGNORE;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
     }
 }

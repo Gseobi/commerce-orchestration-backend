@@ -4,6 +4,7 @@ import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
+import io.github.gseobi.commerce.orchestration.order.api.OrderRecoveryApplication;
 import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderDetailResponse;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-class OrderService implements OrderWorkflowAccess {
+class OrderService implements OrderWorkflowAccess, OrderRecoveryApplication {
 
     private final OrderRepository orderRepository;
     private final PaymentApplication paymentApplication;
@@ -122,6 +123,20 @@ class OrderService implements OrderWorkflowAccess {
         if (order.getStatus() != OrderStatus.CANCELLED) {
             order.transitionTo(OrderStatus.CANCELLED);
         }
+    }
+
+    @Transactional
+    @Override
+    public void completeAfterNotificationRecovery(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
+        if (order.getStatus() != OrderStatus.FAILED) {
+            throw new BusinessException(ErrorCode.ADMIN_REPROCESS_NOT_ALLOWED,
+                    "알림 재처리 완료는 FAILED 주문에만 적용할 수 있습니다. current=" + order.getStatus());
+        }
+        order.transitionTo(OrderStatus.COMPLETED);
     }
 
     private void validateCreateOrderRequest(CreateOrderRequest request) {

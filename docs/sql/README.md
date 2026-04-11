@@ -8,6 +8,8 @@
   현재 엔티티 기준 초기 스키마
 - `V2__outbox_retry_dead_letter.sql`
   outbox retry/backoff/dead-letter 컬럼 및 인덱스 추가
+- `V3__notification_admin_policy.sql`
+  notification handling policy, retry metadata, admin 재처리 지원 컬럼
 
 `docs/sql`은 운영 확인과 수동 점검을 돕기 위한 참고 문서입니다.
 
@@ -17,6 +19,8 @@
   outbox 변경분만 따로 확인하기 위한 참고용 DDL
 - [outbox-operations.sql](outbox-operations.sql)
   상태 확인, retry 대상 확인, dead-letter 확인, 수동 재처리 예시
+- [notification-admin-operations.sql](notification-admin-operations.sql)
+  notification 재처리 후보, 자동 재시도 후보, admin 무시 처리 예시
 
 ## 적용 방식
 

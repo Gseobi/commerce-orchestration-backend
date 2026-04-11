@@ -139,6 +139,26 @@ class OrderFlowIntegrationTest {
                 .andExpect(jsonPath("$.data.steps[4].status", is("FAILED")))
                 .andExpect(jsonPath("$.data.steps[5].stepType", is("COMPENSATION")))
                 .andExpect(jsonPath("$.data.steps[5].status", is("READY")));
+
+        mockMvc.perform(get("/api/orders/{orderId}", orderId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notificationStatuses[0]", is("MANUAL_INTERVENTION_REQUIRED")));
+    }
+
+    @Test
+    void orchestrate_notificationIgnore_completesOrder() throws Exception {
+        Long orderId = createOrder("FAIL_NOTIFICATION_IGNORE");
+
+        mockMvc.perform(post("/api/orders/{orderId}/orchestrate", orderId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus", is("COMPLETED")));
+
+        mockMvc.perform(get("/api/orders/{orderId}", orderId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notificationStatuses[0]", is("IGNORED")));
     }
 
     @Test

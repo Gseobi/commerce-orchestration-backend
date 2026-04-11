@@ -58,15 +58,29 @@
 - payment/settlement를 되돌리지는 않습니다.
 - compensation step은 `READY` 상태로 남기고, 현재 의미는 `retry or manual intervention required`입니다.
 
+## 4. Notification 운영 정책
+
+현재 notification 실패는 아래 세 가지로 분류합니다.
+
+- `AUTO_RETRY`
+  일시적 실패로 간주하며 `RETRY_SCHEDULED` 상태와 `nextAttemptAt`을 남깁니다.
+- `MANUAL_INTERVENTION`
+  운영자 판단이 필요한 실패로 간주하며 `MANUAL_INTERVENTION_REQUIRED` 상태를 남깁니다.
+- `IGNORE`
+  현재 주문 완료를 막지 않아도 되는 실패로 간주하며 `IGNORED` 상태로 남깁니다.
+
+현재 프로젝트에서는 정책 의도를 먼저 고정하는 것이 목적이라, notification 자동 재시도 worker 자체는 아직 넣지 않았습니다.  
+대신 admin 재처리 API와 운영 쿼리로 수동 복구가 가능하도록 정리했습니다.
+
 ### 현재 남겨 둔 부분
 
 - notification 채널별 재시도 횟수
 - 무시 가능한 실패와 운영자 개입이 필요한 실패의 구분
-- admin 재처리 API와 수동 승인 절차
+- 운영자 승인 절차와 이력 보강
 
 이 부분은 아직 코드에 과장해서 반영하지 않았고 TODO로 유지합니다.
 
-## 4. Outbox 신뢰성 기준
+## 5. Outbox 신뢰성 기준
 
 현재 outbox는 아래 상태를 사용합니다.
 
@@ -82,13 +96,22 @@
 - `maxRetryCount`를 초과하면 `DEAD_LETTER`로 전환합니다.
 - 운영 수동 재처리 SQL은 `docs/sql/outbox-operations.sql`에 정리합니다.
 
-## 5. Payment Provider 설계 기준
+## 6. Admin 재처리 기준
+
+- outbox:
+  `DEAD_LETTER` 이벤트만 admin 즉시 재발행 대상으로 허용합니다.
+- notification:
+  `RETRY_SCHEDULED`, `MANUAL_INTERVENTION_REQUIRED`, `FAILED` 상태를 admin 재처리/무시 대상으로 봅니다.
+- admin 재처리는 전체 orchestration 재실행이 아니라 실패한 하위 처리 단위 복구입니다.
+- notification 재처리 성공 또는 ignore 처리 후에는 주문을 `COMPLETED`로 복구합니다.
+
+## 7. Payment Provider 설계 기준
 
 - 기본 모드는 `mock`입니다.
 - `external` 모드는 실제 provider 연동을 붙일 수 있는 구조와 timeout 설정, API key 헤더, 예외 매핑을 제공합니다.
 - provider별 retry, error taxonomy, idempotency key 전략은 아직 고정하지 않았습니다.
 
-## 6. DB 스키마 관리 기준
+## 8. DB 스키마 관리 기준
 
 현재 스키마의 소스 오브 트루스는 Flyway migration입니다.
 
@@ -96,10 +119,12 @@
   현재 엔티티 기준 초기 스키마
 - `V2__outbox_retry_dead_letter.sql`
   outbox retry/dead-letter 확장
+- `V3__notification_admin_policy.sql`
+  notification handling policy, retry metadata, admin 재처리 지원 컬럼
 
 애플리케이션은 Flyway 적용 후 JPA `validate`로 매핑 정합성을 확인합니다.
 
-## 7. 현재 남아 있는 TODO
+## 9. 현재 남아 있는 TODO
 
 - payment provider 실제 연동 고도화
 - notification 운영 정책 구체화

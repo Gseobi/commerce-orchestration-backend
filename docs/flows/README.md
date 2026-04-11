@@ -41,6 +41,12 @@
 - compensation step은 `READY`로 남습니다.
 - 현재 의미는 `manual intervention or retry required`입니다.
 
+### notification ignore 가능 실패
+
+- notification event는 `IGNORED`로 남습니다.
+- 주문 완료 자체는 유지됩니다.
+- 현재 범위에서는 비핵심 알림 실패를 주문 성공과 분리하기 위한 정책입니다.
+
 ## Outbox 상태 흐름
 
 - `READY`
@@ -50,3 +56,9 @@
 
 publish 실패 시 `retryCount`, `nextAttemptAt`, `failureCode`, `failureReason`이 갱신됩니다.  
 최대 재시도 횟수를 넘기면 `DEAD_LETTER`로 이동합니다.
+
+## Admin Reprocessing
+
+- notification 재처리는 실패한 notification event만 다시 처리합니다.
+- 성공 시 주문 상태를 `COMPLETED`로 복구합니다.
+- outbox 재처리는 `DEAD_LETTER` 이벤트만 즉시 재발행 대상으로 받습니다.
