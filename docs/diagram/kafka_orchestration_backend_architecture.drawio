@@ -1,0 +1,195 @@
+<mxfile host="app.diagrams.net" agent="OpenAI" pages="2">
+  <diagram name="Architecture" id="0">
+    <mxGraphModel dx="1664" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="a_clients" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[Client Channels]&lt;/b&gt;&lt;br&gt;1. User App&lt;br&gt;2. Web - Internal Admin" vertex="1">
+          <mxGeometry height="100" width="260" x="12" y="277" as="geometry" />
+        </mxCell>
+        <mxCell id="a_sec" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[Spring Security]&lt;/b&gt;&lt;br&gt;AuthN / AuthZ / API policy" vertex="1">
+          <mxGeometry height="80" width="200" x="42" y="427" as="geometry" />
+        </mxCell>
+        <mxCell id="a_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[Orchestration Backend]&lt;/b&gt;&lt;br&gt;Spring MVC(Admin) + WebClient/Async IO" vertex="1">
+          <mxGeometry height="100" width="250" x="17" y="585" as="geometry" />
+        </mxCell>
+        <mxCell id="a_state" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[Order/Payment State Machine]&lt;/b&gt;&lt;br&gt;1. Idempotency&lt;br&gt;2. Validation&lt;br&gt;3. Saga-like Orchestration" vertex="1">
+          <mxGeometry height="110" width="280" x="270" y="137" as="geometry" />
+        </mxCell>
+        <mxCell id="a_provider" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[External Provider Client]&lt;/b&gt;&lt;br&gt;WebClient + Non-blocking request/recheck" vertex="1">
+          <mxGeometry height="100" width="260" x="940" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="a_kafka" parent="1" style="shape=mxgraph.flowchart.internal_storage;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=18;" value="&lt;b&gt;[Kafka Cluster]&lt;/b&gt;&lt;br&gt;command / provider / payment / &lt;br&gt;settlement / notification / audit topics" vertex="1">
+          <mxGeometry height="90" width="480" x="390" y="527" as="geometry" />
+        </mxCell>
+        <mxCell id="a_pg" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=18;" value="&lt;b&gt;[PostgreSQL]&lt;/b&gt;&lt;br&gt;Source of truth&lt;br&gt;Orders / Payments / Settlement / Delivery / Audit projection" vertex="1">
+          <mxGeometry height="170" width="250" x="580" y="297" as="geometry" />
+        </mxCell>
+        <mxCell id="a_notify" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;" value="&lt;b&gt;[Notification Processor]&lt;/b&gt;&lt;br&gt;Push / SMS / Email ..." vertex="1">
+          <mxGeometry height="100" width="220" x="1040" y="595" as="geometry" />
+        </mxCell>
+        <mxCell id="a_extprov" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=18;" value="&lt;b&gt;[External Providers]&lt;/b&gt;&lt;br&gt;Order / Payment / Settlement partners" vertex="1">
+          <mxGeometry height="80" width="280" x="870" y="317" as="geometry" />
+        </mxCell>
+        <mxCell id="a_obs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=18;" value="&lt;b&gt;[Observability]&lt;/b&gt;&lt;br&gt;Actuator / Micrometer / Logs / Trace IDs / CloudWatch ..." vertex="1">
+          <mxGeometry height="90" width="320" x="1150" y="437" as="geometry" />
+        </mxCell>
+        <mxCell id="a_note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=18;" value="&lt;b&gt;[Design guardrail]&lt;/b&gt;&lt;br&gt;Kafka is the event backbone and ordered processing layer, &lt;br&gt;not the primary transactional database." vertex="1">
+          <mxGeometry height="90" width="410" x="610" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="a_clients" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;" target="a_sec" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="a_sec" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;" target="a_api" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="142" y="445" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="a_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1.004;exitY=0.188;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;fontSize=18;" target="a_state" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="a_state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="a_provider" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="a_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;entryX=0.123;entryY=-0.009;entryDx=0;entryDy=0;entryPerimeter=0;" target="a_extprov" value="request / status recheck">
+          <mxGeometry relative="1" x="-0.3169" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="1170" y="427" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="a_state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;fontSize=18;entryX=0.02;entryY=0.015;entryDx=0;entryDy=0;entryPerimeter=0;" target="a_kafka" value="publish domain events">
+          <mxGeometry relative="1" x="-0.1107" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="480" y="387" />
+              <mxPoint x="400" y="387" />
+            </Array>
+            <mxPoint x="480" y="537" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="a_kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=0.873;exitY=1.005;exitDx=0;exitDy=0;exitPerimeter=0;" target="a_notify" value="notification events">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="a_state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" target="a_pg" value="command result / state snapshot">
+          <mxGeometry relative="1" x="0.5652" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="a_kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=0.821;exitY=-0.057;exitDx=0;exitDy=0;exitPerimeter=0;" target="a_pg" value="materialize history / projection">
+          <mxGeometry relative="1" x="-0.1014" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="a_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="a_obs" value="metrics / logs / traces">
+          <mxGeometry relative="1" x="0.0006" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="142" y="717" />
+              <mxPoint x="1310" y="717" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="a_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="a_obs" value="latency / error tags">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="164" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="a_kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="a_obs" value="lag / consumer state">
+          <mxGeometry relative="1" x="0.012" y="5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="a_extprov" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=18;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="a_obs" value="partner error mapping">
+          <mxGeometry relative="1" x="0.25" y="20" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CC0IQhGfs9naMZo_cqps-6" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="60" width="590" x="10" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="CC0IQhGfs9naMZo_cqps-5" parent="CC0IQhGfs9naMZo_cqps-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
+          <mxGeometry height="60" width="590" as="geometry" />
+        </mxCell>
+        <mxCell id="a_title" parent="CC0IQhGfs9naMZo_cqps-6" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;" value="Architecture - Kafka-Centric Orchestration Backend" vertex="1">
+          <mxGeometry height="40" width="550" x="20" y="10" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Process" id="1">
+    <mxGraphModel dx="1650" dy="1042" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p_title" value="Process - Order -&gt; Provider -&gt; Confirm -&gt; Kafka -&gt; Notification" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="720" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="1. Client request\norder/payment command" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="2. Security + validation\nidempotency key check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="300" y="120" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="3. Persist initial state\nPENDING / ACCEPTED" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="540" y="120" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="4. External call\nWebClient non-blocking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="780" y="120" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="5. Provider response / recheck\nSUCCESS / FAIL / UNKNOWN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="120" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="6. Publish Kafka events\nprovider.result / payment.result" style="shape=mxgraph.flowchart.internal_storage;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p7" value="7. Consumer updates projection\nsettlement / audit / history" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="380" y="320" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p8" value="8. Notify customer\npush / sms / email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="700" y="320" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p9" value="9. Monitoring &amp; alerting\nActuator / Micrometer / CloudWatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="990" y="320" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="pe1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p1" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p2" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p3" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p4" target="p5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p5" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p6" target="p7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p6" target="p8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe9" value="request metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p1" target="p9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe10" value="provider latency/error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p4" target="p9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe11" value="consumer lag / event failure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="p6" target="p9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p_note" value="Recommended keying\nUse orderId/paymentId as Kafka partition key to preserve per-aggregate ordering instead of global locking." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="60" y="470" width="420" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p_note2" value="Recommended persistence\nKeep PostgreSQL as source of truth and use Kafka for event propagation / replay / materialized history, not as the only business-state store." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="520" y="470" width="560" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
