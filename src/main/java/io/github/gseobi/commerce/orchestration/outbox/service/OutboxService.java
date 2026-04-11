@@ -33,8 +33,13 @@ class OutboxService implements OutboxApplication {
                         event.getEventType(),
                         event.getStatus().name(),
                         event.getPayload(),
+                        event.getRetryCount(),
+                        event.getNextAttemptAt(),
                         event.getCreatedAt(),
+                        event.getLastAttemptAt(),
                         event.getPublishedAt(),
+                        event.getDeadLetteredAt(),
+                        event.getFailureCode(),
                         event.getFailureReason()
                 ))
                 .toList();

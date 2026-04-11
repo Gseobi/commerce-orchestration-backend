@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/commerce_orchestration}
+    username: ${DB_USERNAME:commerce}
+    password: ${DB_PASSWORD:commerce}
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  docker:
+    compose:
+      enabled: false
+
+app:
+  payment:
+    provider:
+      mode: ${PAYMENT_PROVIDER_MODE:mock}

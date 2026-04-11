@@ -1,201 +1,180 @@
 # commerce-orchestration-backend
 
-주문 생성 이후 결제, 정산, 알림 같은 후속 작업이 이어지는 환경에서,  
-단순 CRUD보다 **흐름 제어와 상태 가시성**이 더 중요하다는 점을 보여주기 위한  
-Java / Spring Boot 기반 Commerce Orchestration Backend입니다.
+주문 생성 이후 결제, 정산, 알림 같은 후속 작업을 하나의 흐름으로 제어하고,  
+그 진행 상태와 실패 분기를 코드와 데이터로 추적할 수 있게 만드는 Spring Boot 기반 backend입니다.
 
-이 프로젝트는 기능 수를 늘리는 것보다,  
-**order lifecycle을 명시적 상태 전이와 orchestration step 기록으로 관리하고  
-실패 분기와 후속 확장 포인트를 설명 가능한 구조로 만드는 것**에 초점을 맞췄습니다.
+이 프로젝트는 API 개수를 늘리는 것보다 아래 두 가지를 우선합니다.
 
-<br/>
+- `CommerceOrchestrationService`를 중심으로 order lifecycle을 명시적으로 제어하는 것
+- 운영 관점에서 `order status`, `orchestration step`, `outbox event`, `audit log`를 함께 남기는 것
 
-## 1. Quick Proof
+## 1. 현재 기준선
 
-- `CommerceOrchestrationService`가 주문 이후의 흐름을 중앙에서 제어합니다.
-- `payment`, `settlement`, `notification`, `outbox`, `audit`는 각자 자기 저장소를 내부 service에서 소유합니다.
-- `OrderController`가 주문 관련 public API 진입점을 유지하고, 인증은 JWT 발급용 `AuthController`로 분리되어 있습니다.
-- 상태 전이와 orchestration step, outbox event를 함께 남겨 흐름 진행 상태를 추적할 수 있습니다.
-- 실제 Kafka consumer나 외부 PG 연동을 전부 붙이기 전에도, **확장 방향과 운영 관찰 지점**을 코드와 문서로 설명할 수 있습니다.
-
-<br/>
-
-## 2. Execution Evidence
-
-### Architecture Overview
-
-<div align="center">
-  <img src="docs/images/kafka_orchestration_backend_architecture.png" alt="Commerce Orchestration Backend Architecture" width="960" />
-</div>
-
-<div align="center">
-  <sub>
-    Source:
-    <a href="docs/diagram/kafka_orchestration_backend_architecture.drawio">draw.io</a> ·
-    <a href="docs/pdf/kafka_orchestration_backend_architecture.pdf">PDF</a>
-  </sub>
-</div>
-
-<br/>
-
-### Verification Summary
-
-| Scenario | Expected Behavior | Status | Evidence |
-|---|---|---|---|
-| `POST /api/auth/token` | 데모용 JWT access token 발급 | Implemented | 코드, `docs/test-report.md` |
-| `POST /api/orders` | 주문 생성 시 `CREATED` 상태 저장 | Implemented | 코드, `docs/test-report.md` |
-| `POST /api/orders/{orderId}/orchestrate` | happy path와 실패 분기 기준 상태 전이 및 step 기록 생성 | Implemented | 코드, `docs/test-report.md` |
-| `GET /api/orders/{orderId}` | 주문과 후속 단계 상태 요약 조회 | Implemented | 코드, `docs/test-report.md` |
-| `GET /api/orders/{orderId}/flow` | orchestration step / outbox event 조회 | Implemented | 코드, `docs/test-report.md` |
-| JWT 보호 | `/api/**` 인증 필요, `/api/auth/token`만 공개 | Implemented | 코드, `docs/test-report.md` |
-| Docker Compose 로컬 인프라 | PostgreSQL, Kafka, Kafka UI 실행 가능 | Implemented | `compose.yaml`, `docs/troubleshooting.md` |
-| CI 기본 검증 | compile, test, test report artifact 업로드 | Implemented | `.github/workflows/ci.yml` |
-| Payment provider 실제 외부 연동 | mock 기반, 실제 timeout/retry 정책 미구현 | Planned | `docs/design-notes.md` |
-| Outbox retry/backoff / dead-letter | publish 실패 표시까지만 구현 | Planned | `docs/design-notes.md` |
-| JWT refresh/key rotation/user store | access token 발급 중심 최소 구조 | Planned | `docs/design-notes.md` |
-
-### What This Proves
-
-- 주문 이후의 후속 처리 흐름을 **중앙 orchestration 계층**으로 제어할 수 있습니다.
-- 각 domain service가 자기 repository를 내부적으로 소유하도록 정리해, repository 패키지 직접 참조 없이도 흐름 제어가 가능합니다.
-- JWT, Docker Compose, CI가 붙은 상태에서도 구조의 핵심은 여전히 **flow control + explicit state + outbox 확장성**입니다.
-
-<br/>
-
-## 3. Problem & Design Goal
-
-커머스 시스템에서 주문 생성만 성공했다고 해서 비즈니스 플로우가 끝난 것은 아닙니다.
-
-- payment 단계가 실패할 수 있습니다.
-- payment 성공 후 settlement나 notification이 누락될 수 있습니다.
-- retry 과정에서 같은 요청이 중복 처리될 수 있습니다.
-- DB 상태 변경과 메시지 발행 시점이 어긋날 수 있습니다.
-- 운영 관점에서는 지금 어떤 주문이 어느 단계에서 멈췄는지 **상태 가시성**이 중요합니다.
-
-그래서 이 프로젝트는 CRUD 수를 늘리는 것보다,  
-**주문 이후 이어지는 flow를 어떻게 제어하고 관찰할 것인가**를 먼저 보여주도록 설계했습니다.
-
-<br/>
-
-## 4. Key Design
-
-### 1) orchestration과 domain 책임 분리
-
+- 비즈니스 외부 진입점은 `OrderController`입니다.
+- 인증용 `AuthController`는 데모 JWT 발급 보조 엔드포인트만 제공합니다.
 - `CommerceOrchestrationService`는 흐름 제어만 담당합니다.
-- `OrderService`, `PaymentService`, `SettlementService`, `NotificationService`는 각자 자기 domain 상태와 저장소를 관리합니다.
-- orchestration은 repository를 직접 주입받기보다 domain service와 협력하도록 정리했습니다.
+- `payment`, `settlement`, `notification`, `outbox`, `audit`는 각자 자기 repository를 내부 service가 소유합니다.
+- 결제 provider는 `PaymentProviderClient` 인터페이스 아래 `mock` / `external` 구현으로 분리되어 있습니다.
+- outbox는 `READY -> RETRY_WAIT -> PUBLISHED / DEAD_LETTER` 상태를 사용합니다.
+- settlement 실패와 notification 실패는 동일 보상 정책으로 처리하지 않습니다.
+- DB 스키마의 소스 오브 트루스는 이제 Flyway migration입니다.
 
-### 2) 명시적 상태 전이
+## 2. 아키텍처 요약
 
-- 주문은 `CREATED -> PAYMENT_PENDING -> PAID -> SETTLEMENT_REQUESTED -> NOTIFICATION_REQUESTED -> COMPLETED` 흐름을 가집니다.
-- 실패 시 `FAILED`, `CANCELLED`로 분기하며 보상 여부를 step과 audit에 남깁니다.
+### Business Flow
 
-### 3) 단계 기록과 운영 가시성
+1. `POST /api/orders`로 주문을 생성합니다.
+2. `POST /api/orders/{orderId}/orchestrate`가 호출되면 orchestration이 시작됩니다.
+3. payment 승인 후 주문을 `PAID`로 전이합니다.
+4. settlement 요청 후 주문을 `SETTLEMENT_REQUESTED`로 전이하고 outbox event를 남깁니다.
+5. notification 요청 후 주문을 `NOTIFICATION_REQUESTED`로 전이하고 outbox event를 남깁니다.
+6. 최종적으로 `COMPLETED`, 또는 실패 분기에 따라 `FAILED` / `CANCELLED`로 종료합니다.
 
-- `OrchestrationStep`으로 단계별 성공/실패/보상 준비 상태를 남깁니다.
-- `AuditLog`로 idempotent replay, rejected state, failure branch를 기록합니다.
+### Module Intent
 
-### 4) Outbox 기반 확장성
+- `order`
+  주문 생성, 상태 전이, 외부 비즈니스 진입 facade
+- `orchestration`
+  흐름 제어, orchestration step 기록
+- `payment`
+  결제 승인/취소와 provider 연동 추상화
+- `settlement`
+  정산 요청 기록
+- `notification`
+  알림 요청 기록
+- `outbox`
+  이벤트 저장, 재시도, publish, dead-letter 전환
+- `audit`
+  분기/재실행/실패 기록
+- `common`
+  공통 응답, 예외, 공통 기반 타입
 
-- settlement / notification 후속 publish는 `OutboxEvent`로 남깁니다.
-- 현재는 scheduler + publisher가 `READY -> PUBLISHED / FAILED` 상태 전이만 담당합니다.
-- 재발행 정책과 backoff, dead-letter는 의도적으로 후속 과제로 남겨 두었습니다.
+### Dependency Direction
 
-### 5) JWT 기반 API 보호
+- `controller -> facade/service -> repository`
+- `orchestration -> domain application service`
+- 다른 domain의 repository를 직접 주입해서 흐름을 제어하지 않습니다.
+- repository 패키지를 외부에 공개하는 방식보다 service 경계를 통해 협력하는 방식을 우선합니다.
 
-- `/api/auth/token`에서 데모용 access token을 발급합니다.
-- `/api/**`는 기본적으로 JWT 인증이 필요합니다.
-- `/actuator/health`는 공개하고, 나머지 actuator는 `ROLE_ADMIN`으로 보호합니다.
-- 현재 구조는 **API 보호와 테스트 가능성 확보**가 목적이며, refresh token / key rotation / user store는 이후 단계입니다.
+## 3. Payment Provider 구조
 
-<br/>
+`PaymentProviderClient`는 두 구현 중 하나가 설정으로 선택됩니다.
 
-## 5. Runtime / API / Infra
+- `mock`
+  `MockPaymentProviderClient`
+  기본 모드입니다. `PAYMENT_PROVIDER_MOCK_FAILURE_TOKEN`이 description에 포함되면 실패를 시뮬레이션합니다.
+- `external`
+  `ExternalPaymentProviderClient`
+  `baseUrl`, `apiKey`, `approvePath`, `cancelPath`, `connectTimeout`, `readTimeout`를 사용합니다.
 
-### Flow Summary
+현재 external 구현은 실제 연동을 붙일 수 있는 골격과 오류 매핑까지 포함하지만, provider별 상세 error mapping과 retry policy는 후속 과제입니다.
 
-1. 클라이언트가 JWT를 발급받습니다.
-2. `POST /api/orders`로 주문을 생성합니다.
-3. `POST /api/orders/{orderId}/orchestrate` 호출 시 orchestration이 시작됩니다.
-4. payment 승인 후 주문 상태를 `PAID`로 전이합니다.
-5. settlement 요청과 outbox event를 기록합니다.
-6. notification 요청과 outbox event를 기록합니다.
-7. 최종적으로 `COMPLETED`, 또는 실패 분기에 따라 `FAILED` / `CANCELLED` 상태와 compensation step을 남깁니다.
+## 4. Outbox / Compensation 기준
 
-### Current API List
+### Outbox
 
-- `POST /api/auth/token`
-- `POST /api/orders`
-- `POST /api/orders/{orderId}/orchestrate`
-- `GET /api/orders/{orderId}`
-- `GET /api/orders/{orderId}/flow`
+- outbox event는 settlement / notification 후속 publish용으로 저장됩니다.
+- publisher는 `nextAttemptAt`이 지난 `READY`, `RETRY_WAIT` 이벤트만 발행 대상으로 가져옵니다.
+- publish 실패 시 `retryCount`, `failureCode`, `failureReason`, `nextAttemptAt`이 갱신됩니다.
+- `maxRetryCount`를 초과하면 `DEAD_LETTER`로 전환됩니다.
 
-### Local Infrastructure
+### Compensation
 
-- PostgreSQL: `localhost:5432`
+- settlement 실패:
+  payment 취소 보상을 수행하고 주문을 `CANCELLED`로 마무리합니다.
+- notification 실패:
+  payment/settlement를 되돌리지 않고 `FAILED` 상태와 `manual intervention / retry required` 성격의 compensation step을 남깁니다.
+
+notification 운영 정책은 현재 1차 분리까지만 완료된 상태이며, 채널별 재전송/무시/운영자 개입 정책은 TODO입니다.
+
+## 5. 로컬 실행
+
+### Prerequisites
+
+- Java 21
+- Docker
+
+### Quick Start
+
+```bash
+docker compose up -d
+SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
+```
+
+기본 로컬 값은 아래를 사용합니다.
+
+- PostgreSQL: `jdbc:postgresql://localhost:5432/commerce_orchestration`
 - Kafka: `localhost:9092`
-- Kafka UI: `localhost:8085`
+- Kafka UI: `http://localhost:8085`
+- payment provider mode: `mock`
 
-`compose.yaml`은 로컬 개발용 인프라 부트스트랩을 담당합니다.  
-애플리케이션의 기본 datasource와 Kafka bootstrap 서버도 여기에 맞춰 설정되어 있습니다.
+`.env.example`을 참고해 환경변수를 맞출 수 있습니다.
 
-### CI
+### External Payment Provider 골격 확인
 
-GitHub Actions는 현재 다음을 수행합니다.
+```bash
+SPRING_PROFILES_ACTIVE=local \
+PAYMENT_PROVIDER_MODE=external \
+PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
+./gradlew bootRun
+```
 
-- JDK 21 설정
-- `./gradlew compileJava`
-- `./gradlew test`
-- 테스트 리포트와 결과 artifact 업로드
+## 6. DB Schema / Migration
 
-이 단계는 **compile-safe 유지와 기본 회귀 확인**이 목적입니다.  
-PostgreSQL/Kafka 실환경 검증은 아직 CI 기본 job에 포함되어 있지 않습니다.
+현재 DB 스키마는 Flyway migration으로 관리합니다.
 
-<br/>
+- 초기 스키마: [V1__init.sql](/Users/gseobi/workspace/commerce-orchestration-backend/src/main/resources/db/migration/V1__init.sql)
+- outbox retry/dead-letter 변경: [V2__outbox_retry_dead_letter.sql](/Users/gseobi/workspace/commerce-orchestration-backend/src/main/resources/db/migration/V2__outbox_retry_dead_letter.sql)
 
-## 6. Why Some TODOs Still Remain
+애플리케이션 기본/로컬/통합 테스트 프로필은 Flyway를 적용한 뒤 JPA `ddl-auto=validate`로 매핑 정합성을 확인합니다.  
+단위 테스트용 `test` 프로필만 H2 `create-drop`과 `flyway disabled`를 유지합니다.
 
-남아 있는 TODO는 단순 미완성이 아니라, 현재 구조에서 **다음 복잡도를 어디에 추가할지 명확히 하기 위해** 일부러 뒤로 둔 항목입니다.
+운영 점검용 SQL은 `docs/sql`에 정리되어 있습니다.
 
-- 실제 `PaymentProviderClient` 연동:
-  지금은 mock provider로 흐름 제어와 실패 분기부터 고정해 둔 상태입니다. 외부 PG 연동을 먼저 붙이면 timeout, retry, idempotency, error mapping 복잡도가 한 번에 들어오므로 다음 단계로 분리했습니다.
-- outbox retry/backoff / dead-letter:
-  현재는 publish 성공/실패 기록까지만 구현되어 있습니다. 재시도 정책은 운영 정책과 결합되므로, 실제 발행 책임을 먼저 고정한 뒤 넣는 편이 자연스럽습니다.
-- notification compensation:
-  settlement 실패와 notification 실패는 동일한 보상 전략을 쓰지 않을 가능성이 큽니다. 그래서 지금은 notification compensation을 TODO 상태로 명시만 해 두었습니다.
-- refresh token / key rotation / user store:
-  현재 JWT는 서비스 보호와 테스트 자동화를 위한 access token 중심 구조입니다. 인증 체계를 운영 수준으로 올리려면 저장소 연동과 키 관리가 필요합니다.
-- schema migration:
-  현재는 `ddl-auto` 기반으로 개발 속도를 우선하고 있습니다. 협업/배포 단계로 가려면 Flyway 또는 Liquibase로 전환해야 합니다.
-- Kafka/PostgreSQL integration test:
-  현재 테스트는 H2와 mock Kafka 중심입니다. 인프라 실제성 검증은 Testcontainers 단계에서 추가하는 것이 맞습니다.
+- [SQL Guide](docs/sql/README.md)
+- [Outbox Operations](docs/sql/outbox-operations.sql)
 
-<br/>
+## 7. 테스트 / CI
 
-## 7. Recommended Next Order
+### Local Commands
 
-현재 구조 기준으로 다음 구현 순서는 아래가 가장 자연스럽습니다.
+- 컴파일 확인: `./gradlew compileJava`
+- unit 성격 테스트: `./gradlew test`
+- PostgreSQL/Kafka Testcontainers 통합 테스트: `./gradlew integrationTest`
 
-1. `PaymentProviderClient`를 실제 외부 연동 client와 mock client로 분리 고도화
-2. outbox retry/backoff 및 dead-letter 전략 추가
-3. compensation 정책을 settlement / notification 별로 분리
-4. Testcontainers 기반 PostgreSQL / Kafka 통합 테스트 추가
-5. GitHub Actions에 integration-test job과 artifact/report 업로드 확장
+### Current Coverage
 
-이 순서를 택한 이유는 **흐름 제어의 외부 실패 요인 -> 재처리 정책 -> 보상 정책 -> 실인프라 검증 -> CI 확장** 순서가 가장 변경 비용이 낮기 때문입니다.
+- order create / detail / flow API
+- JWT 발급 및 `/api/**` 보호
+- orchestration happy path
+- settlement failure compensation
+- notification failure 분기
+- outbox publish unit test
+- PostgreSQL / Kafka 기반 outbox happy path integration test
+- PostgreSQL / Kafka 기반 outbox retry -> dead-letter integration test
 
-<br/>
+### GitHub Actions
 
-## 8. Notes / Docs
+현재 workflow는 아래 두 job을 사용합니다.
+
+- `build-and-test`
+  `compileJava`, `test`, unit report upload
+- `integration-test`
+  `integrationTest`, integration report upload
+
+## 8. 남아 있는 TODO
+
+- 실제 payment provider별 timeout / retry / error mapping 구체화
+- notification 운영 정책 세분화
+- admin 재처리 / 재검증 API
+- refresh token / key rotation / user store 연동
+- dead-letter 이벤트의 운영 자동화
+
+## 9. Docs
 
 - [Architecture Notes](docs/architecture/README.md)
 - [Flow Notes](docs/flows/README.md)
 - [Design Notes](docs/design-notes.md)
 - [Test Report](docs/test-report.md)
 - [Troubleshooting](docs/troubleshooting.md)
-
-### Development Notes
-
-초기 프로젝트 부트스트랩 단계에서는 AI 도구를 활용해 반복성 높은 클래스 뼈대와 문서 초안을 빠르게 만들었습니다.
-
-반면, 이 프로젝트의 핵심인 도메인 책임 분리, 상태 전이 흐름, orchestration 경계, repository 의존 방향, outbox 확장 포인트, 공개 API 설계는 직접 판단하여 반영했습니다. 생성 결과는 그대로 두지 않고 compile 확인과 구조 수정, 문서 갱신을 거쳐 현재 방향에 맞게 정제했습니다.
+- [SQL Guide](docs/sql/README.md)

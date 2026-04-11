@@ -1,36 +1,69 @@
 # Test Report
 
-## 현재 검증 기준
+## 1. 현재 검증 기준
 
-이 문서는 현재 레포지토리 상태에서 확인한 compile / test 범위와, 아직 실인프라 검증으로 넘어가지 않은 범위를 정리합니다.
+이 문서는 현재 레포지토리 기준선에서 어떤 검증을 실제로 수행하는지 정리합니다.  
+존재하지 않는 테스트 범위는 구현된 것처럼 적지 않습니다.
 
-## Verification Summary
+## 2. 로컬 검증 명령
 
-| Area | Status | Notes |
+- `./gradlew compileJava`
+  메인 소스 compile-safe 확인
+- `./gradlew test`
+  H2 + mock Kafka 중심 unit/integration-lite 검증
+- `./gradlew integrationTest`
+  Testcontainers 기반 PostgreSQL / Kafka 통합 테스트
+
+## 3. 현재 통과하는 검증 범위
+
+| Area | Current Status | Notes |
 |---|---|---|
-| `./gradlew compileJava` | Pass | 2026-04-11 기준 구조 정리 후 컴파일 성공 |
-| `./gradlew test` | Pass | 2026-04-11 기준 전체 테스트 통과 |
-| Spring context loading | Implemented | `CommerceOrchestrationBackendApplicationTests` |
-| JWT token issuance | Implemented | `OrderFlowIntegrationTest`에서 `/api/auth/token` 사용 |
-| `/api/**` authentication | Implemented | 인증 없는 주문 생성 요청 `401` 검증 |
+| `compileJava` | Pass | 메인 소스 컴파일 성공 |
+| `test` | Pass | 단위 테스트와 MockMvc 기반 흐름 검증 |
+| `integrationTest` | Pass | PostgreSQL/Kafka Testcontainers 검증 |
+| JWT token issuance | Implemented | `/api/auth/token` |
+| `/api/**` authentication | Implemented | 인증 없는 주문 생성 `401` 확인 |
 | Order create / detail / flow API | Implemented | `OrderFlowIntegrationTest` |
-| Orchestration happy path | Implemented | 상태 전이, step 수, outbox 생성 검증 |
-| Settlement failure compensation | Implemented | 실패 step과 compensation step 검증 |
-| Notification failure TODO branch | Implemented | compensation `READY` 상태 검증 |
-| Payment service unit test | Implemented | 승인 성공/실패 분기 검증 |
-| Outbox publisher unit test | Implemented | publish 후 `PUBLISHED` 상태 전이 검증 |
-| PostgreSQL integration test | Not Yet | 현재는 H2 메모리 DB 사용 |
-| Kafka broker integration test | Not Yet | 현재는 mock `KafkaTemplate` 사용 |
+| Orchestration happy path | Implemented | 상태 전이, step, outbox 생성 검증 |
+| Settlement failure compensation | Implemented | payment cancel compensation 검증 |
+| Notification failure branch | Implemented | compensation step `READY` 검증 |
+| Outbox publish unit test | Implemented | `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER` 전이 검증 |
+| PostgreSQL/Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
+| PostgreSQL/Kafka outbox dead-letter path | Implemented | retry 후 dead-letter 전환 검증 |
 
-## 현재 테스트 구조의 의미
+## 4. 테스트 종류 차이
 
-- 애플리케이션 구조와 상태 전이, 보안 설정이 깨지지 않았는지 빠르게 확인하는 데 초점을 둡니다.
-- 외부 인프라가 없는 환경에서도 CI와 로컬 회귀가 가능하도록 H2와 mock Kafka를 사용합니다.
-- 대신 실제 PostgreSQL DDL 차이, Kafka publish round-trip, Docker Compose 환경 상호작용은 아직 별도 검증 범위입니다.
+### `test`
 
-## 다음 확장 권장
+- H2 메모리 DB 사용
+- Flyway 비활성화
+- mock `KafkaTemplate` 기반 검증 포함
+- 빠른 회귀 확인이 목적
 
-1. Testcontainers로 PostgreSQL / Kafka 통합 테스트 추가
-2. outbox scheduler와 publisher의 실패 재시도 경로 검증
-3. JWT refresh / key rotation이 추가되면 auth 관련 테스트 분리
-4. GitHub Actions에 integration-test job 추가 및 artifact/report 업로드 확장
+### `integrationTest`
+
+- PostgreSQL Testcontainer 사용
+- Kafka Testcontainer 사용
+- Flyway migration 적용 후 JPA `validate`
+- outbox publish와 DB 스키마를 실인프라에 가깝게 검증
+
+## 5. GitHub Actions 검증 범위
+
+현재 workflow는 아래 두 job을 수행합니다.
+
+- `build-and-test`
+  `./gradlew compileJava`, `./gradlew test`, unit 리포트 업로드
+- `integration-test`
+  `./gradlew integrationTest`, integration 리포트 업로드
+
+artifact 이름도 실제 workflow와 맞춰 아래를 사용합니다.
+
+- `gradle-unit-test-reports`
+- `gradle-integration-test-reports`
+
+## 6. 아직 검증하지 않는 범위
+
+- 실제 외부 payment provider와의 네트워크 round-trip
+- notification 운영 정책의 세분화된 채널별 재처리
+- admin 수동 재처리 API
+- refresh token / key rotation / user store 연동

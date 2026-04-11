@@ -11,6 +11,8 @@ spring:
   docker:
     compose:
       enabled: false
+  flyway:
+    enabled: false
   kafka:
     bootstrap-servers: localhost:9092
 
@@ -22,5 +24,10 @@ app:
       issuer: commerce-orchestration-test
   outbox:
     scheduler-enabled: false
-    publish-fixed-delay: 10000
+    publish-fixed-delay: 10s
     batch-size: 100
+    max-retry-count: 3
+    initial-backoff: 10ms
+    backoff-multiplier: 1.0
+    max-backoff: 10ms
+    publish-timeout: 1s

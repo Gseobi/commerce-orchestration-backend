@@ -37,10 +37,25 @@ public class OutboxEvent extends BaseTimeEntity {
     @Column(nullable = false, length = 50)
     private OutboxStatus status;
 
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount;
+
+    @Column(name = "next_attempt_at", nullable = false)
+    private LocalDateTime nextAttemptAt;
+
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
+
     @Column
     private LocalDateTime publishedAt;
 
-    @Column(length = 500)
+    @Column(name = "dead_lettered_at")
+    private LocalDateTime deadLetteredAt;
+
+    @Column(name = "failure_code", length = 100)
+    private String failureCode;
+
+    @Column(length = 1000)
     private String failureReason;
 
     protected OutboxEvent() {
@@ -52,16 +67,36 @@ public class OutboxEvent extends BaseTimeEntity {
         this.eventType = eventType;
         this.payload = payload;
         this.status = status;
+        this.retryCount = 0;
+        this.nextAttemptAt = LocalDateTime.now();
     }
 
     public void markPublished() {
         this.status = OutboxStatus.PUBLISHED;
+        this.lastAttemptAt = LocalDateTime.now();
         this.publishedAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
+        this.deadLetteredAt = null;
+        this.failureCode = null;
         this.failureReason = null;
     }
 
-    public void markFailed(String failureReason) {
-        this.status = OutboxStatus.FAILED;
+    public void markRetryWaiting(String failureCode, String failureReason, LocalDateTime nextAttemptAt) {
+        this.status = OutboxStatus.RETRY_WAIT;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.nextAttemptAt = nextAttemptAt;
+        this.failureCode = failureCode;
+        this.failureReason = failureReason;
+    }
+
+    public void markDeadLetter(String failureCode, String failureReason) {
+        this.status = OutboxStatus.DEAD_LETTER;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.deadLetteredAt = LocalDateTime.now();
+        this.nextAttemptAt = null;
+        this.failureCode = failureCode;
         this.failureReason = failureReason;
     }
 }

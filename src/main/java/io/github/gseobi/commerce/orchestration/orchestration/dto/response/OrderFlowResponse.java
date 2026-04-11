@@ -36,8 +36,13 @@ public record OrderFlowResponse(
                                 event.eventType(),
                                 event.status(),
                                 event.payload(),
+                                event.retryCount(),
+                                event.nextAttemptAt(),
                                 event.createdAt(),
+                                event.lastAttemptAt(),
                                 event.publishedAt(),
+                                event.deadLetteredAt(),
+                                event.failureCode(),
                                 event.failureReason()))
                         .toList()
         );
@@ -58,8 +63,13 @@ public record OrderFlowResponse(
             String eventType,
             String status,
             String payload,
+            int retryCount,
+            LocalDateTime nextAttemptAt,
             LocalDateTime createdAt,
+            LocalDateTime lastAttemptAt,
             LocalDateTime publishedAt,
+            LocalDateTime deadLetteredAt,
+            String failureCode,
             String failureReason
     ) {
     }

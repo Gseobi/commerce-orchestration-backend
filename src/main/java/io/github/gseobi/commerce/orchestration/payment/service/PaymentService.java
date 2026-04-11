@@ -26,7 +26,7 @@ class PaymentService implements PaymentApplication {
     @Transactional(noRollbackFor = BusinessException.class)
     @Override
     public PaymentResponse approve(Long orderId, BigDecimal amount, String description) {
-        PaymentProviderResult providerResult = paymentProviderClient.approve(orderId, description);
+        PaymentProviderResult providerResult = paymentProviderClient.approve(orderId, amount, description);
         Payment payment = new Payment(orderId, providerResult.status(), amount, providerResult.providerReference());
         paymentRepository.save(payment);
         if (providerResult.status() != PaymentStatus.APPROVED) {

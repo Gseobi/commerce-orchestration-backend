@@ -8,8 +8,13 @@ public record OutboxEventSummary(
         String eventType,
         String status,
         String payload,
+        int retryCount,
+        LocalDateTime nextAttemptAt,
         LocalDateTime createdAt,
+        LocalDateTime lastAttemptAt,
         LocalDateTime publishedAt,
+        LocalDateTime deadLetteredAt,
+        String failureCode,
         String failureReason
 ) {
 }

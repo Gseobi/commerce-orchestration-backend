@@ -7,11 +7,14 @@ spring:
     password: ${DB_PASSWORD:commerce}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -20,6 +23,8 @@ spring:
   docker:
     compose:
       enabled: false
+  webflux:
+    base-path: /
 
 app:
   security:
@@ -29,5 +34,20 @@ app:
       issuer: commerce-orchestration-backend
   outbox:
     scheduler-enabled: true
-    publish-fixed-delay: 5000
+    publish-fixed-delay: 5s
     batch-size: 100
+    max-retry-count: 3
+    initial-backoff: 10s
+    backoff-multiplier: 2.0
+    max-backoff: 5m
+    publish-timeout: 3s
+  payment:
+    provider:
+      mode: ${PAYMENT_PROVIDER_MODE:mock}
+      base-url: ${PAYMENT_PROVIDER_BASE_URL:http://localhost:8089}
+      api-key: ${PAYMENT_PROVIDER_API_KEY:}
+      approve-path: ${PAYMENT_PROVIDER_APPROVE_PATH:/payments/approve}
+      cancel-path: ${PAYMENT_PROVIDER_CANCEL_PATH:/payments/cancel}
+      connect-timeout: ${PAYMENT_PROVIDER_CONNECT_TIMEOUT:2s}
+      read-timeout: ${PAYMENT_PROVIDER_READ_TIMEOUT:3s}
+      mock-failure-token: ${PAYMENT_PROVIDER_MOCK_FAILURE_TOKEN:FAIL_PAYMENT}

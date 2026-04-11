@@ -38,7 +38,7 @@ class PaymentServiceTest {
         Order order = new Order("customer-1", BigDecimal.valueOf(10000), "KRW", "normal", OrderStatus.PAYMENT_PENDING);
         Payment payment = new Payment(1L, PaymentStatus.APPROVED, order.getTotalAmount(), "MOCK-APPROVED");
 
-        when(paymentProviderClient.approve(order.getId(), order.getDescription()))
+        when(paymentProviderClient.approve(order.getId(), order.getTotalAmount(), order.getDescription()))
                 .thenReturn(new PaymentProviderResult(PaymentStatus.APPROVED, "MOCK-APPROVED", "approved"));
         when(paymentRepository.save(ArgumentMatchers.any(Payment.class))).thenReturn(payment);
 
@@ -53,7 +53,7 @@ class PaymentServiceTest {
         Order order = new Order("customer-1", BigDecimal.valueOf(10000), "KRW", "FAIL_PAYMENT", OrderStatus.PAYMENT_PENDING);
         Payment payment = new Payment(1L, PaymentStatus.FAILED, order.getTotalAmount(), "MOCK-FAILED");
 
-        when(paymentProviderClient.approve(order.getId(), order.getDescription()))
+        when(paymentProviderClient.approve(order.getId(), order.getTotalAmount(), order.getDescription()))
                 .thenReturn(new PaymentProviderResult(PaymentStatus.FAILED, "MOCK-FAILED", "failed"));
         when(paymentRepository.save(ArgumentMatchers.any(Payment.class))).thenReturn(payment);
 

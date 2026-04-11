@@ -120,32 +120,44 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
 
     private void handleFailure(Long orderId, BusinessException exception) {
         if (exception.getErrorCode().name().startsWith("PAYMENT")) {
-            orderWorkflowAccess.markFailed(orderId);
-            recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
-            auditRecorder.record(orderId, "PAYMENT_FAILED", exception.getMessage());
+            handlePaymentFailure(orderId, exception);
             return;
         }
 
         if (exception.getErrorCode().name().startsWith("SETTLEMENT")) {
-            orderWorkflowAccess.markFailed(orderId);
-            recordStep(orderId, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
-            PaymentResponse compensationResult = paymentApplication.cancelLatestApprovedPayment(
-                    orderId,
-                    "Settlement failure compensation"
-            );
-            orderWorkflowAccess.markCancelled(orderId);
-            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.SUCCESS,
-                    "Payment cancelled: paymentId=" + compensationResult.paymentId());
-            auditRecorder.record(orderId, "SETTLEMENT_FAILED_COMPENSATED", exception.getMessage());
+            handleSettlementFailure(orderId, exception);
             return;
         }
 
         if (exception.getErrorCode().name().startsWith("NOTIFICATION")) {
-            orderWorkflowAccess.markFailed(orderId);
-            recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.FAILED, exception.getMessage());
-            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
-                    "Notification compensation policy is not finalized yet");
-            auditRecorder.record(orderId, "NOTIFICATION_FAILED", exception.getMessage());
+            handleNotificationFailure(orderId, exception);
         }
+    }
+
+    private void handlePaymentFailure(Long orderId, BusinessException exception) {
+        orderWorkflowAccess.markFailed(orderId);
+        recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
+        auditRecorder.record(orderId, "PAYMENT_FAILED", exception.getMessage());
+    }
+
+    private void handleSettlementFailure(Long orderId, BusinessException exception) {
+        orderWorkflowAccess.markFailed(orderId);
+        recordStep(orderId, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
+        PaymentResponse compensationResult = paymentApplication.cancelLatestApprovedPayment(
+                orderId,
+                "Settlement failure compensation"
+        );
+        orderWorkflowAccess.markCancelled(orderId);
+        recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.SUCCESS,
+                "Payment cancelled after settlement failure: paymentId=" + compensationResult.paymentId());
+        auditRecorder.record(orderId, "SETTLEMENT_FAILED_COMPENSATED", exception.getMessage());
+    }
+
+    private void handleNotificationFailure(Long orderId, BusinessException exception) {
+        orderWorkflowAccess.markFailed(orderId);
+        recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.FAILED, exception.getMessage());
+        recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
+                "Notification requires retry or manual intervention; payment and settlement are kept as-is");
+        auditRecorder.record(orderId, "NOTIFICATION_FAILED_MANUAL_INTERVENTION_REQUIRED", exception.getMessage());
     }
 }
