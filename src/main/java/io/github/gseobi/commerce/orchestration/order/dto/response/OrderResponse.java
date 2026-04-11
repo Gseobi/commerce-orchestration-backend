@@ -1,7 +1,6 @@
 package io.github.gseobi.commerce.orchestration.order.dto.response;
 
 import io.github.gseobi.commerce.orchestration.order.entity.Order;
-import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -11,7 +10,7 @@ public record OrderResponse(
         BigDecimal totalAmount,
         String currency,
         String description,
-        OrderStatus status,
+        String status,
         LocalDateTime createdAt
 ) {
 
@@ -22,7 +21,7 @@ public record OrderResponse(
                 order.getTotalAmount(),
                 order.getCurrency(),
                 order.getDescription(),
-                order.getStatus(),
+                order.getStatus().name(),
                 order.getCreatedAt()
         );
     }

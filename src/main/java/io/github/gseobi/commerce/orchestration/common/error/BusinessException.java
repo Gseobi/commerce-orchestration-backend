@@ -1,5 +1,8 @@
 package io.github.gseobi.commerce.orchestration.common.error;
 
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface
 public class BusinessException extends RuntimeException {
 
     private final ErrorCode errorCode;

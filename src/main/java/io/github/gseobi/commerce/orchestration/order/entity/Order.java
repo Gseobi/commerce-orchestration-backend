@@ -1,6 +1,6 @@
 package io.github.gseobi.commerce.orchestration.order.entity;
 
-import io.github.gseobi.commerce.orchestration.common.domain.BaseTimeEntity;
+import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,10 +10,25 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.EnumSet;
+import java.util.Map;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "orders")
 public class Order extends BaseTimeEntity {
+
+    private static final Map<OrderStatus, EnumSet<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
+            OrderStatus.CREATED, EnumSet.of(OrderStatus.PAYMENT_PENDING, OrderStatus.FAILED, OrderStatus.CANCELLED),
+            OrderStatus.PAYMENT_PENDING, EnumSet.of(OrderStatus.PAID, OrderStatus.FAILED, OrderStatus.CANCELLED),
+            OrderStatus.PAID, EnumSet.of(OrderStatus.SETTLEMENT_REQUESTED, OrderStatus.FAILED, OrderStatus.CANCELLED),
+            OrderStatus.SETTLEMENT_REQUESTED, EnumSet.of(OrderStatus.NOTIFICATION_REQUESTED, OrderStatus.FAILED, OrderStatus.CANCELLED),
+            OrderStatus.NOTIFICATION_REQUESTED, EnumSet.of(OrderStatus.COMPLETED, OrderStatus.FAILED),
+            OrderStatus.FAILED, EnumSet.of(OrderStatus.CANCELLED),
+            OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class),
+            OrderStatus.COMPLETED, EnumSet.noneOf(OrderStatus.class)
+    );
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,31 +61,14 @@ public class Order extends BaseTimeEntity {
         this.status = status;
     }
 
-    public void changeStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
+    public void transitionTo(OrderStatus nextStatus) {
+        if (this.status == nextStatus) {
+            return;
+        }
+        EnumSet<OrderStatus> allowedStatuses = ALLOWED_TRANSITIONS.getOrDefault(this.status, EnumSet.noneOf(OrderStatus.class));
+        if (!allowedStatuses.contains(nextStatus)) {
+            throw new IllegalStateException("허용되지 않은 주문 상태 전이입니다. current=%s, next=%s".formatted(this.status, nextStatus));
+        }
+        this.status = nextStatus;
     }
 }

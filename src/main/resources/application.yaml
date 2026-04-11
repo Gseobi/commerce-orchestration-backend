@@ -1,3 +1,33 @@
 spring:
   application:
     name: commerce-orchestration-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/commerce_orchestration}
+    username: ${DB_USERNAME:commerce}
+    password: ${DB_PASSWORD:commerce}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  docker:
+    compose:
+      enabled: false
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:commerce-orchestration-demo-secret-key-2026}
+      access-token-validity-seconds: 3600
+      issuer: commerce-orchestration-backend
+  outbox:
+    scheduler-enabled: true
+    publish-fixed-delay: 5000
+    batch-size: 100

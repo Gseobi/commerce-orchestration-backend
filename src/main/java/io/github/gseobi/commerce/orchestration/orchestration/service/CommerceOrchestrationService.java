@@ -1,114 +1,151 @@
 package io.github.gseobi.commerce.orchestration.orchestration.service;
 
-import io.github.gseobi.commerce.orchestration.audit.entity.AuditLog;
-import io.github.gseobi.commerce.orchestration.audit.repository.AuditLogRepository;
+import io.github.gseobi.commerce.orchestration.audit.api.AuditRecorder;
+import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
-import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
-import io.github.gseobi.commerce.orchestration.notification.service.NotificationService;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
+import io.github.gseobi.commerce.orchestration.orchestration.api.OrderFlowUseCase;
 import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStep;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStepStatus;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStepType;
 import io.github.gseobi.commerce.orchestration.orchestration.repository.OrchestrationStepRepository;
-import io.github.gseobi.commerce.orchestration.order.entity.Order;
-import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
-import io.github.gseobi.commerce.orchestration.order.service.OrderService;
-import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
-import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
-import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
+import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
+import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
+import io.github.gseobi.commerce.orchestration.payment.api.PaymentApplication;
 import io.github.gseobi.commerce.orchestration.payment.dto.response.PaymentResponse;
-import io.github.gseobi.commerce.orchestration.payment.service.PaymentService;
-import io.github.gseobi.commerce.orchestration.settlement.entity.Settlement;
-import io.github.gseobi.commerce.orchestration.settlement.service.SettlementService;
+import io.github.gseobi.commerce.orchestration.settlement.api.SettlementApplication;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CommerceOrchestrationService {
+class CommerceOrchestrationService implements OrderFlowUseCase {
 
-    private final OrderService orderService;
-    private final PaymentService paymentService;
-    private final SettlementService settlementService;
-    private final NotificationService notificationService;
+    private static final String STATUS_CREATED = "CREATED";
+    private static final String STATUS_COMPLETED = "COMPLETED";
+    private static final String STATUS_CANCELLED = "CANCELLED";
+    private static final String STATUS_NOTIFICATION_REQUESTED = "NOTIFICATION_REQUESTED";
+
+    private final OrderWorkflowAccess orderWorkflowAccess;
+    private final PaymentApplication paymentApplication;
+    private final SettlementApplication settlementApplication;
+    private final NotificationApplication notificationApplication;
+    private final AuditRecorder auditRecorder;
+    private final OutboxApplication outboxApplication;
     private final OrchestrationStepRepository orchestrationStepRepository;
-    private final OutboxEventRepository outboxEventRepository;
-    private final AuditLogRepository auditLogRepository;
 
-    public CommerceOrchestrationService(
-            OrderService orderService,
-            PaymentService paymentService,
-            SettlementService settlementService,
-            NotificationService notificationService,
-            OrchestrationStepRepository orchestrationStepRepository,
-            OutboxEventRepository outboxEventRepository,
-            AuditLogRepository auditLogRepository
-    ) {
-        this.orderService = orderService;
-        this.paymentService = paymentService;
-        this.settlementService = settlementService;
-        this.notificationService = notificationService;
-        this.orchestrationStepRepository = orchestrationStepRepository;
-        this.outboxEventRepository = outboxEventRepository;
-        this.auditLogRepository = auditLogRepository;
-    }
-
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
+    @Override
     public OrderFlowResponse orchestrate(Long orderId) {
-        Order order = orderService.getOrderEntity(orderId);
+        OrderExecutionView order = orderWorkflowAccess.getOrderExecutionView(orderId);
 
-        if (order.getStatus() != OrderStatus.CREATED) {
+        if (STATUS_COMPLETED.equals(order.status())
+                || STATUS_CANCELLED.equals(order.status())
+                || STATUS_NOTIFICATION_REQUESTED.equals(order.status())) {
+            auditRecorder.record(orderId, "ORCHESTRATION_IDEMPOTENT_REPLAY",
+                    "Existing state reused without re-processing");
             return getOrderFlow(orderId);
         }
 
-        recordStep(order, OrchestrationStepType.ORDER_CREATE, OrchestrationStepStatus.SUCCESS, "Order already created");
+        if (!STATUS_CREATED.equals(order.status())) {
+            auditRecorder.record(orderId, "ORCHESTRATION_REJECTED",
+                    "Invalid state for orchestration: " + order.status());
+            return getOrderFlow(orderId);
+        }
 
-        orderService.markPaymentPending(order);
-        recordStep(order, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.READY, "Payment requested");
-        PaymentResponse paymentResponse = paymentService.approve(order);
-        orderService.markPaid(order);
-        recordStep(order, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.SUCCESS,
-                "Payment approved: paymentId=" + paymentResponse.paymentId());
+        recordStep(orderId, OrchestrationStepType.ORDER_CREATE, OrchestrationStepStatus.SUCCESS, "Order already created");
 
-        Settlement settlement = settlementService.request(order);
-        orderService.markSettlementRequested(order);
-        recordStep(order, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.SUCCESS,
-                "Settlement requested: settlementId=" + settlement.getId());
-        createOutboxEvent(order, KafkaTopicNames.SETTLEMENT_REQUESTED, "SETTLEMENT_REQUESTED");
+        try {
+            orderWorkflowAccess.markPaymentPending(orderId);
+            recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.READY, "Payment requested");
+            PaymentResponse paymentResponse = paymentApplication.approve(
+                    orderId,
+                    order.totalAmount(),
+                    order.description()
+            );
+            orderWorkflowAccess.markPaid(orderId);
+            recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.SUCCESS,
+                    "Payment approved: paymentId=" + paymentResponse.paymentId());
 
-        NotificationEvent notificationEvent = notificationService.request(order);
-        orderService.markNotificationRequested(order);
-        recordStep(order, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.SUCCESS,
-                "Notification requested: notificationEventId=" + notificationEvent.getId());
-        createOutboxEvent(order, KafkaTopicNames.NOTIFICATION_REQUESTED, "NOTIFICATION_REQUESTED");
+            Long settlementId = settlementApplication.request(orderId, order.description());
+            orderWorkflowAccess.markSettlementRequested(orderId);
+            recordStep(orderId, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.SUCCESS,
+                    "Settlement requested: settlementId=" + settlementId);
+            createOutboxEvent(orderId, KafkaTopicNames.SETTLEMENT_REQUESTED, "SETTLEMENT_REQUESTED");
 
-        recordStep(order, OrchestrationStepType.COMPLETE, OrchestrationStepStatus.SUCCESS,
-                "Happy path orchestration scaffold completed");
-        auditLogRepository.save(new AuditLog(order, "ORDER_ORCHESTRATED", "Initial happy path orchestration completed"));
+            Long notificationEventId = notificationApplication.request(orderId, order.description());
+            orderWorkflowAccess.markNotificationRequested(orderId);
+            recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.SUCCESS,
+                    "Notification requested: notificationEventId=" + notificationEventId);
+            createOutboxEvent(orderId, KafkaTopicNames.NOTIFICATION_REQUESTED, "NOTIFICATION_REQUESTED");
 
-        // TODO retry/backoff, idempotency, compensation, actual Kafka publish 연동
+            orderWorkflowAccess.markCompleted(orderId);
+            recordStep(orderId, OrchestrationStepType.COMPLETE, OrchestrationStepStatus.SUCCESS,
+                    "Happy path orchestration completed");
+            auditRecorder.record(orderId, "ORDER_ORCHESTRATED", "Happy path orchestration completed");
+        } catch (BusinessException exception) {
+            handleFailure(orderId, exception);
+        }
+
         return getOrderFlow(orderId);
     }
 
+    @Override
     public OrderFlowResponse getOrderFlow(Long orderId) {
-        Order order = orderService.getOrderEntity(orderId);
+        OrderExecutionView order = orderWorkflowAccess.getOrderExecutionView(orderId);
         List<OrchestrationStep> steps = orchestrationStepRepository.findAllByOrderIdOrderByIdAsc(orderId);
-        List<OutboxEvent> outboxEvents = outboxEventRepository.findAllByOrderIdOrderByIdAsc(orderId);
-        return OrderFlowResponse.of(orderId, order.getStatus().name(), steps, outboxEvents);
+        List<OutboxEventSummary> outboxEvents = outboxApplication.getOrderEvents(orderId);
+        return OrderFlowResponse.of(orderId, order.status(), steps, outboxEvents);
     }
 
     private void recordStep(
-            Order order,
+            Long orderId,
             OrchestrationStepType stepType,
             OrchestrationStepStatus status,
             String detail
     ) {
-        orchestrationStepRepository.save(new OrchestrationStep(order, stepType, status, detail));
+        orchestrationStepRepository.save(new OrchestrationStep(orderId, stepType, status, detail));
     }
 
-    private void createOutboxEvent(Order order, String topic, String eventType) {
-        String payload = "{\"orderId\":" + order.getId() + ",\"eventType\":\"" + eventType + "\"}";
-        outboxEventRepository.save(new OutboxEvent(order, topic, eventType, payload, OutboxStatus.READY));
+    private void createOutboxEvent(Long orderId, String topic, String eventType) {
+        String payload = "{\"orderId\":" + orderId + ",\"eventType\":\"" + eventType + "\"}";
+        outboxApplication.appendOrderEvent(orderId, topic, eventType, payload);
+    }
+
+    private void handleFailure(Long orderId, BusinessException exception) {
+        if (exception.getErrorCode().name().startsWith("PAYMENT")) {
+            orderWorkflowAccess.markFailed(orderId);
+            recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
+            auditRecorder.record(orderId, "PAYMENT_FAILED", exception.getMessage());
+            return;
+        }
+
+        if (exception.getErrorCode().name().startsWith("SETTLEMENT")) {
+            orderWorkflowAccess.markFailed(orderId);
+            recordStep(orderId, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.FAILED, exception.getMessage());
+            PaymentResponse compensationResult = paymentApplication.cancelLatestApprovedPayment(
+                    orderId,
+                    "Settlement failure compensation"
+            );
+            orderWorkflowAccess.markCancelled(orderId);
+            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.SUCCESS,
+                    "Payment cancelled: paymentId=" + compensationResult.paymentId());
+            auditRecorder.record(orderId, "SETTLEMENT_FAILED_COMPENSATED", exception.getMessage());
+            return;
+        }
+
+        if (exception.getErrorCode().name().startsWith("NOTIFICATION")) {
+            orderWorkflowAccess.markFailed(orderId);
+            recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.FAILED, exception.getMessage());
+            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
+                    "Notification compensation policy is not finalized yet");
+            auditRecorder.record(orderId, "NOTIFICATION_FAILED", exception.getMessage());
+        }
     }
 }

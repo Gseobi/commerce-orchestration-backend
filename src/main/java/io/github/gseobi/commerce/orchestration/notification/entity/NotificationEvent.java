@@ -1,19 +1,17 @@
 package io.github.gseobi.commerce.orchestration.notification.entity;
 
-import io.github.gseobi.commerce.orchestration.common.domain.BaseTimeEntity;
-import io.github.gseobi.commerce.orchestration.order.entity.Order;
+import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "notification_events")
 public class NotificationEvent extends BaseTimeEntity {
@@ -22,9 +20,8 @@ public class NotificationEvent extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -39,30 +36,10 @@ public class NotificationEvent extends BaseTimeEntity {
     protected NotificationEvent() {
     }
 
-    public NotificationEvent(Order order, NotificationEventStatus status, String channel, String payload) {
-        this.order = order;
+    public NotificationEvent(Long orderId, NotificationEventStatus status, String channel, String payload) {
+        this.orderId = orderId;
         this.status = status;
         this.channel = channel;
         this.payload = payload;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public NotificationEventStatus getStatus() {
-        return status;
-    }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public String getPayload() {
-        return payload;
     }
 }

@@ -2,43 +2,31 @@ package io.github.gseobi.commerce.orchestration.order.service;
 
 import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
-import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
-import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
+import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
+import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderDetailResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
 import io.github.gseobi.commerce.orchestration.order.entity.Order;
 import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
 import io.github.gseobi.commerce.orchestration.order.repository.OrderRepository;
-import io.github.gseobi.commerce.orchestration.payment.entity.Payment;
-import io.github.gseobi.commerce.orchestration.payment.repository.PaymentRepository;
-import io.github.gseobi.commerce.orchestration.settlement.entity.Settlement;
-import io.github.gseobi.commerce.orchestration.settlement.repository.SettlementRepository;
+import io.github.gseobi.commerce.orchestration.payment.api.PaymentApplication;
+import io.github.gseobi.commerce.orchestration.settlement.api.SettlementApplication;
 import java.math.BigDecimal;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class OrderService {
+class OrderService implements OrderWorkflowAccess {
 
     private final OrderRepository orderRepository;
-    private final PaymentRepository paymentRepository;
-    private final SettlementRepository settlementRepository;
-    private final NotificationEventRepository notificationEventRepository;
-
-    public OrderService(
-            OrderRepository orderRepository,
-            PaymentRepository paymentRepository,
-            SettlementRepository settlementRepository,
-            NotificationEventRepository notificationEventRepository
-    ) {
-        this.orderRepository = orderRepository;
-        this.paymentRepository = paymentRepository;
-        this.settlementRepository = settlementRepository;
-        this.notificationEventRepository = notificationEventRepository;
-    }
+    private final PaymentApplication paymentApplication;
+    private final SettlementApplication settlementApplication;
+    private final NotificationApplication notificationApplication;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -55,39 +43,85 @@ public class OrderService {
 
     public OrderDetailResponse getOrderDetail(Long orderId) {
         Order order = getOrderEntity(orderId);
-        List<Payment> payments = paymentRepository.findAllByOrderId(orderId);
-        List<Settlement> settlements = settlementRepository.findAllByOrderId(orderId);
-        List<NotificationEvent> notificationEvents = notificationEventRepository.findAllByOrderId(orderId);
-        return OrderDetailResponse.of(order, payments, settlements, notificationEvents);
+        return OrderDetailResponse.of(
+                order,
+                paymentApplication.getPaymentStatuses(orderId),
+                settlementApplication.getSettlementStatuses(orderId),
+                notificationApplication.getNotificationStatuses(orderId)
+        );
     }
 
-    public Order getOrderEntity(Long orderId) {
+    @Override
+    public OrderExecutionView getOrderExecutionView(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        return new OrderExecutionView(
+                order.getId(),
+                order.getStatus().name(),
+                order.getTotalAmount(),
+                order.getDescription()
+        );
+    }
+
+    private Order getOrderEntity(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     @Transactional
-    public Order markPaymentPending(Order order) {
-        order.changeStatus(OrderStatus.PAYMENT_PENDING);
-        return order;
+    @Override
+    public void markPaymentPending(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        order.transitionTo(OrderStatus.PAYMENT_PENDING);
     }
 
     @Transactional
-    public Order markPaid(Order order) {
-        order.changeStatus(OrderStatus.PAID);
-        return order;
+    @Override
+    public void markPaid(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        order.transitionTo(OrderStatus.PAID);
     }
 
     @Transactional
-    public Order markSettlementRequested(Order order) {
-        order.changeStatus(OrderStatus.SETTLEMENT_REQUESTED);
-        return order;
+    @Override
+    public void markSettlementRequested(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        order.transitionTo(OrderStatus.SETTLEMENT_REQUESTED);
     }
 
     @Transactional
-    public Order markNotificationRequested(Order order) {
-        order.changeStatus(OrderStatus.NOTIFICATION_REQUESTED);
-        return order;
+    @Override
+    public void markNotificationRequested(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        order.transitionTo(OrderStatus.NOTIFICATION_REQUESTED);
+    }
+
+    @Transactional
+    @Override
+    public void markCompleted(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        order.transitionTo(OrderStatus.COMPLETED);
+    }
+
+    @Transactional
+    @Override
+    public void markFailed(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        if (order.getStatus() != OrderStatus.FAILED) {
+            order.transitionTo(OrderStatus.FAILED);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void markCancelled(Long orderId) {
+        Order order = getOrderEntity(orderId);
+        if (order.getStatus() == OrderStatus.FAILED) {
+            order.transitionTo(OrderStatus.CANCELLED);
+            return;
+        }
+        if (order.getStatus() != OrderStatus.CANCELLED) {
+            order.transitionTo(OrderStatus.CANCELLED);
+        }
     }
 
     private void validateCreateOrderRequest(CreateOrderRequest request) {

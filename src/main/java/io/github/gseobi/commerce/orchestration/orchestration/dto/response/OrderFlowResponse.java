@@ -1,7 +1,7 @@
 package io.github.gseobi.commerce.orchestration.orchestration.dto.response;
 
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStep;
-import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,7 +12,12 @@ public record OrderFlowResponse(
         List<OutboxResponse> outboxEvents
 ) {
 
-    public static OrderFlowResponse of(Long orderId, String orderStatus, List<OrchestrationStep> steps, List<OutboxEvent> outboxEvents) {
+    public static OrderFlowResponse of(
+            Long orderId,
+            String orderStatus,
+            List<OrchestrationStep> steps,
+            List<OutboxEventSummary> outboxEvents
+    ) {
         return new OrderFlowResponse(
                 orderId,
                 orderStatus,
@@ -26,12 +31,14 @@ public record OrderFlowResponse(
                         .toList(),
                 outboxEvents.stream()
                         .map(event -> new OutboxResponse(
-                                event.getId(),
-                                event.getTopic(),
-                                event.getEventType(),
-                                event.getStatus().name(),
-                                event.getPayload(),
-                                event.getCreatedAt()))
+                                event.outboxEventId(),
+                                event.topic(),
+                                event.eventType(),
+                                event.status(),
+                                event.payload(),
+                                event.createdAt(),
+                                event.publishedAt(),
+                                event.failureReason()))
                         .toList()
         );
     }
@@ -51,7 +58,9 @@ public record OrderFlowResponse(
             String eventType,
             String status,
             String payload,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            LocalDateTime publishedAt,
+            String failureReason
     ) {
     }
 }

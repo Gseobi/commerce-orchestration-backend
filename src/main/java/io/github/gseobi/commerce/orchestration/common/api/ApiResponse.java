@@ -1,5 +1,8 @@
 package io.github.gseobi.commerce.orchestration.common.api;
 
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface
 public record ApiResponse<T>(
         boolean success,
         String code,

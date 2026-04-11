@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> {
 
     List<OutboxEvent> findAllByOrderIdOrderByIdAsc(Long orderId);
+
+    List<OutboxEvent> findTop100ByStatusOrderByIdAsc(io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus status);
 }

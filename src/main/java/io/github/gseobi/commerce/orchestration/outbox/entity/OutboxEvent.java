@@ -1,19 +1,18 @@
 package io.github.gseobi.commerce.orchestration.outbox.entity;
 
-import io.github.gseobi.commerce.orchestration.common.domain.BaseTimeEntity;
-import io.github.gseobi.commerce.orchestration.order.entity.Order;
+import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "outbox_events")
 public class OutboxEvent extends BaseTimeEntity {
@@ -22,9 +21,8 @@ public class OutboxEvent extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
     @Column(nullable = false, length = 100)
     private String topic;
@@ -39,38 +37,31 @@ public class OutboxEvent extends BaseTimeEntity {
     @Column(nullable = false, length = 50)
     private OutboxStatus status;
 
+    @Column
+    private LocalDateTime publishedAt;
+
+    @Column(length = 500)
+    private String failureReason;
+
     protected OutboxEvent() {
     }
 
-    public OutboxEvent(Order order, String topic, String eventType, String payload, OutboxStatus status) {
-        this.order = order;
+    public OutboxEvent(Long orderId, String topic, String eventType, String payload, OutboxStatus status) {
+        this.orderId = orderId;
         this.topic = topic;
         this.eventType = eventType;
         this.payload = payload;
         this.status = status;
     }
 
-    public Long getId() {
-        return id;
+    public void markPublished() {
+        this.status = OutboxStatus.PUBLISHED;
+        this.publishedAt = LocalDateTime.now();
+        this.failureReason = null;
     }
 
-    public Order getOrder() {
-        return order;
-    }
-
-    public String getTopic() {
-        return topic;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public OutboxStatus getStatus() {
-        return status;
+    public void markFailed(String failureReason) {
+        this.status = OutboxStatus.FAILED;
+        this.failureReason = failureReason;
     }
 }

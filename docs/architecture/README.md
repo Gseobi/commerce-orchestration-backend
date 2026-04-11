@@ -1,6 +1,6 @@
 # Architecture Notes
 
-이 디렉터리는 commerce orchestration backend의 상위 구조를 설명하기 위한 문서입니다.
+이 디렉터리는 commerce orchestration backend의 상위 구조와 현재 코드가 어떤 경계를 의도하는지 설명합니다.
 
 현재 architecture 자산은 아래 파일을 기준으로 관리합니다.
 
@@ -10,12 +10,23 @@
 
 `README.md`의 Architecture Overview 섹션은 위 자산을 그대로 참조합니다.
 
-현재 코드 스캐폴드는 아래 구조를 설명하는 데 초점을 둡니다.
+## 현재 구조 원칙
 
-- `OrderController`는 public API 진입점 역할만 담당
-- `CommerceOrchestrationService`가 전체 order lifecycle flow 제어
-- `payment`, `settlement`, `notification`은 내부 단계 도메인으로 분리
-- `outbox`는 Kafka publish 확장 지점 역할
-- `audit`는 운영 추적 이력을 남길 수 있는 저장소 역할
+- `OrderController`는 주문 관련 public API 진입점입니다.
+- `AuthController`는 데모용 JWT 발급을 위한 보조 진입점입니다.
+- `CommerceOrchestrationService`는 전체 flow control을 담당합니다.
+- `OrderService`, `PaymentService`, `SettlementService`, `NotificationService`는 각자 자기 repository를 내부적으로 소유합니다.
+- `OutboxService`, `OutboxPublisherService`는 이벤트 저장과 발행을 나눠 담당합니다.
+- `AuditService`는 운영 추적 로그를 남깁니다.
 
-실제 다이어그램과 코드 사이 차이는 이후 구현 진행에 따라 점진적으로 맞춰 갈 예정입니다.
+## 경계 관점에서 중요한 점
+
+- orchestration은 다른 domain의 repository를 직접 주입받지 않습니다.
+- order 상세 조회도 payment / settlement / notification repository를 직접 읽지 않고 각 domain service를 통해 조회합니다.
+- repository 패키지를 외부로 export하는 방식보다, 필요한 협력 메서드를 service 경계에 두는 방향을 우선합니다.
+
+## 현재 다이어그램과 코드의 관계
+
+- 다이어그램은 중앙 orchestration, domain 분리, outbox 확장성을 설명하는 데 초점을 둡니다.
+- 실제 코드는 JWT 보호, Compose 기반 로컬 인프라, CI, outbox publisher scheduler까지 일부 더 진행된 상태입니다.
+- 반면 외부 payment provider, retry/backoff, integration test는 아직 후속 단계입니다.

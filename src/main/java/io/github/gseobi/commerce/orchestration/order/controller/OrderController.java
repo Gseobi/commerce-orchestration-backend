@@ -1,12 +1,13 @@
 package io.github.gseobi.commerce.orchestration.order.controller;
 
 import io.github.gseobi.commerce.orchestration.common.api.ApiResponse;
-import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
-import io.github.gseobi.commerce.orchestration.orchestration.service.CommerceOrchestrationService;
+import io.github.gseobi.commerce.orchestration.order.api.OrderFacade;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderDetailResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
-import io.github.gseobi.commerce.orchestration.order.service.OrderService;
+import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,36 +17,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderService orderService;
-    private final CommerceOrchestrationService commerceOrchestrationService;
-
-    public OrderController(
-            OrderService orderService,
-            CommerceOrchestrationService commerceOrchestrationService
-    ) {
-        this.orderService = orderService;
-        this.commerceOrchestrationService = commerceOrchestrationService;
-    }
+    private final OrderFacade orderFacade;
 
     @PostMapping
-    public ApiResponse<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
-        return ApiResponse.success(orderService.createOrder(request));
+    public ApiResponse<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+        return ApiResponse.success(orderFacade.createOrder(request));
     }
 
     @PostMapping("/{orderId}/orchestrate")
     public ApiResponse<OrderFlowResponse> orchestrate(@PathVariable Long orderId) {
-        return ApiResponse.success(commerceOrchestrationService.orchestrate(orderId));
+        return ApiResponse.success(orderFacade.orchestrate(orderId));
     }
 
     @GetMapping("/{orderId}")
     public ApiResponse<OrderDetailResponse> getOrder(@PathVariable Long orderId) {
-        return ApiResponse.success(orderService.getOrderDetail(orderId));
+        return ApiResponse.success(orderFacade.getOrderDetail(orderId));
     }
 
     @GetMapping("/{orderId}/flow")
     public ApiResponse<OrderFlowResponse> getOrderFlow(@PathVariable Long orderId) {
-        return ApiResponse.success(commerceOrchestrationService.getOrderFlow(orderId));
+        return ApiResponse.success(orderFacade.getOrderFlow(orderId));
     }
 }

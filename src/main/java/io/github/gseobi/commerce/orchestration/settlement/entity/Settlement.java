@@ -1,19 +1,17 @@
 package io.github.gseobi.commerce.orchestration.settlement.entity;
 
-import io.github.gseobi.commerce.orchestration.common.domain.BaseTimeEntity;
-import io.github.gseobi.commerce.orchestration.order.entity.Order;
+import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "settlements")
 public class Settlement extends BaseTimeEntity {
@@ -22,9 +20,8 @@ public class Settlement extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -36,25 +33,9 @@ public class Settlement extends BaseTimeEntity {
     protected Settlement() {
     }
 
-    public Settlement(Order order, SettlementStatus status, String memo) {
-        this.order = order;
+    public Settlement(Long orderId, SettlementStatus status, String memo) {
+        this.orderId = orderId;
         this.status = status;
         this.memo = memo;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public SettlementStatus getStatus() {
-        return status;
-    }
-
-    public String getMemo() {
-        return memo;
     }
 }
