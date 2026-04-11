@@ -3,7 +3,7 @@
 ## 1. 현재 검증 기준
 
 이 문서는 현재 레포지토리 기준선에서 어떤 검증을 실제로 수행하는지 정리합니다.  
-존재하지 않는 테스트 범위는 구현된 것처럼 적지 않습니다.
+존재하지 않는 테스트 범위는 구현된 것처럼 적지 않고, 설계 TODO는 이 문서가 아니라 `design-notes`에서 다룹니다.
 
 ## 2. 로컬 검증 명령
 
@@ -67,6 +67,7 @@ artifact 이름도 실제 workflow와 맞춰 아래를 사용합니다.
 ## 6. 아직 검증하지 않는 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip
-- notification 운영 정책의 세분화된 채널별 재처리
-- admin 수동 재처리 API
+- notification 운영 정책의 세분화된 채널별 재처리/운영 규칙
+- dead-letter 운영 자동화
+- admin 레벨 재처리/재검증 API 고도화
 - refresh token / key rotation / user store 연동

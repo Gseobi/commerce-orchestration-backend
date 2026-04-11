@@ -12,6 +12,9 @@
 - repository 패키지를 외부 공개하기보다 service 경계를 통해 협력한다.
 - 주문 상태, orchestration step, outbox event, audit log를 같이 남겨 운영 가시성을 확보한다.
 
+이 문서는 현재 설계 기준과 남은 TODO를 정리합니다.  
+이미 실제로 검증된 범위는 [Test Report](test-report.md)를 기준으로 봅니다.
+
 ## 2. 현재 구조 요약
 
 ### Order
@@ -127,7 +130,7 @@
 ## 9. 현재 남아 있는 TODO
 
 - payment provider 실제 연동 고도화
-- notification 운영 정책 구체화
+- notification 운영 정책의 세부 고도화
 - dead-letter 운영 자동화
 - refresh token / key rotation / user store
-- admin 레벨 재처리/재검증 API
+- admin 레벨 재처리/재검증 API 고도화

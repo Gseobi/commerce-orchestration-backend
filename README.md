@@ -3,12 +3,27 @@
 주문 생성 이후 결제, 정산, 알림 같은 후속 작업을 하나의 흐름으로 제어하고,  
 그 진행 상태와 실패 분기를 코드와 데이터로 추적할 수 있게 만드는 Spring Boot 기반 backend입니다.
 
-이 프로젝트는 API 개수를 늘리는 것보다 아래 두 가지를 우선합니다.
+이 프로젝트는 CRUD 화면 수나 엔드포인트 수보다 아래를 먼저 증명하는 데 초점을 둡니다.
 
 - `CommerceOrchestrationService`를 중심으로 order lifecycle을 명시적으로 제어하는 것
-- 운영 관점에서 `order status`, `orchestration step`, `outbox event`, `audit log`를 함께 남기는 것
+- 상태 전이, 실패 분기, 운영 복구 지점을 `order status`, `orchestration step`, `outbox event`, `audit log`로 남기는 것
+- settlement 실패와 notification 실패를 같은 오류로 뭉개지 않고 서로 다른 보상 경로로 다루는 것
 
-## 1. 현재 기준선
+## 1. 이 레포가 현재 증명하는 것
+
+- 주문 이후 후속 작업을 controller 단위로 흩뿌리지 않고 orchestration 서비스에서 흐름 중심으로 제어합니다.
+- 주문 상태 전이는 묵시적 처리 대신 명시적 상태 변경으로 기록됩니다.
+- outbox를 통해 후속 이벤트 발행을 분리하고, retry/dead-letter 전이를 코드와 데이터로 추적합니다.
+- notification 실패는 단순 롤백이 아니라 `AUTO_RETRY`, `MANUAL_INTERVENTION`, `IGNORE` 정책으로 분기합니다.
+- 운영자는 전체 orchestration 재실행이 아니라 실패한 하위 처리 단위를 admin 재처리 API로 복구할 수 있습니다.
+
+## 2. 문제 정의
+
+주문 생성 이후에는 결제 승인, 정산 요청, 알림 발송, 이벤트 발행, 실패 복구가 이어집니다.  
+이 레포는 이 후속 흐름을 여러 controller와 ad-hoc service 호출에 분산시키지 않고,  
+명시적 상태 전이와 운영 복구 경로가 보이는 orchestration backend로 정리하는 것을 목표로 합니다.
+
+현재 기준선은 아래와 같습니다.
 
 - 비즈니스 외부 진입점은 `OrderController`입니다.
 - 인증용 `AuthController`는 데모 JWT 발급 보조 엔드포인트만 제공합니다.
@@ -18,9 +33,9 @@
 - outbox는 `READY -> RETRY_WAIT -> PUBLISHED / DEAD_LETTER` 상태를 사용합니다.
 - settlement 실패와 notification 실패는 동일 보상 정책으로 처리하지 않습니다.
 - admin은 `notification-events`, `outbox-events` 단위로 명시적 재처리를 수행할 수 있습니다.
-- DB 스키마의 소스 오브 트루스는 이제 Flyway migration입니다.
+- DB 스키마의 소스 오브 트루스는 Flyway migration입니다.
 
-## 2. 아키텍처 요약
+## 3. 핵심 설계
 
 ### Business Flow
 
@@ -57,7 +72,14 @@
 - 다른 domain의 repository를 직접 주입해서 흐름을 제어하지 않습니다.
 - repository 패키지를 외부에 공개하는 방식보다 service 경계를 통해 협력하는 방식을 우선합니다.
 
-## 3. Payment Provider 구조
+### 왜 이런 구조를 택했는가
+
+- 흐름 제어를 한곳에 모아 order lifecycle의 분기와 종료 조건을 읽기 쉽게 유지합니다.
+- 상태 전이와 보상 경로를 명시적으로 남겨 "어디서 실패했고 어떻게 복구할 수 있는가"를 추적 가능하게 만듭니다.
+- outbox를 별도 관리해 후속 publish의 재시도와 dead-letter 전환을 비즈니스 처리와 분리합니다.
+- notification 실패를 단순 rollback으로 처리하지 않고 운영 정책과 복구 방식의 차이를 드러냅니다.
+
+## 4. Payment Provider 구조
 
 `PaymentProviderClient`는 두 구현 중 하나가 설정으로 선택됩니다.
 
@@ -70,7 +92,7 @@
 
 현재 external 구현은 실제 연동을 붙일 수 있는 골격과 오류 매핑까지 포함하지만, provider별 상세 error mapping과 retry policy는 후속 과제입니다.
 
-## 4. Outbox / Compensation 기준
+## 5. Outbox / Compensation 기준
 
 ### Outbox
 
@@ -99,7 +121,52 @@ notification 운영 정책은 현재 1차 분리까지만 완료된 상태이며
 
 현재 admin 재처리는 전체 orchestration 재실행이 아니라, 실패한 하위 처리 단위를 명시적으로 복구하는 방식입니다.
 
-## 5. 로컬 실행
+## 6. 현재 검증 범위
+
+이 레포는 "흐름 제어와 실패 처리 구조가 실제로 동작하는가"를 현재 기준으로 아래까지 검증합니다.
+
+- `./gradlew compileJava`
+  메인 소스 컴파일 확인
+- `./gradlew test`
+  H2 + MockMvc 중심 단위/흐름 검증
+- `./gradlew integrationTest`
+  PostgreSQL/Kafka Testcontainers 기반 통합 검증
+
+현재 실제 구현 및 검증 범위는 아래를 포함합니다.
+
+- order create / detail / flow API
+- JWT 발급 및 `/api/**` 보호
+- orchestration happy path
+- settlement failure compensation
+- notification failure 분기와 ignore policy
+- admin notification / outbox reprocessing
+- outbox publish 상태 전이
+- PostgreSQL / Kafka 기반 outbox happy path integration test
+- PostgreSQL / Kafka 기반 outbox retry -> dead-letter integration test
+
+GitHub Actions도 같은 기준으로 아래 두 job을 수행합니다.
+
+- `build-and-test`
+  `compileJava`, `test`, unit report upload
+- `integration-test`
+  `integrationTest`, integration report upload
+
+즉, 이 레포는 "주문 이후 흐름을 코드상으로 설계했다" 수준이 아니라,  
+"상태 전이, 보상 분기, outbox retry/dead-letter, admin 복구가 테스트와 CI 기준선 안에서 검증된다"는 점까지 보여줍니다.
+
+## 7. 아직 남은 범위
+
+아래는 현재도 후속 과제로 유지하는 항목입니다.
+
+- 실제 payment provider별 timeout / retry / error mapping 고도화
+- notification 운영 정책의 세부 고도화
+- dead-letter 이벤트의 운영 자동화
+- refresh token / key rotation / user store 연동
+- admin 레벨 재처리/재검증 API 고도화
+
+짧게 말해 이 프로젝트는 CRUD showcase보다는 orchestration, explicit state transition, failure handling, 운영 복구 지점을 보여주는 포트폴리오 성격이 강합니다.
+
+## 8. 로컬 실행
 
 ### Prerequisites
 
@@ -131,12 +198,13 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 ./gradlew bootRun
 ```
 
-## 6. DB Schema / Migration
+## 9. DB Schema / Migration
 
 현재 DB 스키마는 Flyway migration으로 관리합니다.
 
 - 초기 스키마: [V1__init.sql](/Users/gseobi/workspace/commerce-orchestration-backend/src/main/resources/db/migration/V1__init.sql)
 - outbox retry/dead-letter 변경: [V2__outbox_retry_dead_letter.sql](/Users/gseobi/workspace/commerce-orchestration-backend/src/main/resources/db/migration/V2__outbox_retry_dead_letter.sql)
+- notification admin policy 변경: [V3__notification_admin_policy.sql](/Users/gseobi/workspace/commerce-orchestration-backend/src/main/resources/db/migration/V3__notification_admin_policy.sql)
 
 애플리케이션 기본/로컬/통합 테스트 프로필은 Flyway를 적용한 뒤 JPA `ddl-auto=validate`로 매핑 정합성을 확인합니다.  
 단위 테스트용 `test` 프로필만 H2 `create-drop`과 `flyway disabled`를 유지합니다.
@@ -146,35 +214,7 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - [SQL Guide](docs/sql/README.md)
 - [Outbox Operations](docs/sql/outbox-operations.sql)
 
-## 7. 테스트 / CI
-
-### Local Commands
-
-- 컴파일 확인: `./gradlew compileJava`
-- unit 성격 테스트: `./gradlew test`
-- PostgreSQL/Kafka Testcontainers 통합 테스트: `./gradlew integrationTest`
-
-### Current Coverage
-
-- order create / detail / flow API
-- JWT 발급 및 `/api/**` 보호
-- orchestration happy path
-- settlement failure compensation
-- notification failure 분기
-- outbox publish unit test
-- PostgreSQL / Kafka 기반 outbox happy path integration test
-- PostgreSQL / Kafka 기반 outbox retry -> dead-letter integration test
-
-### GitHub Actions
-
-현재 workflow는 아래 두 job을 사용합니다.
-
-- `build-and-test`
-  `compileJava`, `test`, unit report upload
-- `integration-test`
-  `integrationTest`, integration report upload
-
-## 8. Notification 운영 정책
+## 10. Notification 운영 정책
 
 - `AUTO_RETRY`
   일시적 실패로 간주하며 notification event를 `RETRY_SCHEDULED`로 남깁니다.
@@ -190,15 +230,7 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - `FAIL_NOTIFICATION_IGNORE`
 - `FAIL_NOTIFICATION`
 
-## 9. 남아 있는 TODO
-
-- 실제 payment provider별 timeout / retry / error mapping 구체화
-- notification 운영 정책 세분화
-- admin 재처리 / 재검증 API
-- refresh token / key rotation / user store 연동
-- dead-letter 이벤트의 운영 자동화
-
-## 10. Docs
+## 11. Docs
 
 - [Architecture Notes](docs/architecture/README.md)
 - [Flow Notes](docs/flows/README.md)
