@@ -64,8 +64,14 @@ artifact 이름도 실제 workflow와 맞춰 아래를 사용합니다.
 - `gradle-unit-test-reports`
 - `gradle-integration-test-reports`
 
-현재 로컬 재검증에서는 `test`, `integrationTest`가 통과했습니다.  
-다만 GitHub Actions에는 실패 이력이 남아 있으므로, 이 문서는 "현재 workflow가 무엇을 돌리는가"와 "로컬에서 무엇을 재검증했는가"를 구분해서 기록합니다.
+이번 정리에서 `integrationTest` 실패 원인은 Docker 부재 자체보다 Kafka Testcontainers 조합 문제로 확인했습니다.  
+기존 테스트 지원 코드는 `org.testcontainers.containers.KafkaContainer`와 `apache/kafka-native:3.8.0` 이미지를 함께 쓰고 있었고, GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerError` / `IllegalStateException`으로 드러났습니다.
+
+현재는 `org.testcontainers.kafka.KafkaContainer`로 정합성을 맞췄고, 아래 기준으로 재검증했습니다.
+
+- `./gradlew clean test --rerun-tasks`
+- `./gradlew clean integrationTest --rerun-tasks --stacktrace`
+- `./gradlew integrationTest --rerun-tasks --stacktrace`
 
 ## 6. 아직 검증하지 않는 범위
 

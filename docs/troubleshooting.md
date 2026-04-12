@@ -70,9 +70,10 @@
 
 ## 12. GitHub Actions `integration-test`가 실패하는 경우
 
-- 현재 failure surface는 business logic보다 Docker/Testcontainers runner 상태일 가능성이 큽니다.
-- 이번 정리에서 workflow에 `docker info`와 `--stacktrace`를 추가해 원인을 더 직접적으로 남기도록 조정했습니다.
-- Actions에서 실패하면 먼저 Docker availability 단계와 Testcontainers 초기화 예외를 확인합니다.
+- 이번 정리에서 확인된 직접 원인은 Docker 부재보다 Kafka Testcontainers 조합 문제였습니다.
+- 기존 코드가 `org.testcontainers.containers.KafkaContainer`와 `apache/kafka-native:3.8.0` 이미지를 함께 사용하고 있었고, CI에서는 초기화 단계 `ExceptionInInitializerError` / `IllegalStateException`으로 실패했습니다.
+- 현재는 `org.testcontainers.kafka.KafkaContainer`로 정합성을 맞췄습니다.
+- 그래도 Actions에서 다시 실패하면 `docker info` 단계와 Testcontainers 초기화 stacktrace를 먼저 확인합니다.
 
 ## 13. module boundary warning과 구조 문제를 구분하고 싶은 경우
 

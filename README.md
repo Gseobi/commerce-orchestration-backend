@@ -20,9 +20,9 @@
 - 의존성 메모:
   MVC + JPA + Kafka + Flyway + WebClient + Modulith test support가 같이 보여 폭이 넓어 보일 수 있지만, 이번 정리에서 현재 코드에 직접 사용 흔적이 없는 batch, oauth2 client/server, thymeleaf, webservices, spring-boot-admin, kafka-streams 계열은 제거했습니다.
 - 현재 로컬 검증:
-  `./gradlew test`, `./gradlew integrationTest` 통과
+  `./gradlew clean test --rerun-tasks`, `./gradlew clean integrationTest --rerun-tasks --stacktrace`, `./gradlew integrationTest --rerun-tasks --stacktrace` 기준 통과
 - 현재 CI 상태:
-  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, 이번 정리에서 Docker/Testcontainers 진단 로그와 실행 옵션을 보강했습니다.
+  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, 이번 정리에서 `KafkaContainer` 패키지/이미지 조합 정합성 문제를 수정했습니다. 기존 Docker/Testcontainers 진단 로그 보강도 유지합니다.
 
 ## 2. 이 레포가 현재 증명하는 것
 
