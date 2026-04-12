@@ -70,11 +70,10 @@
 
 ## 12. GitHub Actions `integration-test`가 실패하는 경우
 
-- 이번 정리에서 확인된 직접 원인은 Docker 부재보다 Kafka Testcontainers 조합 문제였습니다.
-- 기존 코드가 `org.testcontainers.containers.KafkaContainer`와 `apache/kafka-native:3.8.0` 이미지를 함께 사용하고 있었고, CI에서는 초기화 단계 `ExceptionInInitializerError` / `IllegalStateException`으로 실패했습니다.
-- 현재는 `org.testcontainers.kafka.KafkaContainer`로 정합성을 맞췄습니다.
-- Codex 로컬 환경에서는 Docker 부재로 PostgreSQL/Kafka Testcontainers를 띄우지 못해 schema validate까지 재현하지 못했습니다.
-- 그래서 현재는 GitHub Actions가 실패할 때 XML/HTML report와 keyword dump에서 정확한 `SchemaManagementException` / schema mismatch 문구를 먼저 추출하는 기준선으로 정리했습니다.
+- Docker availability만 확인하지 말고, integration-test 시작 로그에서 Flyway가 실제로 어떤 JDBC URL/classpath migration을 보는지 같이 확인하는 편이 안전합니다.
+- 현재 integration-test 공통 지원 코드는 `spring.datasource.*`뿐 아니라 `spring.flyway.*`도 같은 Testcontainers PostgreSQL로 명시적으로 고정합니다.
+- 또한 Flyway migrate 직전/직후에 `flyway_schema_history`와 `information_schema.tables` 기준 테이블 목록을 로그로 남깁니다.
+- 그래서 CI에서 다시 `SchemaManagementException`이 나면 `audit_logs`가 migration 미적용인지, 다른 datasource/schema를 본 것인지 바로 구분할 수 있습니다.
 
 ## 13. module boundary warning과 구조 문제를 구분하고 싶은 경우
 

@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.BeforeAll;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -17,6 +18,7 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers(disabledWithoutDocker = true)
+@Import(IntegrationFlywayDiagnosticsConfig.class)
 public abstract class TestcontainersIntegrationSupport {
 
     protected static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
@@ -38,6 +40,12 @@ public abstract class TestcontainersIntegrationSupport {
         registry.add("spring.datasource.url", POSTGRESQL_CONTAINER::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRESQL_CONTAINER::getUsername);
         registry.add("spring.datasource.password", POSTGRESQL_CONTAINER::getPassword);
+        registry.add("spring.flyway.url", POSTGRESQL_CONTAINER::getJdbcUrl);
+        registry.add("spring.flyway.user", POSTGRESQL_CONTAINER::getUsername);
+        registry.add("spring.flyway.password", POSTGRESQL_CONTAINER::getPassword);
+        registry.add("spring.flyway.default-schema", () -> "public");
+        registry.add("spring.flyway.schemas", () -> "public");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
         registry.add("spring.kafka.bootstrap-servers", KAFKA_CONTAINER::getBootstrapServers);
     }
 
