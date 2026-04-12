@@ -5,13 +5,34 @@
 
 이 프로젝트는 pinned 상태에서 "주문 이후 orchestration을 어떻게 설계했고 어디까지 검증했는가"를 10초 안에 이해시키는 것을 우선합니다.
 
+핵심 포인트는 세 가지입니다.
+
+- 무엇을 제어하나:
+  order 이후 payment, settlement, notification, outbox publish를 하나의 orchestration 흐름으로 제어합니다.
+- 무엇을 증명하나:
+  explicit state transition, failure branching, compensation, admin reprocessing, Flyway + integration-test 기준선을 함께 보여줍니다.
+- 어디를 보면 되나:
+  먼저 이 README를 보고, 이어서 [Docs Index](docs/README.md), [Architecture Notes](docs/architecture/README.md), [Flow Notes](docs/flows/README.md)를 보면 됩니다.
+
 이 레포는 CRUD 화면 수나 엔드포인트 수보다 아래를 먼저 증명하는 데 초점을 둡니다.
 
 - `CommerceOrchestrationService`를 중심으로 order lifecycle을 명시적으로 제어하는 것
 - 상태 전이, 실패 분기, 운영 복구 지점을 `order status`, `orchestration step`, `outbox event`, `audit log`로 남기는 것
 - settlement 실패와 notification 실패를 같은 오류로 뭉개지 않고 서로 다른 보상 경로로 다루는 것
 
-## 1. Snapshot
+## 1. Start Here
+
+처음 보는 사람 기준 권장 읽기 순서는 아래입니다.
+
+1. [Docs Index](docs/README.md)
+2. [Architecture Notes](docs/architecture/README.md)
+3. [Flow Notes](docs/flows/README.md)
+4. [Design Notes](docs/design-notes.md)
+5. [Test Report](docs/test-report.md) / [Troubleshooting](docs/troubleshooting.md)
+
+추후 draw.io 기반 자료는 [Diagram Guide](docs/diagrams/README.md)에 정리한 위치/네이밍 기준에 맞춰 추가할 예정입니다.
+
+## 2. Snapshot
 
 - 역할:
   주문 생성 이후 payment, settlement, notification, outbox publish를 orchestration 관점에서 제어하는 backend
@@ -22,9 +43,9 @@
 - 현재 로컬 검증:
   `./gradlew clean test --rerun-tasks`, `./gradlew clean integrationTest --rerun-tasks --stacktrace`, `./gradlew integrationTest --rerun-tasks --stacktrace` 기준 통과
 - 현재 CI 상태:
-  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, 이번 정리에서 `KafkaContainer` 패키지/이미지 조합 정합성 문제를 수정했습니다. 기존 Docker/Testcontainers 진단 로그 보강도 유지합니다.
+  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, 이번 정리 기준에서 green 기준선을 다시 확보했습니다.
 
-## 2. 이 레포가 현재 증명하는 것
+## 3. 이 레포가 현재 증명하는 것
 
 - 주문 이후 후속 작업을 controller 단위로 흩뿌리지 않고 orchestration 서비스에서 흐름 중심으로 제어합니다.
 - 주문 상태 전이는 묵시적 처리 대신 명시적 상태 변경으로 기록됩니다.
@@ -32,7 +53,7 @@
 - notification 실패는 단순 롤백이 아니라 `AUTO_RETRY`, `MANUAL_INTERVENTION`, `IGNORE` 정책으로 분기합니다.
 - 운영자는 전체 orchestration 재실행이 아니라 실패한 하위 처리 단위를 admin 재처리 API로 복구할 수 있습니다.
 
-## 3. 문제 정의
+## 4. 문제 정의
 
 주문 생성 이후에는 결제 승인, 정산 요청, 알림 발송, 이벤트 발행, 실패 복구가 이어집니다.  
 이 레포는 이 후속 흐름을 여러 controller와 ad-hoc service 호출에 분산시키지 않고,  
@@ -50,7 +71,7 @@
 - admin은 `notification-events`, `outbox-events` 단위로 명시적 재처리를 수행할 수 있습니다.
 - DB 스키마의 소스 오브 트루스는 Flyway migration입니다.
 
-## 4. 핵심 설계
+## 5. 핵심 설계
 
 ### Business Flow
 
@@ -94,7 +115,7 @@
 - outbox를 별도 관리해 후속 publish의 재시도와 dead-letter 전환을 비즈니스 처리와 분리합니다.
 - notification 실패를 단순 rollback으로 처리하지 않고 운영 정책과 복구 방식의 차이를 드러냅니다.
 
-## 5. Payment Provider 구조
+## 6. Payment Provider 구조
 
 `PaymentProviderClient`는 두 구현 중 하나가 설정으로 선택됩니다.
 
@@ -107,7 +128,7 @@
 
 현재 external 구현은 실제 연동을 붙일 수 있는 골격과 오류 매핑까지 포함하지만, provider별 상세 error mapping과 retry policy는 후속 과제입니다.
 
-## 6. Outbox / Compensation 기준
+## 7. Outbox / Compensation 기준
 
 ### Outbox
 
@@ -136,7 +157,7 @@ notification 운영 정책은 현재 1차 분리까지만 완료된 상태이며
 
 현재 admin 재처리는 전체 orchestration 재실행이 아니라, 실패한 하위 처리 단위를 명시적으로 복구하는 방식입니다.
 
-## 7. 현재 검증 범위
+## 8. 현재 검증 범위
 
 이 레포는 "흐름 제어와 실패 처리 구조가 실제로 동작하는가"를 현재 기준으로 아래까지 검증합니다.
 
@@ -166,10 +187,29 @@ GitHub Actions workflow도 아래 두 job을 수행합니다.
 - `integration-test`
   `integrationTest`, integration report upload
 
-이번 정리 시점의 로컬 재검증에서는 `test`, `integrationTest`가 모두 통과했습니다.  
-다만 GitHub Actions는 현재 실패 이력이 남아 있으므로, README에서는 "CI가 이미 안정적이다"라고 과장하지 않고 workflow 기준선과 로컬 검증 범위를 분리해서 표기합니다.
+이번 정리 시점의 로컬 재검증에서는 `test`, `integrationTest` 기준선을 다시 확인했습니다.  
+README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 레포인지"와 "어디까지 확인했는지"를 분리해 적습니다.
 
-## 8. 아직 남은 범위
+## 9. 문서와 다이어그램 위치
+
+- 문서 진입점:
+  [Docs Index](docs/README.md)
+- 구조 설명:
+  [Architecture Notes](docs/architecture/README.md)
+- 흐름 설명:
+  [Flow Notes](docs/flows/README.md)
+- 다이어그램 가이드:
+  [Diagram Guide](docs/diagrams/README.md)
+
+추후 아래 draw.io 자산이 같은 기준으로 보강될 예정입니다.
+
+- overall architecture
+- order orchestration flow
+- outbox retry / dead-letter flow
+- notification retry / manual intervention flow
+- table relation overview
+
+## 10. 아직 남은 범위
 
 아래는 현재도 후속 과제로 유지하는 항목입니다.
 
@@ -181,7 +221,7 @@ GitHub Actions workflow도 아래 두 job을 수행합니다.
 
 짧게 말해 이 프로젝트는 CRUD showcase보다는 orchestration, explicit state transition, failure handling, 운영 복구 지점을 보여주는 포트폴리오 성격이 강합니다.
 
-## 9. 로컬 실행
+## 11. 로컬 실행
 
 ### Prerequisites
 
@@ -213,7 +253,7 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 ./gradlew bootRun
 ```
 
-## 10. DB Schema / Migration
+## 12. DB Schema / Migration
 
 현재 DB 스키마는 Flyway migration으로 관리합니다.
 
@@ -229,7 +269,7 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - [SQL Guide](docs/sql/README.md)
 - [Outbox Operations](docs/sql/outbox-operations.sql)
 
-## 11. Notification 운영 정책
+## 13. Notification 운영 정책
 
 - `AUTO_RETRY`
   일시적 실패로 간주하며 notification event를 `RETRY_SCHEDULED`로 남깁니다.
@@ -245,11 +285,12 @@ PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 - `FAIL_NOTIFICATION_IGNORE`
 - `FAIL_NOTIFICATION`
 
-## 12. Docs
+## 14. Docs
 
 - [Docs Index](docs/README.md)
 - [Architecture Notes](docs/architecture/README.md)
 - [Flow Notes](docs/flows/README.md)
+- [Diagram Guide](docs/diagrams/README.md)
 - [Design Notes](docs/design-notes.md)
 - [Test Report](docs/test-report.md)
 - [Troubleshooting](docs/troubleshooting.md)

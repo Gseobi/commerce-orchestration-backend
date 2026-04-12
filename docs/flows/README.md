@@ -3,6 +3,8 @@
 현재 order lifecycle은 아래 순서를 따릅니다.
 이 문서는 텍스트 요약본이며, 추후 flow diagram이 들어와도 현재 설명 구조가 그대로 이어지도록 정리합니다.
 
+처음 보는 경우에는 [Architecture Notes](../architecture/README.md)로 구조를 먼저 본 뒤 이 문서를 읽는 편이 자연스럽습니다.
+
 1. JWT 발급
 2. 주문 생성
 3. orchestration 시작
@@ -10,6 +12,17 @@
 5. settlement 요청 + outbox event 생성
 6. notification 요청 + outbox event 생성
 7. 최종 완료 또는 실패 분기 처리
+
+## 추후 보강 예정 flow diagram
+
+- order orchestration flow
+  happy path 기준의 상태 전이와 step 기록 흐름
+- outbox retry / dead-letter flow
+  `READY -> RETRY_WAIT -> PUBLISHED / DEAD_LETTER` 전이와 retry metadata 갱신 흐름
+- notification retry / manual intervention flow
+  `AUTO_RETRY`, `MANUAL_INTERVENTION`, `IGNORE` 정책 분기와 admin recovery 흐름
+
+파일 네이밍과 설명 기준은 [Diagram Guide](../diagrams/README.md)를 따릅니다.
 
 ## Happy Path
 
