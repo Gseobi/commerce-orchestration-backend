@@ -68,7 +68,13 @@
 - `integrationTest`는 PostgreSQL / Kafka Testcontainers를 사용합니다.
 - 로컬에서는 `./gradlew test`와 `./gradlew integrationTest`를 구분해서 보는 편이 맞습니다.
 
-## 12. module boundary warning과 구조 문제를 구분하고 싶은 경우
+## 12. GitHub Actions `integration-test`가 실패하는 경우
+
+- 현재 failure surface는 business logic보다 Docker/Testcontainers runner 상태일 가능성이 큽니다.
+- 이번 정리에서 workflow에 `docker info`와 `--stacktrace`를 추가해 원인을 더 직접적으로 남기도록 조정했습니다.
+- Actions에서 실패하면 먼저 Docker availability 단계와 Testcontainers 초기화 예외를 확인합니다.
+
+## 13. module boundary warning과 구조 문제를 구분하고 싶은 경우
 
 - 현재 modulith warning은 일부 보류 상태입니다.
 - 하지만 cross-domain repository 직접 참조를 늘리지 않는 방향은 유지하고 있습니다.

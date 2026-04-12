@@ -1,6 +1,7 @@
 # Flow Notes
 
 현재 order lifecycle은 아래 순서를 따릅니다.
+이 문서는 텍스트 요약본이며, 추후 flow diagram이 들어와도 현재 설명 구조가 그대로 이어지도록 정리합니다.
 
 1. JWT 발급
 2. 주문 생성

@@ -64,6 +64,9 @@ artifact 이름도 실제 workflow와 맞춰 아래를 사용합니다.
 - `gradle-unit-test-reports`
 - `gradle-integration-test-reports`
 
+현재 로컬 재검증에서는 `test`, `integrationTest`가 통과했습니다.  
+다만 GitHub Actions에는 실패 이력이 남아 있으므로, 이 문서는 "현재 workflow가 무엇을 돌리는가"와 "로컬에서 무엇을 재검증했는가"를 구분해서 기록합니다.
+
 ## 6. 아직 검증하지 않는 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip

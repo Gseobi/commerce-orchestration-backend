@@ -1,12 +1,15 @@
 # Architecture Notes
 
 이 디렉터리는 현재 코드가 어떤 모듈 경계와 협력 방향을 의도하는지 설명합니다.
+이 문서는 텍스트 기준선이며, 추후 draw.io 기반 architecture/table 자료가 붙을 위치를 먼저 정리합니다.
 
 ## 아키텍처 자산
 
 - [draw.io 원본](../diagram/kafka_orchestration_backend_architecture.drawio)
 - [PNG 이미지](../images/kafka_orchestration_backend_architecture.png)
 - [PDF 문서](../pdf/kafka_orchestration_backend_architecture.pdf)
+
+현재 자산은 참조용이며, pinned 품질 기준의 정식 diagram/table 정리는 후속 작업으로 남겨 둡니다.
 
 ## 현재 구조 원칙
 
