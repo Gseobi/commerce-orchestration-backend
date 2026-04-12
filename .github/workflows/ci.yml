@@ -69,7 +69,23 @@ jobs:
       - name: Run integration tests
         id: integration
         continue-on-error: true
-        run: ./gradlew --no-daemon --stacktrace --info integrationTest
+        shell: bash
+        run: |
+          set +e
+          ./gradlew --no-daemon --stacktrace --info integrationTest
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Report integration exit code
+        if: always()
+        run: |
+          echo "integration exit code: ${{ steps.integration.outputs.exit_code }}"
+          {
+            echo "### integration-test result"
+            echo
+            echo "- exit code: ${{ steps.integration.outputs.exit_code }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Dump integration failure context
         if: always()
@@ -135,8 +151,10 @@ jobs:
             build/reports/tests/integrationTest
             build/test-results/integrationTest
 
-      - name: Fail if integration tests failed
-        if: steps.integration.outcome == 'failure'
+      - name: Propagate integration test failure after diagnostics
+        if: ${{ steps.integration.outputs.exit_code != '0' }}
         run: |
-          echo "integrationTest failed after dumping XML/HTML evidence"
+          echo "Propagating integration test failure after diagnostics"
+          echo "integration exit code: ${{ steps.integration.outputs.exit_code }}"
+          echo "artifacts: build/reports/tests/integrationTest, build/test-results/integrationTest"
           exit 1
