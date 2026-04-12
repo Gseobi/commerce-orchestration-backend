@@ -67,7 +67,63 @@ jobs:
         run: docker info
 
       - name: Run integration tests
-        run: ./gradlew --no-daemon --stacktrace integrationTest
+        id: integration
+        continue-on-error: true
+        run: ./gradlew --no-daemon --stacktrace --info integrationTest
+
+      - name: Dump integration failure context
+        if: always()
+        run: |
+          echo "== integration-test outcome =="
+          echo "${{ steps.integration.outcome }}"
+          echo
+          echo "== integration test result files =="
+          find build/test-results/integrationTest build/reports/tests/integrationTest -type f 2>/dev/null | sort || true
+          echo
+          echo "== failed integration test classes =="
+          rg -n "<testsuite|<testcase|failures=\"|errors=\"|skipped=\"" build/test-results/integrationTest 2>/dev/null || true
+          echo
+          echo "== schema / testcontainers keywords =="
+          rg -n -C 3 "Schema-validation|missing table|missing column|wrong column type|validate against schema|found \\[|but expecting|Could not find a valid Docker environment|Testcontainers|SchemaManagementException|EntityManagerFactory|Caused by:" \
+            build/test-results/integrationTest build/reports/tests/integrationTest 2>/dev/null || true
+          echo
+          echo "== caused by excerpt from HTML report =="
+          python3 - <<'PY'
+          from pathlib import Path
+          report_dir = Path("build/reports/tests/integrationTest")
+          if not report_dir.exists():
+              print("integration HTML report directory not found")
+              raise SystemExit(0)
+          text = ""
+          for path in sorted(report_dir.rglob("*.html")):
+              try:
+                  text += f"\n===== {path} =====\n" + path.read_text(encoding="utf-8", errors="ignore")
+              except Exception as exc:
+                  print(f"failed to read {path}: {exc}")
+          keywords = [
+              "Schema-validation",
+              "missing table",
+              "missing column",
+              "wrong column type",
+              "validate against schema",
+              "found [",
+              "but expecting",
+              "SchemaManagementException",
+              "EntityManagerFactory",
+              "Caused by:"
+          ]
+          lines = text.splitlines()
+          matched = False
+          for idx, line in enumerate(lines):
+              if any(keyword in line for keyword in keywords):
+                  matched = True
+                  start = max(0, idx - 20)
+                  end = min(len(lines), idx + 61)
+                  print("\n".join(lines[start:end]))
+                  print("\n" + "=" * 80 + "\n")
+          if not matched:
+              print("no schema-validation excerpt found in HTML report")
+          PY
 
       - name: Upload integration test reports
         if: always()
@@ -78,3 +134,9 @@ jobs:
           path: |
             build/reports/tests/integrationTest
             build/test-results/integrationTest
+
+      - name: Fail if integration tests failed
+        if: steps.integration.outcome == 'failure'
+        run: |
+          echo "integrationTest failed after dumping XML/HTML evidence"
+          exit 1
