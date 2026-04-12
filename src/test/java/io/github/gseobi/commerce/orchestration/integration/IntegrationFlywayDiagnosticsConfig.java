@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
+import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,30 +16,23 @@ import org.springframework.jdbc.core.JdbcTemplate;
 class IntegrationFlywayDiagnosticsConfig {
 
     @Bean
-    Flyway flyway(
+    FlywayMigrationStrategy integrationFlywayMigrationStrategy(
             DataSource dataSource
     ) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        Flyway flyway = Flyway.configure()
-                .dataSource(dataSource)
-                .locations("classpath:db/migration")
-                .defaultSchema("public")
-                .schemas("public")
-                .load();
+        return flyway -> {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            logClasspathMigrations(flyway);
+            logDatabaseState(jdbcTemplate, "before");
 
-        logClasspathMigrations(flyway);
-        logDatabaseState(jdbcTemplate, "before");
-
-        var result = flyway.migrate();
-        log.info(
-                "integration-test flyway migrate completed: initialSchemaVersion={}, targetSchemaVersion={}, migrationsExecuted={}",
-                result.initialSchemaVersion,
-                result.targetSchemaVersion,
-                result.migrationsExecuted
-        );
-        logDatabaseState(jdbcTemplate, "after");
-
-        return flyway;
+            var result = flyway.migrate();
+            log.info(
+                    "integration-test flyway migrate completed: initialSchemaVersion={}, targetSchemaVersion={}, migrationsExecuted={}",
+                    result.initialSchemaVersion,
+                    result.targetSchemaVersion,
+                    result.migrationsExecuted
+            );
+            logDatabaseState(jdbcTemplate, "after");
+        };
     }
 
     private static void logClasspathMigrations(Flyway flyway) {
