@@ -13,7 +13,7 @@
 - 주문 상태, orchestration step, outbox event, audit log를 같이 남겨 운영 가시성을 확보한다.
 
 이 문서는 현재 설계 기준과 남은 TODO를 정리합니다.  
-이미 실제로 검증된 범위는 [Test Report](test-report.md)를 기준으로 봅니다.
+이미 실제로 검증된 범위는 [Test Report](docs/test-report.md)를 기준으로 봅니다.
 
 ## 2. 현재 구조 요약
 

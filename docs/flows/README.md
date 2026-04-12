@@ -3,7 +3,7 @@
 현재 order lifecycle은 아래 순서를 따릅니다.
 이 문서는 텍스트 요약본이며, 추후 flow diagram이 들어와도 현재 설명 구조가 그대로 이어지도록 정리합니다.
 
-처음 보는 경우에는 [Architecture Notes](../architecture/README.md)로 구조를 먼저 본 뒤 이 문서를 읽는 편이 자연스럽습니다.
+처음 보는 경우에는 [Architecture Notes](docs/architecture/README.md)로 구조를 먼저 본 뒤 이 문서를 읽는 편이 자연스럽습니다.
 
 1. JWT 발급
 2. 주문 생성
@@ -22,7 +22,25 @@
 - notification retry / manual intervention flow
   `AUTO_RETRY`, `MANUAL_INTERVENTION`, `IGNORE` 정책 분기와 admin recovery 흐름
 
-파일 네이밍과 설명 기준은 [Diagram Guide](../diagrams/README.md)를 따릅니다.
+파일 네이밍과 설명 기준은 [Diagram Guide](docs/diagrams/README.md)를 따릅니다.
+
+## 현재 다이어그램 자산
+
+### Order Orchestration Flow
+
+![Order orchestration flow](docs/diagrams/png/commerce_orchestration_order_flow.png)
+
+- [draw.io 원본](docs/diagrams/source/commerce_orchestration_order_flow.drawio)
+- [PNG 이미지](docs/diagrams/png/commerce_orchestration_order_flow.png)
+- [PDF 문서](docs/diagrams/pdf/commerce_orchestration_order_flow.pdf)
+
+### Outbox Retry / Dead-Letter Flow
+
+![Outbox retry / dead-letter flow](docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png)
+
+- [draw.io 원본](docs/diagrams/source/commerce_orchestration_outbox_retry_dead_letter.drawio)
+- [PNG 이미지](docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png)
+- [PDF 문서](docs/diagrams/pdf/commerce_orchestration_outbox_retry_dead_letter.pdf)
 
 ## Happy Path
 

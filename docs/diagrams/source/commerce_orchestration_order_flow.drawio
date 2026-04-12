@@ -1,0 +1,136 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram id="HYYsPWc8rMjP" name="Order Orchestration Flow">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="yl8tM6462XRx" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=18;" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Order Orchestration Flow&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;happy path + major failure branches&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="760" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="tVJcr1XYQM-sSKYlqDax-1" edge="1" parent="1" source="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="s2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="1. POST /api/orders&lt;br&gt;&lt;b&gt;CREATED&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="40" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="2. POST /api/orders/{id}/orchestrate&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;payment step READY&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="190" x="30" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="3. Payment approved&lt;br&gt;&lt;b&gt;PAID&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="290" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="4. Settlement requested&lt;br&gt;&lt;b&gt;SETTLEMENT_REQUESTED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;outbox event created&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="200" x="540" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="5. Notification requested&lt;br&gt;&lt;b&gt;NOTIFICATION_REQUESTED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;outbox event created&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="790" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="6. Order completed&lt;br&gt;&lt;b&gt;COMPLETED&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="1050" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="s7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="7. Outbox published&lt;br&gt;&lt;b&gt;PUBLISHED&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="170" x="970" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="sz7DyOhP3R5v" edge="1" parent="1" source="s1" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;" target="s2" value="start orchestration">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hZjR1bGNwWQV" edge="1" parent="1" source="s2" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="s3" value="approve">
+          <mxGeometry relative="1" x="0.5001" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vwQyDkNjbW2H" edge="1" parent="1" source="s3" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="s4" value="request settlement">
+          <mxGeometry relative="1" x="0.0004" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="460" y="120" />
+              <mxPoint x="540" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GOBuTJ9uX9cH" edge="1" parent="1" source="s4" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="s5" value="request notification">
+          <mxGeometry relative="1" x="-0.1111" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="740" y="120" />
+              <mxPoint x="790" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qVxi9DEz4NoD" edge="1" parent="1" source="s5" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="s6" value="finish order">
+          <mxGeometry relative="1" x="-0.1111" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1000" y="120" />
+              <mxPoint x="1050" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uMbA0Wsl9PXU" edge="1" parent="1" source="s5" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;" target="s7" value="publish later">
+          <mxGeometry relative="1" x="-0.35" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="Payment failure&lt;br&gt;&lt;b&gt;FAILED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;audit log + failed step&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="190" x="290" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="sf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="Settlement failure&lt;br&gt;&lt;b&gt;FAILED&lt;/b&gt;" vertex="1">
+          <mxGeometry height="70" width="170" x="530" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="sc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="Compensation: payment cancel&lt;br&gt;&lt;b&gt;CANCELLED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;compensation step SUCCESS&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="510" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="nf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="Notification failure&lt;br&gt;&lt;b&gt;FAILED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;manual intervention or retry required&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="740" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="ni" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="IGNORE policy&lt;br&gt;&lt;b&gt;notification event IGNORED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;order remains COMPLETED&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="980" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="nr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="Admin retry / recovery&lt;br&gt;&lt;b&gt;COMPLETED restored&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="740" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="HzHBBVWVMlVJ" edge="1" parent="1" source="s2" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="pf" value="payment error">
+          <mxGeometry relative="1" x="0.5625" y="-27" as="geometry">
+            <mxPoint x="-25" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HkQwR8WgKMWk" edge="1" parent="1" source="s3" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" target="sf" value="settlement error">
+          <mxGeometry relative="1" x="-0.0909" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="417" y="270" />
+              <mxPoint x="510" y="270" />
+              <mxPoint x="510" y="355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3AWERc34kusu" edge="1" parent="1" source="sf" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;" target="sc" value="cancel payment">
+          <mxGeometry relative="1" x="-0.5" y="-55" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1SGVe7fmwcTb" edge="1" parent="1" source="s4" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" target="nf" value="notification error">
+          <mxGeometry relative="1" x="-0.1373" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="UvvYYK8Sadab" edge="1" parent="1" source="nf" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;" target="nr" value="retry / manual recovery">
+          <mxGeometry relative="1" x="-0.3333" y="75" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pz5l3gvxc41y" edge="1" parent="1" source="nf" style="endArrow=block;html=1;rounded=0;strokeWidth=2;fontSize=14;edgeStyle=orthogonalEdgeStyle;" target="ni" value="ignore allowed">
+          <mxGeometry relative="1" x="-0.0244" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pb4jh0VNjVjZ" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" value="State evidence:&lt;br&gt;order status + orchestration step + outbox event + audit log" vertex="1">
+          <mxGeometry height="90" width="390" x="40" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="isdYmbffWM98" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" value="This diagram summarizes the order-after-create orchestration path and its main state transitions.&lt;br&gt;It is a visual companion to the current implementation baseline, including current failure branching and admin recovery paths." vertex="1">
+          <mxGeometry height="90" width="800" x="450" y="520" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

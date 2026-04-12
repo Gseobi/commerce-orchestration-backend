@@ -1,7 +1,16 @@
 # Diagram Guide
 
-이 디렉터리는 pinned 대표 포트폴리오 기준으로 draw.io 자산을 어떤 규칙으로 추가할지 정리하는 자리입니다.
-이번 턴에서는 새 diagram을 추가하지 않고, 추후 자료가 들어올 위치와 설명 기준만 고정합니다.
+이 디렉터리는 pinned 대표 포트폴리오 기준으로 draw.io 자산을 한 곳에서 관리하기 위한 기준 경로입니다.
+현재는 원본, PNG 미리보기, PDF 배포본을 아래 구조로 정리합니다.
+
+## 현재 디렉터리 구조
+
+- `docs/diagrams/source/`
+  draw.io 원본
+- `docs/diagrams/png/`
+  README / docs 미리보기용 PNG
+- `docs/diagrams/pdf/`
+  공유/배포용 PDF
 
 ## 대상 다이어그램
 
@@ -16,28 +25,60 @@
 - table relation overview
   주요 테이블 관계와 역할을 한 장으로 요약
 
+현재 실제 자산은 아래 4종입니다.
+
+- `commerce_orchestration_overall_architecture`
+- `commerce_orchestration_overall_architecture_reference`
+- `commerce_orchestration_order_flow`
+- `commerce_orchestration_outbox_retry_dead_letter`
+
+아래 2종은 TODO로 남깁니다.
+
+- `commerce_orchestration_notification_recovery_flow`
+- `commerce_orchestration_table_overview`
+
 ## 파일 네이밍 기준
 
 - 원본:
-  `docs/diagram/<topic>.drawio`
+  `docs/diagrams/source/<topic>.drawio`
 - PNG:
-  `docs/images/<topic>.png`
+  `docs/diagrams/png/<topic>.png`
 - PDF:
-  `docs/pdf/<topic>.pdf`
+  `docs/diagrams/pdf/<topic>.pdf`
 
 예시 topic 이름:
 
 - `commerce_orchestration_overall_architecture`
+- `commerce_orchestration_overall_architecture_reference`
 - `commerce_orchestration_order_flow`
 - `commerce_orchestration_outbox_retry_dead_letter`
 - `commerce_orchestration_notification_recovery_flow`
 - `commerce_orchestration_table_overview`
 
+## 현재 파일 목록
+
+- overall architecture
+  - [docs/diagrams/source/commerce_orchestration_overall_architecture.drawio](docs/diagrams/source/commerce_orchestration_overall_architecture.drawio)
+  - [docs/diagrams/png/commerce_orchestration_overall_architecture.png](docs/diagrams/png/commerce_orchestration_overall_architecture.png)
+  - [docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf](docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf)
+- overall architecture reference
+  - [docs/diagrams/source/commerce_orchestration_overall_architecture_reference.drawio](docs/diagrams/source/commerce_orchestration_overall_architecture_reference.drawio)
+  - [docs/diagrams/png/commerce_orchestration_overall_architecture_reference.png](docs/diagrams/png/commerce_orchestration_overall_architecture_reference.png)
+  - [docs/diagrams/pdf/commerce_orchestration_overall_architecture_reference.pdf](docs/diagrams/pdf/commerce_orchestration_overall_architecture_reference.pdf)
+- order orchestration flow
+  - [docs/diagrams/source/commerce_orchestration_order_flow.drawio](docs/diagrams/source/commerce_orchestration_order_flow.drawio)
+  - [docs/diagrams/png/commerce_orchestration_order_flow.png](docs/diagrams/png/commerce_orchestration_order_flow.png)
+  - [docs/diagrams/pdf/commerce_orchestration_order_flow.pdf](docs/diagrams/pdf/commerce_orchestration_order_flow.pdf)
+- outbox retry / dead-letter flow
+  - [docs/diagrams/source/commerce_orchestration_outbox_retry_dead_letter.drawio](docs/diagrams/source/commerce_orchestration_outbox_retry_dead_letter.drawio)
+  - [docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png](docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png)
+  - [docs/diagrams/pdf/commerce_orchestration_outbox_retry_dead_letter.pdf](docs/diagrams/pdf/commerce_orchestration_outbox_retry_dead_letter.pdf)
+
 ## 문서 연결 기준
 
 - 구조 중심 다이어그램은 `docs/architecture/README.md`에서 링크
 - 흐름 중심 다이어그램은 `docs/flows/README.md`에서 링크
-- README 본문에는 "어디에 정리되어 있는가"만 짧게 노출
+- README 본문에는 대표 이미지로 overall architecture PNG 1장만 노출
 
 ## 설명 문장 기준
 
