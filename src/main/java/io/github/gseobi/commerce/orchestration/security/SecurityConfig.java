@@ -1,5 +1,6 @@
-package io.github.gseobi.commerce.orchestration.config;
+package io.github.gseobi.commerce.orchestration.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,10 +9,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import io.github.gseobi.commerce.orchestration.security.JwtAuthenticationFilter;
-import io.github.gseobi.commerce.orchestration.security.RequestTraceFilter;
-import io.github.gseobi.commerce.orchestration.security.RestAuthenticationEntryPoint;
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor

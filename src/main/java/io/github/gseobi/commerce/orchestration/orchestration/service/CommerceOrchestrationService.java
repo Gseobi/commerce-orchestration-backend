@@ -5,18 +5,18 @@ import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
-import io.github.gseobi.commerce.orchestration.orchestration.api.OrderFlowUseCase;
-import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStep;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStepStatus;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStepType;
 import io.github.gseobi.commerce.orchestration.orchestration.repository.OrchestrationStepRepository;
 import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
+import io.github.gseobi.commerce.orchestration.order.api.OrderFlowResponse;
+import io.github.gseobi.commerce.orchestration.order.api.OrderFlowUseCase;
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
 import io.github.gseobi.commerce.orchestration.payment.api.PaymentApplication;
-import io.github.gseobi.commerce.orchestration.payment.dto.response.PaymentResponse;
+import io.github.gseobi.commerce.orchestration.payment.api.PaymentResponse;
 import io.github.gseobi.commerce.orchestration.settlement.api.SettlementApplication;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +104,33 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
         OrderExecutionView order = orderWorkflowAccess.getOrderExecutionView(orderId);
         List<OrchestrationStep> steps = orchestrationStepRepository.findAllByOrderIdOrderByIdAsc(orderId);
         List<OutboxEventSummary> outboxEvents = outboxApplication.getOrderEvents(orderId);
-        return OrderFlowResponse.of(orderId, order.status(), steps, outboxEvents);
+        List<OrderFlowResponse.StepResponse> stepResponses = steps.stream()
+                .map(step -> new OrderFlowResponse.StepResponse(
+                        step.getId(),
+                        step.getStepType().name(),
+                        step.getStatus().name(),
+                        step.getDetail(),
+                        step.getCreatedAt()
+                ))
+                .toList();
+        List<OrderFlowResponse.OutboxResponse> outboxResponses = outboxEvents.stream()
+                .map(event -> new OrderFlowResponse.OutboxResponse(
+                        event.outboxEventId(),
+                        event.topic(),
+                        event.eventType(),
+                        event.status(),
+                        event.payload(),
+                        event.retryCount(),
+                        event.nextAttemptAt(),
+                        event.createdAt(),
+                        event.lastAttemptAt(),
+                        event.publishedAt(),
+                        event.deadLetteredAt(),
+                        event.failureCode(),
+                        event.failureReason()
+                ))
+                .toList();
+        return OrderFlowResponse.of(orderId, order.status(), stepResponses, outboxResponses);
     }
 
     private void recordStep(

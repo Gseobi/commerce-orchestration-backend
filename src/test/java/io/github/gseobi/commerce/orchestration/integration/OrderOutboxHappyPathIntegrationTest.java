@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFacade;
+import io.github.gseobi.commerce.orchestration.order.api.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
-import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.outbox.service.OutboxPublisherService;
 import java.math.BigDecimal;
 import java.util.HashSet;

@@ -3,9 +3,9 @@ package io.github.gseobi.commerce.orchestration.payment.service;
 import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.payment.api.PaymentApplication;
+import io.github.gseobi.commerce.orchestration.payment.api.PaymentResponse;
 import io.github.gseobi.commerce.orchestration.payment.client.PaymentProviderClient;
 import io.github.gseobi.commerce.orchestration.payment.client.PaymentProviderResult;
-import io.github.gseobi.commerce.orchestration.payment.dto.response.PaymentResponse;
 import io.github.gseobi.commerce.orchestration.payment.entity.Payment;
 import io.github.gseobi.commerce.orchestration.payment.entity.PaymentStatus;
 import io.github.gseobi.commerce.orchestration.payment.repository.PaymentRepository;
@@ -32,7 +32,14 @@ class PaymentService implements PaymentApplication {
         if (providerResult.status() != PaymentStatus.APPROVED) {
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, providerResult.message());
         }
-        return PaymentResponse.from(paymentRepository.save(payment));
+        Payment savedPayment = paymentRepository.save(payment);
+        return PaymentResponse.of(
+                savedPayment.getId(),
+                savedPayment.getOrderId(),
+                savedPayment.getStatus().name(),
+                savedPayment.getAmount(),
+                savedPayment.getProviderReference()
+        );
     }
 
     @Transactional(noRollbackFor = BusinessException.class)
@@ -45,7 +52,13 @@ class PaymentService implements PaymentApplication {
         PaymentProviderResult providerResult = paymentProviderClient.cancel(orderId, reason);
         latestPayment.changeStatus(PaymentStatus.CANCELLED);
         latestPayment.changeProviderReference(providerResult.providerReference());
-        return PaymentResponse.from(latestPayment);
+        return PaymentResponse.of(
+                latestPayment.getId(),
+                latestPayment.getOrderId(),
+                latestPayment.getStatus().name(),
+                latestPayment.getAmount(),
+                latestPayment.getProviderReference()
+        );
     }
 
     @Override

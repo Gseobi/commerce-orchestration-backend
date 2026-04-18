@@ -2,10 +2,10 @@ package io.github.gseobi.commerce.orchestration.order.controller;
 
 import io.github.gseobi.commerce.orchestration.common.api.ApiResponse;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFacade;
+import io.github.gseobi.commerce.orchestration.order.api.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderDetailResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
-import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,5 @@
 package io.github.gseobi.commerce.orchestration.payment.api;
 
-import io.github.gseobi.commerce.orchestration.payment.dto.response.PaymentResponse;
 import java.math.BigDecimal;
 import java.util.List;
 

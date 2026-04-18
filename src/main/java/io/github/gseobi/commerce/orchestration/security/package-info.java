@@ -1,8 +1,9 @@
 @org.springframework.modulith.ApplicationModule(
         allowedDependencies = {
-                "common",
+                "common::api",
                 "common::error",
+                "common::web",
                 "config"
         }
 )
-package io.github.gseobi.commerce.orchestration.outbox;
+package io.github.gseobi.commerce.orchestration.security;

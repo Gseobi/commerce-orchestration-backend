@@ -1,4 +1,7 @@
 @org.springframework.modulith.ApplicationModule(
-        allowedDependencies = {"common"}
+        allowedDependencies = {
+                "common",
+                "common::error"
+        }
 )
 package io.github.gseobi.commerce.orchestration.settlement;
