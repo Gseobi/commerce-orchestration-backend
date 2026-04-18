@@ -66,20 +66,37 @@ public class NotificationEvent extends BaseTimeEntity {
     }
 
     public void scheduleRetry(String failureCode, String failureReason, LocalDateTime nextAttemptAt) {
+        scheduleRetry(failureCode, failureReason, LocalDateTime.now(), nextAttemptAt);
+    }
+
+    public void scheduleRetry(
+            String failureCode,
+            String failureReason,
+            LocalDateTime attemptedAt,
+            LocalDateTime nextAttemptAt
+    ) {
         this.status = NotificationEventStatus.RETRY_SCHEDULED;
         this.handlingPolicy = NotificationHandlingPolicy.AUTO_RETRY;
         this.retryCount++;
-        this.lastAttemptAt = LocalDateTime.now();
+        this.lastAttemptAt = attemptedAt;
         this.nextAttemptAt = nextAttemptAt;
         this.failureCode = failureCode;
         this.failureReason = failureReason;
     }
 
     public void requireManualIntervention(String failureCode, String failureReason) {
+        requireManualIntervention(failureCode, failureReason, LocalDateTime.now());
+    }
+
+    public void requireManualIntervention(
+            String failureCode,
+            String failureReason,
+            LocalDateTime attemptedAt
+    ) {
         this.status = NotificationEventStatus.MANUAL_INTERVENTION_REQUIRED;
         this.handlingPolicy = NotificationHandlingPolicy.MANUAL_INTERVENTION;
         this.retryCount++;
-        this.lastAttemptAt = LocalDateTime.now();
+        this.lastAttemptAt = attemptedAt;
         this.nextAttemptAt = null;
         this.failureCode = failureCode;
         this.failureReason = failureReason;
@@ -95,10 +112,14 @@ public class NotificationEvent extends BaseTimeEntity {
     }
 
     public void markSentByAdminRetry() {
+        markSent(LocalDateTime.now());
+    }
+
+    public void markSent(LocalDateTime attemptedAt) {
         this.status = NotificationEventStatus.SENT;
         this.handlingPolicy = NotificationHandlingPolicy.NONE;
         this.retryCount++;
-        this.lastAttemptAt = LocalDateTime.now();
+        this.lastAttemptAt = attemptedAt;
         this.nextAttemptAt = null;
         this.failureCode = null;
         this.failureReason = null;

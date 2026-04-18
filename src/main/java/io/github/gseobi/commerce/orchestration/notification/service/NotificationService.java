@@ -6,19 +6,22 @@ import io.github.gseobi.commerce.orchestration.notification.api.NotificationAppl
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationAdminApplication;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationAdminView;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryCandidateView;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryOperations;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus;
 import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-class NotificationService implements NotificationApplication, NotificationAdminApplication {
+class NotificationService implements NotificationApplication, NotificationAdminApplication, NotificationRetryOperations {
 
     private static final String CHANNEL_ORDER_STATUS = "ORDER_STATUS";
     private static final String TOKEN_IGNORE = "FAIL_NOTIFICATION_IGNORE";
@@ -93,6 +96,58 @@ class NotificationService implements NotificationApplication, NotificationAdminA
                 ));
     }
 
+    @Override
+    public List<NotificationRetryCandidateView> findDueRetryScheduledEvents(LocalDateTime now, int limit) {
+        return notificationEventRepository.findDueRetryScheduledEvents(
+                        NotificationEventStatus.RETRY_SCHEDULED,
+                        now,
+                        3,
+                        PageRequest.of(0, limit)
+                ).stream()
+                .map(event -> new NotificationRetryCandidateView(
+                        event.getId(),
+                        event.getOrderId(),
+                        event.getRetryCount(),
+                        event.getNextAttemptAt()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public NotificationAdminView markRetrySucceeded(Long notificationEventId, LocalDateTime attemptedAt) {
+        NotificationEvent event = getNotificationEvent(notificationEventId);
+        event.markSent(attemptedAt);
+        return toAdminView(event);
+    }
+
+    @Transactional
+    @Override
+    public NotificationFailureView rescheduleRetry(
+            Long notificationEventId,
+            String failureCode,
+            String failureReason,
+            LocalDateTime attemptedAt,
+            LocalDateTime nextAttemptAt
+    ) {
+        NotificationEvent event = getNotificationEvent(notificationEventId);
+        event.scheduleRetry(failureCode, failureReason, attemptedAt, nextAttemptAt);
+        return toFailureView(event);
+    }
+
+    @Transactional
+    @Override
+    public NotificationFailureView requireManualIntervention(
+            Long notificationEventId,
+            String failureCode,
+            String failureReason,
+            LocalDateTime attemptedAt
+    ) {
+        NotificationEvent event = getNotificationEvent(notificationEventId);
+        event.requireManualIntervention(failureCode, failureReason, attemptedAt);
+        return toFailureView(event);
+    }
+
     @Transactional
     @Override
     public NotificationAdminView retryNotification(Long notificationEventId) {
@@ -138,6 +193,19 @@ class NotificationService implements NotificationApplication, NotificationAdminA
         return new NotificationAdminView(
                 event.getId(),
                 event.getOrderId(),
+                event.getStatus().name(),
+                event.getHandlingPolicy().name(),
+                event.getRetryCount(),
+                event.getNextAttemptAt(),
+                event.getLastAttemptAt(),
+                event.getFailureCode(),
+                event.getFailureReason()
+        );
+    }
+
+    private NotificationFailureView toFailureView(NotificationEvent event) {
+        return new NotificationFailureView(
+                event.getId(),
                 event.getStatus().name(),
                 event.getHandlingPolicy().name(),
                 event.getRetryCount(),
