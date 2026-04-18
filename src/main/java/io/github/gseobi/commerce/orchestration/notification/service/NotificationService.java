@@ -5,11 +5,12 @@ import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationAdminApplication;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationAdminView;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus;
 import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +76,21 @@ class NotificationService implements NotificationApplication, NotificationAdminA
                 .stream()
                 .map(notificationEvent -> notificationEvent.getStatus().name())
                 .toList();
+    }
+
+    @Override
+    public Optional<NotificationFailureView> getLatestNotificationFailure(Long orderId) {
+        return notificationEventRepository.findFirstByOrderIdOrderByIdDesc(orderId)
+                .map(event -> new NotificationFailureView(
+                        event.getId(),
+                        event.getStatus().name(),
+                        event.getHandlingPolicy().name(),
+                        event.getRetryCount(),
+                        event.getNextAttemptAt(),
+                        event.getLastAttemptAt(),
+                        event.getFailureCode(),
+                        event.getFailureReason()
+                ));
     }
 
     @Transactional

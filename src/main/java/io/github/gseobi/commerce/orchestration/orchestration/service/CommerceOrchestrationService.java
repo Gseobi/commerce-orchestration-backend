@@ -4,6 +4,7 @@ import io.github.gseobi.commerce.orchestration.audit.api.AuditRecorder;
 import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
 import io.github.gseobi.commerce.orchestration.orchestration.api.OrderFlowUseCase;
 import io.github.gseobi.commerce.orchestration.orchestration.dto.response.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStep;
@@ -31,6 +32,8 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
     private static final String STATUS_COMPLETED = "COMPLETED";
     private static final String STATUS_CANCELLED = "CANCELLED";
     private static final String STATUS_NOTIFICATION_REQUESTED = "NOTIFICATION_REQUESTED";
+    private static final String POLICY_AUTO_RETRY = "AUTO_RETRY";
+    private static final String POLICY_MANUAL_INTERVENTION = "MANUAL_INTERVENTION";
 
     private final OrderWorkflowAccess orderWorkflowAccess;
     private final PaymentApplication paymentApplication;
@@ -156,8 +159,33 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
     private void handleNotificationFailure(Long orderId, BusinessException exception) {
         orderWorkflowAccess.markFailed(orderId);
         recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.FAILED, exception.getMessage());
+        NotificationFailureView notificationFailure = notificationApplication.getLatestNotificationFailure(orderId)
+                .orElse(null);
+
+        if (notificationFailure != null && POLICY_AUTO_RETRY.equals(notificationFailure.handlingPolicy())) {
+            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
+                    "Notification retry scheduled; payment and settlement are kept as-is, nextAttemptAt="
+                            + notificationFailure.nextAttemptAt());
+            auditRecorder.record(orderId, "NOTIFICATION_FAILED_RETRY_SCHEDULED",
+                    exception.getMessage()
+                            + ", notificationEventId=" + notificationFailure.notificationEventId()
+                            + ", retryCount=" + notificationFailure.retryCount()
+                            + ", nextAttemptAt=" + notificationFailure.nextAttemptAt());
+            return;
+        }
+
+        if (notificationFailure != null && POLICY_MANUAL_INTERVENTION.equals(notificationFailure.handlingPolicy())) {
+            recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
+                    "Notification requires manual intervention; payment and settlement are kept as-is");
+            auditRecorder.record(orderId, "NOTIFICATION_FAILED_MANUAL_INTERVENTION_REQUIRED",
+                    exception.getMessage()
+                            + ", notificationEventId=" + notificationFailure.notificationEventId()
+                            + ", status=" + notificationFailure.status());
+            return;
+        }
+
         recordStep(orderId, OrchestrationStepType.COMPENSATION, OrchestrationStepStatus.READY,
-                "Notification requires retry or manual intervention; payment and settlement are kept as-is");
-        auditRecorder.record(orderId, "NOTIFICATION_FAILED_MANUAL_INTERVENTION_REQUIRED", exception.getMessage());
+                "Notification recovery pending; payment and settlement are kept as-is");
+        auditRecorder.record(orderId, "NOTIFICATION_FAILED_RECOVERY_PENDING", exception.getMessage());
     }
 }
