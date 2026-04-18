@@ -37,7 +37,7 @@ class SettlementService implements SettlementApplication {
 
     @Override
     public List<String> getSettlementStatuses(Long orderId) {
-        return settlementRepository.findAllByOrderId(orderId)
+        return settlementRepository.findAllByOrderIdOrderByIdAsc(orderId)
                 .stream()
                 .map(settlement -> settlement.getStatus().name())
                 .toList();

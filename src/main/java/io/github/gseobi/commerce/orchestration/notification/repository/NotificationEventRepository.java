@@ -8,5 +8,7 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
 
     List<NotificationEvent> findAllByOrderId(Long orderId);
 
+    List<NotificationEvent> findAllByOrderIdOrderByIdAsc(Long orderId);
+
     Optional<NotificationEvent> findFirstByOrderIdOrderByIdDesc(Long orderId);
 }

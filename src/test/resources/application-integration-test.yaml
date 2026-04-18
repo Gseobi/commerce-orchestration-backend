@@ -23,7 +23,7 @@ app:
     initial-backoff: 0ms
     backoff-multiplier: 1.0
     max-backoff: 0ms
-    publish-timeout: 2s
+    publish-timeout: 5s
   payment:
     provider:
       mode: mock

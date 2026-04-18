@@ -72,7 +72,7 @@ class NotificationService implements NotificationApplication, NotificationAdminA
 
     @Override
     public List<String> getNotificationStatuses(Long orderId) {
-        return notificationEventRepository.findAllByOrderId(orderId)
+        return notificationEventRepository.findAllByOrderIdOrderByIdAsc(orderId)
                 .stream()
                 .map(notificationEvent -> notificationEvent.getStatus().name())
                 .toList();

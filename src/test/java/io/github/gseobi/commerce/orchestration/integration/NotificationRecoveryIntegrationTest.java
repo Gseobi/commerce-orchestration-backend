@@ -226,7 +226,7 @@ class NotificationRecoveryIntegrationTest extends TestcontainersIntegrationSuppo
     }
 
     private NotificationEvent getSingleNotificationEvent(Long orderId) {
-        List<NotificationEvent> events = notificationEventRepository.findAllByOrderId(orderId);
+        List<NotificationEvent> events = notificationEventRepository.findAllByOrderIdOrderByIdAsc(orderId);
         assertThat(events).hasSize(1);
         return events.getFirst();
     }

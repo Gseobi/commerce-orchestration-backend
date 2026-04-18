@@ -63,7 +63,7 @@ class PaymentService implements PaymentApplication {
 
     @Override
     public List<String> getPaymentStatuses(Long orderId) {
-        return paymentRepository.findAllByOrderId(orderId)
+        return paymentRepository.findAllByOrderIdOrderByIdAsc(orderId)
                 .stream()
                 .map(payment -> payment.getStatus().name())
                 .toList();

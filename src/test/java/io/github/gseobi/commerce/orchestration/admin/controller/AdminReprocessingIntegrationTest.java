@@ -86,7 +86,7 @@ class AdminReprocessingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.orderStatus", is("FAILED")));
 
-        NotificationEvent notificationEvent = notificationEventRepository.findAllByOrderId(orderId).getFirst();
+        NotificationEvent notificationEvent = notificationEventRepository.findAllByOrderIdOrderByIdAsc(orderId).getFirst();
 
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
