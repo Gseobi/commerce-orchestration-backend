@@ -1,7 +1,7 @@
 # Design Notes
 
 이 문서는 현재 구조를 왜 이렇게 나눴는지, 어디까지 구현했고 무엇을 TODO로 남겨 두었는지 정리합니다.  
-실제 검증 범위는 [Test Report](../docs/test-report.md)를 기준으로 확인합니다.
+실제 검증 범위는 [Test Report](/docs/test-report.md)를 기준으로 확인합니다.  
 
 ## 1. 왜 현재 구조를 택했는가
 

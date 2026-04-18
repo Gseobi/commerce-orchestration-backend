@@ -35,3 +35,23 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Local env
+.env
+.env.*
+
+# Generated files
+*.class
+
+# Mac
+.AppleDouble
+.LSOverride
+
+# Docker
+docker-compose.override.yml

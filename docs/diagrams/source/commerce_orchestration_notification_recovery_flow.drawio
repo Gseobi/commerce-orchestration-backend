@@ -1,0 +1,149 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram id="qjrembKCaJeC" name="Overall Architecture">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-58" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=18;" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Notification Retry / Manual Intervention Flow&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;handling_policy branch + admin recovery + audit trail&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="980" x="50" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="Notification request failed&lt;br&gt;&lt;b&gt;order FAILED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;notification event failure captured&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="220" x="70" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-60" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" value="Check handling_policy&lt;br&gt;&lt;b&gt;AUTO_RETRY / MANUAL_INTERVENTION / IGNORE&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="220" x="70" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-61" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" value="AUTO_RETRY&lt;br&gt;&lt;b&gt;RETRY_SCHEDULED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;retryCount / nextAttemptAt / failureCode / failureReason&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="540" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-62" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="MANUAL_INTERVENTION&lt;br&gt;&lt;b&gt;MANUAL_INTERVENTION_REQUIRED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;admin confirmation required&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="540" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-63" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" value="IGNORE&lt;br&gt;&lt;b&gt;IGNORED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;order can remain completed&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="260" x="540" y="433" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-64" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;" value="Retry worker / scheduler&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;re-attempt when nextAttemptAt is reached&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="240" x="940" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-65" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="Admin recovery API&lt;br&gt;&lt;b&gt;POST /api/admin/notification-events/{id}/retry&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="280" x="940" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-66" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" value="Admin recovery API&lt;br&gt;&lt;b&gt;POST /api/admin/notification-events/{id}/ignore&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="280" x="940" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-67" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" value="Recovery succeeded&lt;br&gt;&lt;b&gt;order COMPLETED restored&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;notification success or explicit ignore&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="250" x="1530" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-69" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="Logical intent: notification failure is handled without rolling back payment or settlement.&lt;div&gt;Recovery restores the order to COMPLETED when notification succeeds or is explicitly ignored.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="600" x="70" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-70" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-59" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=14;" target="aU4Z9K0QBd1zkDZ1_Onb-60" value="branch by handling_policy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-71" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-60" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=14;" target="aU4Z9K0QBd1zkDZ1_Onb-61" value="AUTO_RETRY">
+          <mxGeometry relative="1" x="0.3514" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="310" y="360" />
+              <mxPoint x="310" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-72" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-60" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=14;" target="aU4Z9K0QBd1zkDZ1_Onb-62" value="MANUAL_INTERVENTION">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-73" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-60" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=14;" target="aU4Z9K0QBd1zkDZ1_Onb-63" value="IGNORE">
+          <mxGeometry relative="1" x="0.3514" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="310" y="360" />
+              <mxPoint x="310" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-74" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-61" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-64" value="wait until nextAttemptAt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-75" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-64" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-67" value="retry succeeds">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1655" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-76" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-64" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-68" value="retry fails again">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-77" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-62" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-65" value="operator chooses retry">
+          <mxGeometry relative="1" x="0.0242" y="5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="840" y="340" />
+              <mxPoint x="840" y="275" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-78" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-62" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-66" value="operator chooses ignore">
+          <mxGeometry relative="1" x="0.0668" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="840" y="340" />
+              <mxPoint x="840" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-79" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-65" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-67" value="manual retry succeeds">
+          <mxGeometry relative="1" x="0.2557" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1600" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-80" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-65" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-68" value="manual retry fails">
+          <mxGeometry relative="1" x="0.0905" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1300" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-81" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-68" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-67" value="ignore and close">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="420" />
+              <mxPoint x="1600" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-82" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-63" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-67" value="keep order completed">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="930" y="480" />
+              <mxPoint x="930" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-83" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-62" style="endArrow=block;html=1;rounded=0;dashed=1;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-68" value="waiting for operator">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-84" edge="1" parent="1" source="aU4Z9K0QBd1zkDZ1_Onb-66" style="endArrow=block;html=1;rounded=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;fontSize=13;" target="aU4Z9K0QBd1zkDZ1_Onb-68" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1300" y="425" />
+            </Array>
+            <mxPoint x="1220" y="395" as="sourcePoint" />
+            <mxPoint x="1520" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aU4Z9K0QBd1zkDZ1_Onb-68" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" value="Failure persists or stays pending&lt;br&gt;&lt;b&gt;audit log / orchestration step updated&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;manual follow-up or later retry&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="250" x="1240" y="290" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
