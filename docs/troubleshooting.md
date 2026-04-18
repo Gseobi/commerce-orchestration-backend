@@ -81,10 +81,34 @@
 - `notification-events/{id}/retry` 또는 `ignore`는 실패한 notification 처리 단위만 복구하고, 성공 시 주문 상태를 `COMPLETED`로 복구합니다.
 - `outbox-events/{id}/retry`는 `DEAD_LETTER` outbox event만 즉시 재발행 대상으로 허용합니다.
 
+### 2.6 notification retry processor가 대상을 처리하지 않는 경우
+
+`RETRY_SCHEDULED` 이벤트가 processor 대상이 되려면 아래 조건을 만족해야 합니다.
+
+- `status = RETRY_SCHEDULED`
+- `nextAttemptAt <= now`
+- `retryCount < maxRetryCount`
+
+`nextAttemptAt`이 미래이면 processor는 해당 이벤트를 건드리지 않습니다.  
+반복 실패로 최대 재시도 기준에 도달하면 이벤트는 `MANUAL_INTERVENTION_REQUIRED`로 전환되고, 주문은 자동 완료 복구하지 않습니다.
+
+현재 구현은 processor/application method를 명시적으로 호출하는 구조입니다.  
+실제 `@Scheduled` trigger 또는 admin-triggered batch endpoint는 후속 확장 범위입니다.
+
 ## 3. Structure Notes
 
 ### 3.1 module boundary warning과 구조 문제를 구분하고 싶은 경우
 
-- 현재 modulith warning은 일부 보류 상태입니다.
-- 하지만 cross-domain repository 직접 참조를 늘리지 않는 방향은 유지하고 있습니다.
-- 현재 권장 방향은 `controller -> service -> repository`, `orchestration -> domain application service`입니다.
+현재 모듈 경계는 Spring Modulith 기준으로 검증합니다.
+
+- 각 domain의 외부 공개 계약은 주로 `*.api` 패키지에 둡니다.
+- 외부에서 접근 가능한 API 패키지는 `@NamedInterface("api")`로 명시합니다.
+- orchestration/admin처럼 여러 domain을 조합하는 모듈은 `allowedDependencies`에서 `module::api` 형태로 의존 범위를 제한합니다.
+- 구조 변경 후에는 `ApplicationModules.verify()` 기반 Modulith 테스트를 실행해 module cycle과 내부 패키지 침범 여부를 확인합니다.
+
+IDE에서 다시 warning이 보이면 먼저 아래를 확인합니다.
+
+- 다른 모듈의 `service`, `repository`, `entity`를 직접 참조하고 있지 않은가
+- 필요한 public contract가 `*.api` 패키지에 있는가
+- 해당 패키지가 `@NamedInterface("api")`로 공개되어 있는가
+- `allowedDependencies`가 모듈 전체가 아니라 필요한 named interface만 허용하고 있는가

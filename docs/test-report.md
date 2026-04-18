@@ -31,6 +31,10 @@
 | Outbox publish unit test | Implemented | `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER` 전이 검증 |
 | PostgreSQL / Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
 | PostgreSQL / Kafka outbox dead-letter path | Implemented | retry 후 dead-letter 전환 검증 |
+| Notification retry processor | Implemented | `RETRY_SCHEDULED` due event 재처리, 성공/재스케줄/manual 전환 검증 |
+| Notification future retry skip | Implemented | `nextAttemptAt`이 미래인 이벤트는 처리 대상에서 제외 |
+| Notification max retry exceeded | Implemented | 반복 실패 시 `MANUAL_INTERVENTION_REQUIRED` 전환 |
+| Modulith architecture verification | Implemented | `ApplicationModules.verify()` 기준 module boundary 검증 |
 
 ## 3. 테스트 종류 차이
 
@@ -78,7 +82,7 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 ## 6. 아직 검증하지 않은 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip
-- notification 운영 정책의 세분화된 채널별 재처리 / 운영 규칙
+- notification 채널별 retry policy / scheduler trigger / 운영자 승인 절차
 - dead-letter 운영 자동화
 - admin 레벨 재처리 / 재검증 API 고도화
 - refresh token / key rotation / user store 연동

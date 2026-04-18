@@ -65,8 +65,10 @@
 - `IGNORE`  
   주문 완료를 막지 않아도 되는 실패로 간주하며 `IGNORED` 상태로 남깁니다.
 
-현재 단계에서는 정책 의도를 먼저 고정하는 데 집중하고 있어, notification 자동 재시도 worker 자체는 아직 포함하지 않았습니다.  
-대신 admin 재처리 API와 운영 쿼리로 수동 복구가 가능하도록 정리했습니다.
+현재는 `RETRY_SCHEDULED` 이벤트를 due 시점에 조회해 재처리하는 `NotificationRetryProcessor` 경로까지 포함합니다.
+
+다만 실제 `@Scheduled` trigger는 아직 붙이지 않았고, 테스트와 운영 안정성을 위해 processor를 명시적으로 호출 가능한 application contract로 분리했습니다.  
+따라서 현재 구현 범위는 "자동 재시도 대상 조회와 상태 전이 로직"이며, 실제 운영 trigger는 property-gated scheduler 또는 admin-triggered batch endpoint로 후속 확장할 수 있습니다.
 
 ### 후속 작업
 - notification 채널별 재시도 횟수
