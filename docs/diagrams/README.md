@@ -2,6 +2,8 @@
 
 draw.io 자산의 원본, PNG, PDF를 관리하는 기준 문서입니다.
 
+이 다이어그램들은 commerce-orchestration-backend의 전체 구조, 주문 이후 orchestration 흐름, outbox retry/dead-letter, notification retry/manual intervention, table relation overview를 시각적으로 확인하기 위한 자료입니다.
+
 ## Directory
 
 - `docs/diagrams/source/`

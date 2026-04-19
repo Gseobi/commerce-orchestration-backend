@@ -1,28 +1,41 @@
 # Docs Index
 
-`docs`는 설계, 흐름, 테스트, 운영 참고 자료를 정리한 문서 모음입니다.
+`docs`는 commerce-orchestration-backend의 설계 의도, 처리 흐름, 다이어그램, 테스트, 운영 참고 자료를 정리한 문서 모음입니다.
+
+이 프로젝트는 주문 이후 payment · settlement · notification · outbox publish 흐름을 단순 기능 호출이 아니라, 상태 전이·실패 분기·보상 처리·재처리 경로가 보이는 orchestration 구조로 설명하는 것을 목표로 합니다.
 
 ## 1. Recommended Order
 
-- [Architecture Notes](/docs/architecture/README.md)
-- [Flow Notes](/docs/flows/README.md)
-- [Diagram Guide](/docs/diagrams/README.md)
-- [Test Report](/docs/test-report.md)
-- [Troubleshooting](/docs/troubleshooting.md)
+처음 보는 사람 기준 권장 읽기 순서는 아래입니다.
+
+1. [Architecture Notes](/docs/architecture/README.md)  
+   모듈 경계, 의존 방향, 테이블 관계를 먼저 확인합니다.
+2. [Flow Notes](/docs/flows/README.md)  
+   주문 이후 payment / settlement / notification / outbox 흐름과 실패 분기를 확인합니다.
+3. [Diagram Guide](/docs/diagrams/README.md)  
+   draw.io 원본, PNG, PDF 자산을 확인합니다.
+4. [Test Report](/docs/test-report.md)  
+   실제로 검증한 범위와 아직 검증하지 않은 범위를 구분합니다.
+5. [Troubleshooting](/docs/troubleshooting.md)  
+   로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
 
-- [Design Notes](/docs/design-notes.md)
-- [SQL Guide](/docs/sql/README.md)
+- [Design Notes](/docs/design-notes.md)  
+  현재 구조를 왜 이렇게 나눴는지, compensation / notification policy / outbox reliability 기준을 정리합니다.
+- [SQL Guide](/docs/sql/README.md)  
+  Flyway migration과 운영 점검용 SQL 문서의 역할을 구분합니다.
 
 ## 3. Diagram Status
 
 현재 포함된 자산:
-- architecture
+
+- overall architecture
 - overall architecture reference
 - order orchestration flow
 - outbox retry / dead-letter flow
 - notification retry / manual intervention flow
 - table relation overview
 
-권장 읽기 흐름은 architecture에서 모듈/테이블 관계를 먼저 보고, flows에서 order / outbox / notification recovery를 확인한 뒤, Diagram Guide에서 source / PNG / PDF 자산을 직접 여는 순서입니다.
+권장 읽기 흐름은 architecture에서 모듈/테이블 관계를 먼저 보고, 
+flows에서 order / outbox / notification recovery를 확인한 뒤, Diagram Guide에서 source / PNG / PDF 자산을 직접 여는 순서입니다.

@@ -1,5 +1,10 @@
 # SQL Guide
 
+이 문서는 DB schema source of truth와 운영 점검용 SQL의 역할을 구분하기 위한 문서입니다.
+
+이 프로젝트에서 실제 스키마 변경은 Flyway migration으로 관리하고, 
+`docs/sql`은 outbox retry/dead-letter, notification admin operation처럼 운영 확인과 수동 점검이 필요한 상황을 설명하는 참고 SQL로 유지합니다.
+
 ## 1. Source of Truth
 
 실제 DB 스키마의 source of truth는 `src/main/resources/db/migration` 아래 Flyway migration입니다.

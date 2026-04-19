@@ -1,6 +1,9 @@
 # Design Notes
 
-이 문서는 현재 구조를 왜 이렇게 나눴는지, 어디까지 구현했고 무엇을 TODO로 남겨 두었는지 정리합니다.  
+이 문서는 commerce-orchestration-backend가 커머스 주문 이후 후속 처리 흐름을 왜 orchestration, explicit state transition, failure branching, compensation, retry/dead-letter 구조로 나누었는지 정리합니다.
+
+핵심 관점은 단순 주문 API 구현이 아니라, 결제·정산·알림·이벤트 발행 중 일부만 실패했을 때 거래 흐름의 정합성과 운영 복구 가능성을 어떻게 확보할 것인가입니다.
+  
 실제 검증 범위는 [Test Report](/docs/test-report.md)를 기준으로 확인합니다.  
 
 ## 1. 왜 현재 구조를 택했는가

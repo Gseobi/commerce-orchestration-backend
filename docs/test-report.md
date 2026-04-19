@@ -1,6 +1,9 @@
 # Test Report
 
-이 문서는 현재 레포지토리 기준선에서 실제로 수행하는 검증 범위를 정리합니다.  
+이 문서는 commerce-orchestration-backend가 주장하는 orchestration, 상태 전이, 실패 분기, 보상 처리, outbox retry/dead-letter, notification retry 흐름이 실제 테스트로 어디까지 검증되었는지 정리합니다.
+
+특히 이 프로젝트는 구현 범위를 과장하지 않고, 현재 검증한 흐름과 아직 남은 운영 확장 범위를 분리해 보여주는 것을 목표로 합니다.
+ 
 존재하지 않는 테스트 범위는 구현된 것처럼 적지 않고, 설계 TODO는 `docs/design-notes.md`에서 다룹니다.
 
 ## 1. 로컬 검증 명령

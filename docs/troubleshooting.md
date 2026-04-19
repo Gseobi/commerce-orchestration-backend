@@ -1,6 +1,8 @@
 # Troubleshooting
 
-이 문서는 로컬 실행, 테스트, 운영 복구, 구조 점검 과정에서 자주 확인하는 항목을 정리합니다.
+이 문서는 로컬 실행, 테스트, Flyway, Kafka/PostgreSQL, payment provider, outbox retry/dead-letter, notification recovery 흐름에서 발생할 수 있는 문제를 빠르게 확인하기 위한 운영 참고 문서입니다.
+
+단순 실행 오류뿐 아니라, settlement 실패와 notification 실패가 왜 서로 다르게 처리되는지, admin 재처리가 왜 전체 orchestration 재실행이 아닌 하위 처리 단위 복구인지도 함께 설명합니다.
 
 ## 1. Quick Checks
 
