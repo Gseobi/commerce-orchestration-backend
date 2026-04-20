@@ -70,8 +70,9 @@
 
 현재는 `RETRY_SCHEDULED` 이벤트를 due 시점에 조회해 재처리하는 `NotificationRetryProcessor` 경로까지 포함합니다.
 
-다만 실제 `@Scheduled` trigger는 아직 붙이지 않았고, 테스트와 운영 안정성을 위해 processor를 명시적으로 호출 가능한 application contract로 분리했습니다.  
-따라서 현재 구현 범위는 "자동 재시도 대상 조회와 상태 전이 로직"이며, 실제 운영 trigger는 property-gated scheduler 또는 admin-triggered batch endpoint로 후속 확장할 수 있습니다.
+`NotificationRetryScheduler`가 property-gated 방식으로 `NotificationRetryProcessor`를 호출하며, 기본값은 비활성화입니다.  
+운영자는 `POST /api/admin/notification-events/retry-due`로 동일 trigger를 수동 실행할 수 있으며, 현재 응답은 `{ "status": "triggered" }`입니다.  
+따라서 현재 구현 범위는 "자동 재시도 대상 조회와 상태 전이 로직 + 선택적 scheduled trigger + admin-triggered batch endpoint"입니다.
 
 ### 후속 작업
 - notification 채널별 재시도 횟수

@@ -94,8 +94,8 @@
 `nextAttemptAt`이 미래이면 processor는 해당 이벤트를 건드리지 않습니다.  
 반복 실패로 최대 재시도 기준에 도달하면 이벤트는 `MANUAL_INTERVENTION_REQUIRED`로 전환되고, 주문은 자동 완료 복구하지 않습니다.
 
-현재 구현은 processor/application method를 명시적으로 호출하는 구조입니다.  
-실제 `@Scheduled` trigger 또는 admin-triggered batch endpoint는 후속 확장 범위입니다.
+현재 구현은 processor/application method를 유지하면서, property-gated `NotificationRetryScheduler`와 `POST /api/admin/notification-events/retry-due` endpoint가 동일 trigger port를 호출하는 구조입니다.  
+현재 admin batch 응답은 `{ "status": "triggered" }`만 반환하며, processedCount 같은 운영 지표는 후속 확장 범위입니다.
 
 ## 3. Structure Notes
 

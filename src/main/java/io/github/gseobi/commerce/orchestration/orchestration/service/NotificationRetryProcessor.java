@@ -4,6 +4,7 @@ import io.github.gseobi.commerce.orchestration.audit.api.AuditRecorder;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryCandidateView;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryOperations;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryProcessingResult;
+import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetrySchedulerTrigger;
 import io.github.gseobi.commerce.orchestration.orchestration.api.NotificationRetryProcessorApplication;
 import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
 import io.github.gseobi.commerce.orchestration.order.api.OrderRecoveryApplication;
@@ -18,9 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-class NotificationRetryProcessor implements NotificationRetryProcessorApplication {
+class NotificationRetryProcessor implements NotificationRetryProcessorApplication, NotificationRetrySchedulerTrigger {
 
     private static final int MAX_AUTO_RETRY_COUNT = 3;
+    private static final int SCHEDULER_BATCH_LIMIT = Integer.MAX_VALUE;
     private static final Duration RETRY_BACKOFF = Duration.ofMinutes(5);
     private static final String TOKEN_RETRY_PERSISTENT = "FAIL_NOTIFICATION_RETRY_PERSISTENT";
 
@@ -31,7 +33,17 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
 
     @Transactional
     @Override
+    public NotificationRetryProcessingResult processDueRetryEvents() {
+        return processRetries(LocalDateTime.now(), SCHEDULER_BATCH_LIMIT);
+    }
+
+    @Transactional
+    @Override
     public NotificationRetryProcessingResult processDueRetries(LocalDateTime now, int limit) {
+        return processRetries(now, limit);
+    }
+
+    private NotificationRetryProcessingResult processRetries(LocalDateTime now, int limit) {
         List<NotificationRetryCandidateView> dueEvents = notificationRetryOperations.findDueRetryScheduledEvents(now, limit);
 
         int successCount = 0;

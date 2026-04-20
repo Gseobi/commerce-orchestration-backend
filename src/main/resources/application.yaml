@@ -51,3 +51,9 @@ app:
       connect-timeout: ${PAYMENT_PROVIDER_CONNECT_TIMEOUT:2s}
       read-timeout: ${PAYMENT_PROVIDER_READ_TIMEOUT:3s}
       mock-failure-token: ${PAYMENT_PROVIDER_MOCK_FAILURE_TOKEN:FAIL_PAYMENT}
+
+notification:
+  retry:
+    scheduler:
+      enabled: false
+      fixed-delay-ms: 60000
