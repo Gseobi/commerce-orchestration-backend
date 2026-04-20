@@ -31,11 +31,12 @@ Spring Boot 기반 commerce orchestration backend입니다.
 
 처음 보는 사람 기준 권장 읽기 순서는 아래입니다.
 
-1. [Docs Index](/docs/README.md)
-2. [Architecture Notes](/docs/architecture/README.md)
-3. [Flow Notes](/docs/flows/README.md)
-4. [Design Notes](/docs/design-notes.md)
-5. [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+1. **문서 구조:** [Docs Index](/docs/README.md)
+2. **Modulith / 패키지 구조:** [Architecture Notes](/docs/architecture/README.md)
+3. **Order / Payment / Settlement 흐름:** [Flow Notes](/docs/flows/README.md)
+4. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
+5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
+6. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
