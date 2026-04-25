@@ -35,17 +35,34 @@
 | PostgreSQL / Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
 | PostgreSQL / Kafka outbox dead-letter path | Implemented | retry 후 dead-letter 전환 검증 |
 | Notification retry processor | Implemented | `RETRY_SCHEDULED` due event 재처리, 성공/재스케줄/manual 전환 검증 |
+| Notification retry claim | Implemented | due event claim, claim 실패 skippedCount 집계, 동시 실행 시 단일 성공 처리 검증 |
 | Notification future retry skip | Implemented | `nextAttemptAt`이 미래인 이벤트는 처리 대상에서 제외 |
 | Notification max retry exceeded | Implemented | 반복 실패 시 `MANUAL_INTERVENTION_REQUIRED` 전환 |
+| Payment idempotency | Implemented | 같은 `paymentRequestId` replay 시 provider approve/save 1회 검증 |
+| Outbox publisher adapter | Implemented | `KafkaTemplate` 없이 `OutboxEventPublisher` mock 기반 publish/retry/dead-letter 검증 |
+| Outbox publish claim | Implemented | claim 성공 시에만 publish, `PROCESSING` event 중복 publish 방지 검증 |
 | Modulith architecture verification | Implemented | `ApplicationModules.verify()` 기준 module boundary 검증 |
 
-## 3. 테스트 종류 차이
+## 3. Reliability Hardening Test Matrix
+
+이번 문서 정리 전 실제 실행 결과 기준입니다.
+
+| Test / Command | Coverage | Result |
+|---|---|---|
+| `PaymentServiceTest` | 같은 `paymentRequestId` replay 시 `PaymentProviderClient.approve` 중복 호출 방지, `paymentRepository.save` 1회 검증 | PASS |
+| `NotificationRetryProcessorIntegrationTest` | due retry event 처리, retry success/reschedule/manual 전환, skippedCount 필드 유지 검증 | PASS |
+| `NotificationRetryProcessorTest` | claim 실패 시 skippedCount 증가, 같은 due event 동시 processor 실행 시 최종 성공 처리 1회 검증 | PASS |
+| `OutboxPublisherServiceTest` | `OutboxEventPublisher` mock 기반 publish 성공/실패, retry/dead-letter, `PROCESSING` skip 검증 | PASS |
+| `./gradlew clean test --rerun-tasks` | 단위 테스트, MockMvc 테스트, Modulith boundary 검증 | PASS |
+| `./gradlew clean integrationTest --rerun-tasks --stacktrace` | PostgreSQL/Kafka Testcontainers, Flyway migration, outbox/notification integration flow | PASS |
+
+## 4. 테스트 종류 차이
 
 ### `test`
 
 - H2 메모리 DB 사용
 - Flyway 비활성화
-- mock `KafkaTemplate` 기반 검증 포함
+- mock adapter / mock Kafka 기반 검증 포함
 - 빠른 회귀 확인 목적
 
 ### `integrationTest`
@@ -55,7 +72,7 @@
 - Flyway migration 적용 후 JPA `validate`
 - outbox publish와 DB 스키마를 실인프라에 가깝게 검증
 
-## 4. GitHub Actions 검증 범위
+## 5. GitHub Actions 검증 범위
 
 현재 workflow는 아래 두 job을 수행합니다.
 
@@ -69,7 +86,7 @@
 - `gradle-unit-test-reports`
 - `gradle-integration-test-reports`
 
-## 5. CI 안정화 메모
+## 6. CI 안정화 메모
 
 이번 정리에서 `integrationTest` 실패 원인은 단순 Docker 부재가 아니라 Kafka Testcontainers 조합 문제로 확인했습니다.
 
@@ -82,10 +99,13 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - `./gradlew clean integrationTest --rerun-tasks --stacktrace`
 - `./gradlew integrationTest --rerun-tasks --stacktrace`
 
-## 6. 아직 검증하지 않은 범위
+## 7. 아직 검증하지 않은 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip
-- notification 채널별 retry policy / scheduler trigger / 운영자 승인 절차
+- notification 채널별 retry policy / 운영자 승인 절차
 - dead-letter 운영 자동화
+- Kafka consumer 기반 상태 전이
+- WebClient timeout 이후 confirmation flow
+- provider callback API와 `providerTransactionId` 기반 callback idempotency
 - admin 레벨 재처리 / 재검증 API 고도화
 - refresh token / key rotation / user store 연동

@@ -15,6 +15,13 @@
 - audit은 분기, 실패, 재처리 지점을 추적합니다.
 - admin은 전체 orchestration 재실행이 아니라 실패한 하위 처리 단위의 명시적 복구 API를 제공합니다.
 
+최근 reliability hardening 이후 architecture 관점의 추가 기준은 아래와 같습니다.
+
+- `PaymentService`는 `paymentRequestId` 기준으로 idempotent replay를 처리합니다.
+- `NotificationRetryProcessor`와 outbox publisher는 Java `synchronized`가 아니라 DB 조건부 상태 전이를 통해 처리 권한을 선점합니다.
+- `OutboxPublisherService`는 `KafkaTemplate`을 직접 알지 않고 `OutboxEventPublisher` interface에 의존합니다.
+- `KafkaOutboxEventPublisher`는 `infrastructure/kafka` adapter로 분리되어 `KafkaTemplate` 발행과 timeout/failure 변환을 담당합니다.
+
 ## 2. Dependency Direction
 
 권장 의존 방향은 아래와 같습니다.
@@ -64,3 +71,38 @@
 따라서 architecture의 목표는 모든 후속 처리를 하나의 거대한 service에 밀어 넣는 것이 아니라, orchestration은 흐름을 제어하고 각 domain은 자기 상태와 복구 기준을 소유하도록 분리하는 것입니다.
 
 이 구조를 통해 실패 지점을 추적하고, 재시도/보상/수동 개입 대상을 하위 처리 단위로 좁힐 수 있습니다.
+
+## 8. Reliability Hardening Structure
+
+### Payment Idempotency
+
+`CommerceOrchestrationService`는 payment approve 호출 시 `"ORDER-" + orderId + "-PAYMENT-APPROVE"` 형식의 deterministic `paymentRequestId`를 넘깁니다.
+
+`PaymentService`는 approve 시작 시 `paymentRequestId`로 기존 payment를 먼저 조회합니다. 기존 row가 있으면 provider를 다시 호출하지 않고 기존 payment 기준 `PaymentResponse`를 반환합니다. 기존 row가 없을 때만 provider approve를 호출하고 payment row를 저장합니다.
+
+`providerTransactionId` 컬럼과 repository 조회 메서드는 외부 provider callback 멱등성 확장을 위한 준비 지점입니다. 현재 callback API와 callback 처리 flow는 구현되어 있지 않습니다.
+
+### Notification / Outbox Claim
+
+Notification retry와 Outbox publish는 둘 다 DB 상태 조건 기반 claim을 사용합니다.
+
+- notification: `RETRY_SCHEDULED -> PROCESSING -> SENT / RETRY_SCHEDULED / MANUAL_INTERVENTION_REQUIRED`
+- outbox: `READY / RETRY_WAIT -> PROCESSING -> PUBLISHED / RETRY_WAIT / DEAD_LETTER`
+
+claim은 조건부 update 결과로 판단합니다.
+
+- update count `1`: 처리 권한 획득
+- update count `0`: 이미 다른 실행자가 선점했거나 더 이상 대상 상태가 아니므로 skip
+
+Java `synchronized`를 쓰지 않는 이유는 scheduler와 admin/manual retry가 같은 JVM 안에서만 실행된다는 보장이 없기 때문입니다. 다중 인스턴스나 운영자 수동 실행까지 고려하면 프로세스 내부 락보다 DB row 상태 전이가 더 명확한 조정 지점입니다.
+
+### Outbox Publisher Adapter
+
+```text
+OutboxPublisherService
+  -> OutboxEventPublisher
+      -> KafkaOutboxEventPublisher
+          -> KafkaTemplate
+```
+
+`OutboxPublisherService`는 outbox 상태 전이, retry count, backoff, dead-letter 정책을 담당합니다. Kafka 발행 세부 구현과 failure message truncation은 `KafkaOutboxEventPublisher`가 담당합니다.

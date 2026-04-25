@@ -96,8 +96,9 @@
 
 현재 구조는 trigger 분리와 module boundary 정리에 초점을 맞춘 구현으로 보는 것이 맞고, 아래 항목은 후속 과제로 남겨두는 편이 적절합니다.
 
-- `processedCount` 반환 구조 검토
-  - 현재 admin batch endpoint 응답은 `{ "status": "triggered" }`만 반환하므로, 실제 처리 건수나 결과 summary를 어떻게 노출할지 검토가 필요합니다.
+- batch 결과 노출 고도화
+  - 현재 admin retry-due endpoint는 `NotificationRetryProcessingResult`를 반환하며 `processedCount`, `successCount`, `failedCount`, `skippedCount`, `processedEventIds`를 포함합니다.
+  - 운영자 실행 actor trace, batch id, 상세 실패 리스트는 후속 확장 후보입니다.
 - retry 실행 결과에 대한 audit log 강화
   - 현재 processor 내부 audit는 있으나, batch trigger 단위 실행 결과와 운영자 실행 맥락까지 더 풍부하게 남길 여지가 있습니다.
 - admin endpoint 인증/권한 정책 추가
@@ -108,3 +109,43 @@
   - outbox dead-letter 운영 재처리는 현재 admin path가 중심이며, 더 자동화된 운영 회수 전략은 별도 과제로 남습니다.
 - retry/backoff 정책을 설정 기반으로 외부화
   - 현재 retry 횟수와 backoff는 processor 내부 상수에 가깝기 때문에, 환경별 운영 설정으로 빼는 작업이 남아 있습니다.
+
+## 8. Reliability Hardening Review
+
+최근 hardening 작업에서는 retry trigger 분리 이후 실제 중복 실행 가능성을 줄이는 구현을 추가했습니다.
+
+### Payment idempotency guard
+
+- `PaymentApplication.approve`는 `paymentRequestId`를 인자로 받습니다.
+- orchestration은 `"ORDER-" + orderId + "-PAYMENT-APPROVE"` deterministic key를 생성해 전달합니다.
+- `PaymentService`는 provider 호출 전에 `findByPaymentRequestId`를 수행합니다.
+- 기존 payment가 있으면 provider approve를 다시 호출하지 않고 기존 payment 기준 응답을 반환합니다.
+- 실패 provider result도 payment row로 저장하되, 기존 정책처럼 `BusinessException`은 유지합니다.
+
+### Notification retry claim
+
+- `NotificationEventStatus.PROCESSING`과 `NotificationEvent.@Version`을 추가했습니다.
+- `NotificationEventRepository.claimRetryScheduledEvent`는 `RETRY_SCHEDULED`, due 조건, retry count 조건을 만족할 때만 `PROCESSING`으로 update합니다.
+- update count가 `1`이면 retry 처리 권한을 얻고, `0`이면 skipped로 집계합니다.
+- `markRetrySucceeded`, `rescheduleRetry`, `requireManualIntervention`은 claim 이후 `PROCESSING` 이벤트를 다음 상태로 전이하는 경로에서 동작합니다.
+
+### Outbox publisher adapter 분리
+
+- `OutboxPublisherService`의 `KafkaTemplate` 직접 의존을 제거했습니다.
+- `OutboxPublisherService`는 `OutboxEventPublisher` interface에 의존하고, publish 결과에 따라 `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER` 상태 전이만 담당합니다.
+- `KafkaOutboxEventPublisher`는 `infrastructure/kafka` adapter로 `KafkaTemplate.send(...).get(...)`, timeout, failure message truncation을 담당합니다.
+- Kafka consumer 기반 상태 전이는 아직 구현하지 않았고, 현재 범위는 publisher adapter 분리까지입니다.
+
+### Outbox PROCESSING claim
+
+- `OutboxStatus.PROCESSING`과 `OutboxEvent.@Version`을 추가했습니다.
+- `OutboxEventRepository.claimPublishableEvent`는 `READY` 또는 `RETRY_WAIT`이고 `nextAttemptAt <= now`인 이벤트만 `PROCESSING`으로 선점합니다.
+- `publishReadyEvents`는 후보 조회 후 claim에 성공한 이벤트만 publisher adapter에 전달합니다.
+- 이미 `PROCESSING`인 이벤트나 claim 실패 이벤트는 중복 publish하지 않습니다.
+
+### Verification
+
+이번 문서 정리 전 기준으로 아래 명령을 실행했고 둘 다 통과했습니다.
+
+- `./gradlew clean test --rerun-tasks`
+- `./gradlew clean integrationTest --rerun-tasks --stacktrace`

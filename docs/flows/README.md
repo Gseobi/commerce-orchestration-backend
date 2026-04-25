@@ -18,11 +18,13 @@
 ## 2. Flow Intent
 
 - payment 성공 이후 order를 `PAID`로 전이합니다.
+- payment approve는 `paymentRequestId` 기준으로 provider 중복 호출을 방지합니다.
 - settlement 성공 이후 order를 `SETTLEMENT_REQUESTED`로 전이하고 후속 outbox event를 남깁니다.
 - notification 성공 이후 order를 `NOTIFICATION_REQUESTED` 또는 `COMPLETED` 흐름으로 전이하고 후속 outbox event를 남깁니다.
 - settlement 실패는 거래 정합성에 영향을 주는 실패로 보고 payment cancel compensation까지 연결합니다.
 - notification 실패는 payment / settlement를 되돌리지 않고, 실패 정책에 따라 retry / manual intervention / ignore로 분기합니다.
 - outbox publish 실패는 비즈니스 처리 자체와 분리해 retry / dead-letter 상태로 추적합니다.
+- notification retry와 outbox publish는 처리 전 `PROCESSING` 상태 claim을 수행합니다.
 
 ## 3. Current Assets
 
@@ -53,16 +55,56 @@ notification 실패 시 `handling_policy` 기준으로 `AUTO_RETRY`, `MANUAL_INT
 - 명시적 ignore 처리 시 주문은 `COMPLETED`로 복구됩니다.
 - 실패/보류 상태는 audit log 또는 orchestration step 기록 포인트로 남습니다.
 
+### Reliability State Transitions
+
+#### Payment approve
+
+```text
+paymentRequestId 없음
+  -> provider approve
+  -> payment 저장
+  -> PaymentResponse 반환
+
+동일 paymentRequestId 있음
+  -> provider 재호출 없음
+  -> 기존 payment 기준 PaymentResponse 반환
+```
+
+orchestration replay에서 같은 주문은 `"ORDER-" + orderId + "-PAYMENT-APPROVE"` key를 다시 사용합니다.
+
+#### Notification retry
+
+```text
+RETRY_SCHEDULED
+  -> PROCESSING
+  -> SENT / RETRY_SCHEDULED / MANUAL_INTERVENTION_REQUIRED
+```
+
+due retry 후보를 조회한 뒤 조건부 update로 `PROCESSING` claim을 시도합니다. claim 결과가 `0`이면 다른 실행자가 이미 처리 중이거나 대상 상태가 아니므로 `skippedCount`만 증가시키고 order 조회나 retry 처리는 수행하지 않습니다.
+
+#### Outbox publish
+
+```text
+READY / RETRY_WAIT
+  -> PROCESSING
+  -> PUBLISHED / RETRY_WAIT / DEAD_LETTER
+```
+
+publish 후보를 조회한 뒤 조건부 update로 `PROCESSING` claim을 획득한 이벤트만 `OutboxEventPublisher`에 넘깁니다. Kafka 발행 성공 시 `PUBLISHED`, 실패 시 retry 정책에 따라 `RETRY_WAIT` 또는 `DEAD_LETTER`로 전이합니다.
+
 ## 4. Covered Flow
 
 - order create / detail / orchestration 시작
 - payment success / failure
+- payment idempotent replay
 - settlement failure compensation
 - notification policy 분기
 - admin retry / ignore / reprocessing
 - outbox retry / dead-letter 전환
+- outbox publish claim
 - notification retry / manual intervention flow
 - notification retry processor due event 처리
+- notification retry claim / skipped count 집계
 
 ## 5. Why This Matters
 

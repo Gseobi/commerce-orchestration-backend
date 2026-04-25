@@ -58,26 +58,37 @@
 - 실제 외부 provider 골격을 사용하려면 `PAYMENT_PROVIDER_MODE=external`로 바꿔야 합니다.
 - 외부 provider 모드에서는 `PAYMENT_PROVIDER_BASE_URL`, 필요 시 `PAYMENT_PROVIDER_API_KEY`도 지정해야 합니다.
 - 외부 호출 실패는 내부적으로 `PAYMENT_FAILED` 계열 예외로 매핑됩니다.
+- 같은 주문 orchestration replay에서는 `"ORDER-" + orderId + "-PAYMENT-APPROVE"` 형식의 `paymentRequestId`를 재사용합니다.
+- 동일 `paymentRequestId` payment가 이미 있으면 provider approve를 다시 호출하지 않습니다.
 
-### 2.2 outbox 이벤트가 바로 publish되지 않는 경우
+### 2.2 `payment_request_id` unique violation이 발생하는 경우
 
-- 현재 outbox는 `READY -> RETRY_WAIT -> PUBLISHED / DEAD_LETTER` 흐름을 사용합니다.
+- 동일 `paymentRequestId`로 동시에 신규 approve가 들어왔는지 확인합니다.
+- 정상 replay라면 기존 payment 조회 후 반환되어야 하므로, 예외가 반복되면 race condition 재현 여부와 transaction boundary를 확인합니다.
+- `payment_request_id` 값이 주문 단위 deterministic key와 다르게 생성되고 있지 않은지 확인합니다.
+- `providerTransactionId`는 callback 멱등성 확장용 컬럼/조회 포트만 준비된 상태이며, callback flow 자체는 아직 구현되어 있지 않습니다.
+
+### 2.3 outbox 이벤트가 바로 publish되지 않는 경우
+
+- 현재 outbox는 `READY / RETRY_WAIT -> PROCESSING -> PUBLISHED / RETRY_WAIT / DEAD_LETTER` 흐름을 사용합니다.
+- publisher는 먼저 `PROCESSING` claim을 획득한 이벤트만 발행합니다.
 - publish 실패 시 `retryCount`, `nextAttemptAt`, `failureCode`, `failureReason`이 기록됩니다.
 - 최대 재시도 초과 시 `DEAD_LETTER`로 이동합니다.
 - 운영 점검/수동 재처리 SQL은 `docs/sql/outbox-operations.sql`을 참고합니다.
 
-### 2.3 settlement 실패와 notification 실패가 다르게 처리되는 이유
+### 2.4 settlement 실패와 notification 실패가 다르게 처리되는 이유
 
 - settlement 실패는 현재 payment 취소 보상까지 연결되어 있습니다.
 - notification 실패는 payment/settlement를 되돌리지 않고 재시도 또는 운영자 개입 대상으로 남깁니다.
 
-### 2.4 notification 실패가 모두 같은 상태로 보이지 않는 경우
+### 2.5 notification 실패가 모두 같은 상태로 보이지 않는 경우
 
-- 현재 notification 실패는 `RETRY_SCHEDULED`, `MANUAL_INTERVENTION_REQUIRED`, `IGNORED`로 나뉠 수 있습니다.
+- 현재 notification 실패는 `RETRY_SCHEDULED`, `PROCESSING`, `MANUAL_INTERVENTION_REQUIRED`, `IGNORED`로 나뉠 수 있습니다.
 - `RETRY_SCHEDULED`는 일시적 실패, `MANUAL_INTERVENTION_REQUIRED`는 운영자 확인 필요, `IGNORED`는 주문 완료를 막지 않는 실패를 뜻합니다.
+- `PROCESSING`은 retry processor 또는 admin-triggered batch가 처리 권한을 선점한 상태입니다.
 - 운영 점검/수동 처리 SQL은 `docs/sql/notification-admin-operations.sql`을 참고합니다.
 
-### 2.5 admin 재처리가 기대한 대상을 다시 태우지 않는 경우
+### 2.6 admin 재처리가 기대한 대상을 다시 태우지 않는 경우
 
 - notification admin 재처리는 전체 order orchestration 재실행이 아닙니다.
 - `notification-events/{id}/retry` 또는 `ignore`는 실패한 notification 처리 단위만 복구하고, 성공 시 주문 상태를 `COMPLETED`로 복구합니다.
@@ -85,7 +96,7 @@
 - `outbox-events/{id}/retry`는 `DEAD_LETTER` outbox event만 즉시 재발행 대상으로 허용합니다.
 - 성공 시 응답에는 `eventId`, `aggregateId`, `eventType`, `action=RETRY_DEAD_LETTER`, `result=PUBLISHED`, `previousStatus=DEAD_LETTER`, `currentStatus=PUBLISHED`, `message`가 포함됩니다.
 
-### 2.6 notification retry processor가 대상을 처리하지 않는 경우
+### 2.7 notification retry processor가 대상을 처리하지 않는 경우
 
 `RETRY_SCHEDULED` 이벤트가 processor 대상이 되려면 아래 조건을 만족해야 합니다.
 
@@ -97,7 +108,33 @@
 반복 실패로 최대 재시도 기준에 도달하면 이벤트는 `MANUAL_INTERVENTION_REQUIRED`로 전환되고, 주문은 자동 완료 복구하지 않습니다.
 
 현재 구현은 processor/application method를 유지하면서, property-gated `NotificationRetryScheduler`와 `POST /api/admin/notification-events/retry-due` endpoint가 동일 trigger port를 호출하는 구조입니다.  
-현재 admin batch 응답은 `{ "status": "triggered" }`만 반환하며, processedCount 같은 운영 지표는 후속 확장 범위입니다.
+현재 admin batch 응답은 `status`, `processedCount`, `successCount`, `failedCount`, `skippedCount`, `processedEventIds`를 포함합니다.
+
+### 2.8 notification event가 `PROCESSING`에 오래 머무는 경우
+
+- retry processor가 claim 이후 예외나 프로세스 종료로 다음 상태 전이에 도달하지 못했을 가능성이 있습니다.
+- `last_attempt_at` 기준으로 얼마나 오래 머물렀는지 확인합니다.
+- 같은 이벤트에 대한 skippedCount 증가가 함께 보이면 다른 실행자가 이미 선점한 것으로 판단되어 후속 실행이 skip되고 있을 수 있습니다.
+- 현재 자동 stale-processing 복구 job은 구현되어 있지 않으므로 운영 점검 후 수동 복구 정책을 별도로 판단해야 합니다.
+
+### 2.9 outbox event가 `PROCESSING`에 오래 머무는 경우
+
+- outbox publisher가 claim 이후 Kafka publish 또는 상태 전이 전에 중단됐을 가능성이 있습니다.
+- `last_attempt_at`, `topic`, `event_type`, Kafka broker 상태를 함께 확인합니다.
+- 현재 자동 stale-processing 복구 job은 구현되어 있지 않습니다.
+
+### 2.10 `skippedCount`가 증가하는 경우
+
+- due candidate 조회 후 claim update가 `0`을 반환한 이벤트가 있다는 뜻입니다.
+- 보통 scheduler와 admin/manual trigger가 비슷한 시점에 같은 event를 잡았거나, 다른 instance가 먼저 `PROCESSING`으로 선점한 경우입니다.
+- skipped 자체는 중복 실행 방어가 동작했다는 신호일 수 있습니다. 다만 특정 이벤트가 장시간 `PROCESSING`에 머무는지 같이 확인해야 합니다.
+
+### 2.11 Kafka publish 실패로 `RETRY_WAIT` 또는 `DEAD_LETTER`가 되는 경우
+
+- `failure_code`, `failure_reason`, `retry_count`, `next_attempt_at`을 먼저 확인합니다.
+- `RETRY_WAIT`이면 `next_attempt_at` 이후 다시 publish 대상이 됩니다.
+- `DEAD_LETTER`이면 admin outbox retry API 또는 운영 SQL로 상태를 확인한 뒤 재처리합니다.
+- Kafka consumer 기반 상태 전이는 아직 구현되어 있지 않으며, 현재는 publisher adapter의 send 결과를 기준으로 outbox 상태를 전이합니다.
 
 ## 3. Structure Notes
 
