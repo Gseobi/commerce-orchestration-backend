@@ -68,6 +68,7 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
             orderWorkflowAccess.markPaymentPending(orderId);
             recordStep(orderId, OrchestrationStepType.PAYMENT, OrchestrationStepStatus.READY, "Payment requested");
             PaymentResponse paymentResponse = paymentApplication.approve(
+                    paymentRequestId(orderId),
                     orderId,
                     order.totalAmount(),
                     order.description()
@@ -145,6 +146,10 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
     private void createOutboxEvent(Long orderId, String topic, String eventType) {
         String payload = "{\"orderId\":" + orderId + ",\"eventType\":\"" + eventType + "\"}";
         outboxApplication.appendOrderEvent(orderId, topic, eventType, payload);
+    }
+
+    private String paymentRequestId(Long orderId) {
+        return "ORDER-" + orderId + "-PAYMENT-APPROVE";
     }
 
     private void handleFailure(Long orderId, BusinessException exception) {

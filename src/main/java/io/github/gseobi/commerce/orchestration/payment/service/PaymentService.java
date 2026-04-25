@@ -25,20 +25,34 @@ class PaymentService implements PaymentApplication {
 
     @Transactional(noRollbackFor = BusinessException.class)
     @Override
-    public PaymentResponse approve(Long orderId, BigDecimal amount, String description) {
+    public PaymentResponse approve(String paymentRequestId, Long orderId, BigDecimal amount, String description) {
+        Payment existingPayment = paymentRepository.findByPaymentRequestId(paymentRequestId).orElse(null);
+        if (existingPayment != null) {
+            return toResponse(existingPayment);
+        }
+
         PaymentProviderResult providerResult = paymentProviderClient.approve(orderId, amount, description);
-        Payment payment = new Payment(orderId, providerResult.status(), amount, providerResult.providerReference());
-        paymentRepository.save(payment);
+        Payment payment = Payment.requested(
+                paymentRequestId,
+                orderId,
+                providerResult.status(),
+                amount,
+                providerResult.providerReference()
+        );
+        Payment savedPayment = paymentRepository.save(payment);
         if (providerResult.status() != PaymentStatus.APPROVED) {
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, providerResult.message());
         }
-        Payment savedPayment = paymentRepository.save(payment);
+        return toResponse(savedPayment);
+    }
+
+    private PaymentResponse toResponse(Payment payment) {
         return PaymentResponse.of(
-                savedPayment.getId(),
-                savedPayment.getOrderId(),
-                savedPayment.getStatus().name(),
-                savedPayment.getAmount(),
-                savedPayment.getProviderReference()
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getStatus().name(),
+                payment.getAmount(),
+                payment.getProviderReference()
         );
     }
 
