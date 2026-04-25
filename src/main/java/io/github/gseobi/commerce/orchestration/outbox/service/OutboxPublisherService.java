@@ -1,6 +1,8 @@
 package io.github.gseobi.commerce.orchestration.outbox.service;
 
 import io.github.gseobi.commerce.orchestration.config.OutboxProperties;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventPublisher;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishResult;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
 import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
@@ -9,10 +11,7 @@ import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +23,7 @@ public class OutboxPublisherService {
 
     private static final List<OutboxStatus> PUBLISHABLE_STATUSES = List.of(OutboxStatus.READY, OutboxStatus.RETRY_WAIT);
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxEventPublisher outboxEventPublisher;
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxProperties outboxProperties;
 
@@ -37,10 +36,20 @@ public class OutboxPublisherService {
                 PageRequest.of(0, batchSize)
         );
         int publishedCount = 0;
-        for (OutboxEvent readyEvent : readyEvents) {
-            String previousStatus = readyEvent.getStatus().name();
-            publishEvent(readyEvent);
-            if (!previousStatus.equals(readyEvent.getStatus().name()) && readyEvent.getStatus() == OutboxStatus.PUBLISHED) {
+        for (OutboxEvent candidateEvent : readyEvents) {
+            int claimed = outboxEventRepository.claimPublishableEvent(
+                    candidateEvent.getId(),
+                    PUBLISHABLE_STATUSES,
+                    now
+            );
+            if (claimed == 0) {
+                continue;
+            }
+
+            OutboxEvent claimedEvent = outboxEventRepository.findById(candidateEvent.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
+            publishEvent(claimedEvent);
+            if (claimedEvent.getStatus() == OutboxStatus.PUBLISHED) {
                 publishedCount++;
             }
         }
@@ -51,26 +60,43 @@ public class OutboxPublisherService {
     public OutboxEvent publishEvent(Long outboxEventId) {
         OutboxEvent outboxEvent = outboxEventRepository.findById(outboxEventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
+
+        if (outboxEvent.getStatus() == OutboxStatus.PUBLISHED || outboxEvent.getStatus() == OutboxStatus.PROCESSING) {
+            return outboxEvent;
+        }
+
+        if (outboxEvent.getStatus() == OutboxStatus.DEAD_LETTER) {
+            outboxEvent.resetForAdminRetry();
+        }
+
+        int claimed = outboxEventRepository.claimPublishableEvent(
+                outboxEventId,
+                PUBLISHABLE_STATUSES,
+                LocalDateTime.now()
+        );
+        if (claimed == 0) {
+            return outboxEventRepository.findById(outboxEventId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
+        }
+
+        outboxEvent = outboxEventRepository.findById(outboxEventId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
         publishEvent(outboxEvent);
         return outboxEvent;
     }
 
     private void publishEvent(OutboxEvent outboxEvent) {
-        try {
-            SendResult<String, String> result = kafkaTemplate
-                    .send(outboxEvent.getTopic(), String.valueOf(outboxEvent.getOrderId()), outboxEvent.getPayload())
-                    .get(outboxProperties.publishTimeout().toSeconds(), TimeUnit.SECONDS);
-            if (result != null) {
-                outboxEvent.markPublished();
-            }
-        } catch (Exception exception) {
-            handlePublishFailure(outboxEvent, exception);
+        OutboxPublishResult result = outboxEventPublisher.publish(outboxEvent);
+        if (result.isSuccess()) {
+            outboxEvent.markPublished();
+            return;
         }
+        handlePublishFailure(outboxEvent, result);
     }
 
-    private void handlePublishFailure(OutboxEvent outboxEvent, Exception exception) {
-        String failureCode = exception.getClass().getSimpleName();
-        String failureReason = buildFailureReason(exception);
+    private void handlePublishFailure(OutboxEvent outboxEvent, OutboxPublishResult result) {
+        String failureCode = result.failureCode();
+        String failureReason = result.failureReason();
         int nextRetryCount = outboxEvent.getRetryCount() + 1;
 
         if (nextRetryCount >= outboxProperties.maxRetryCount()) {
@@ -88,13 +114,5 @@ public class OutboxPublisherService {
         long calculatedMillis = Math.round(initialMillis * multiplier);
         long cappedMillis = Math.min(calculatedMillis, outboxProperties.maxBackoff().toMillis());
         return Duration.ofMillis(Math.max(cappedMillis, 0));
-    }
-
-    private String buildFailureReason(Exception exception) {
-        String message = exception.getMessage();
-        if (message == null || message.isBlank()) {
-            return exception.getClass().getName();
-        }
-        return message.length() > 1000 ? message.substring(0, 1000) : message;
     }
 }

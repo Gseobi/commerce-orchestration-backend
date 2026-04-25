@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
@@ -58,6 +59,9 @@ public class OutboxEvent extends BaseTimeEntity {
     @Column(length = 1000)
     private String failureReason;
 
+    @Version
+    private Long version;
+
     protected OutboxEvent() {
     }
 
@@ -79,6 +83,11 @@ public class OutboxEvent extends BaseTimeEntity {
         this.deadLetteredAt = null;
         this.failureCode = null;
         this.failureReason = null;
+    }
+
+    public void markProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+        this.lastAttemptAt = LocalDateTime.now();
     }
 
     public void markRetryWaiting(String failureCode, String failureReason, LocalDateTime nextAttemptAt) {
