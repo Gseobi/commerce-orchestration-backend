@@ -49,9 +49,20 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
 
         int successCount = 0;
         int failedCount = 0;
+        int skippedCount = 0;
         List<Long> processedEventIds = new ArrayList<>(dueEvents.size());
 
         for (NotificationRetryCandidateView event : dueEvents) {
+            int claimed = notificationRetryOperations.claimRetryScheduledEvent(
+                    event.notificationEventId(),
+                    now,
+                    MAX_AUTO_RETRY_COUNT
+            );
+            if (claimed == 0) {
+                skippedCount++;
+                continue;
+            }
+
             processedEventIds.add(event.notificationEventId());
             OrderExecutionView order = orderWorkflowAccess.getOrderExecutionView(event.orderId());
             if (descriptionContains(order.description(), TOKEN_RETRY_PERSISTENT)) {
@@ -93,7 +104,7 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
                 dueEvents.size(),
                 successCount,
                 failedCount,
-                0,
+                skippedCount,
                 processedEventIds
         );
     }

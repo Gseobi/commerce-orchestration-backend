@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,5 +32,22 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
             @Param("now") LocalDateTime now,
             @Param("maxRetryCount") int maxRetryCount,
             Pageable pageable
+    );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update NotificationEvent event
+            set event.status = io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus.PROCESSING,
+                event.lastAttemptAt = :now,
+                event.version = event.version + 1
+            where event.id = :id
+              and event.status = io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus.RETRY_SCHEDULED
+              and event.nextAttemptAt <= :now
+              and event.retryCount < :maxRetryCount
+            """)
+    int claimRetryScheduledEvent(
+            @Param("id") Long id,
+            @Param("now") LocalDateTime now,
+            @Param("maxRetryCount") int maxRetryCount
     );
 }

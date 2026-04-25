@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
@@ -53,6 +54,9 @@ public class NotificationEvent extends BaseTimeEntity {
     @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
+    @Version
+    private Long version;
+
     protected NotificationEvent() {
     }
 
@@ -67,6 +71,11 @@ public class NotificationEvent extends BaseTimeEntity {
 
     public void scheduleRetry(String failureCode, String failureReason, LocalDateTime nextAttemptAt) {
         scheduleRetry(failureCode, failureReason, LocalDateTime.now(), nextAttemptAt);
+    }
+
+    public void markProcessing(LocalDateTime attemptedAt) {
+        this.status = NotificationEventStatus.PROCESSING;
+        this.lastAttemptAt = attemptedAt;
     }
 
     public void scheduleRetry(

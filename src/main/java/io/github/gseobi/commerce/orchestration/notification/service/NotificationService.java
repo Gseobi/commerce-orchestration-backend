@@ -115,6 +115,12 @@ class NotificationService implements NotificationApplication, NotificationAdminA
 
     @Transactional
     @Override
+    public int claimRetryScheduledEvent(Long notificationEventId, LocalDateTime now, int maxRetryCount) {
+        return notificationEventRepository.claimRetryScheduledEvent(notificationEventId, now, maxRetryCount);
+    }
+
+    @Transactional
+    @Override
     public NotificationAdminView markRetrySucceeded(Long notificationEventId, LocalDateTime attemptedAt) {
         NotificationEvent event = getNotificationEvent(notificationEventId);
         String previousStatus = event.getStatus().name();

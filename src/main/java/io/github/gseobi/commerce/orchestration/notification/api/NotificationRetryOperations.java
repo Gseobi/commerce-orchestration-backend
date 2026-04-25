@@ -7,6 +7,8 @@ public interface NotificationRetryOperations {
 
     List<NotificationRetryCandidateView> findDueRetryScheduledEvents(LocalDateTime now, int limit);
 
+    int claimRetryScheduledEvent(Long notificationEventId, LocalDateTime now, int maxRetryCount);
+
     NotificationAdminView markRetrySucceeded(Long notificationEventId, LocalDateTime attemptedAt);
 
     NotificationFailureView rescheduleRetry(
