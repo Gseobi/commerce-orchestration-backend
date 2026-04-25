@@ -21,7 +21,7 @@ public class OutboxPublishScheduler {
         this.outboxProperties = outboxProperties;
     }
 
-    @Scheduled(fixedDelayString = "#{@outboxProperties.publishFixedDelay().toMillis()}")
+    @Scheduled(fixedDelayString = "${app.outbox.publish-fixed-delay}")
     public void publishReadyEvents() {
         outboxPublisherService.publishReadyEvents(outboxProperties.batchSize());
     }
