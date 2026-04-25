@@ -12,6 +12,7 @@ import io.github.gseobi.commerce.orchestration.audit.entity.AuditLog;
 import io.github.gseobi.commerce.orchestration.audit.repository.AuditLogRepository;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryProcessingResult;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
+import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationHandlingPolicy;
 import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
 import io.github.gseobi.commerce.orchestration.orchestration.api.NotificationRetryProcessorApplication;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -181,25 +183,19 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         Long successOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-success");
         orchestrate(successOrderId);
         NotificationEvent successEvent = getSingleNotificationEvent(successOrderId);
-        updateNextAttemptAt(successEvent.getId(), batchRunAt.minusMinutes(1));
+        makeRetryDue(successEvent.getId(), batchRunAt);
 
         Long failedOrderId = createOrder("FAIL_NOTIFICATION_RETRY_PERSISTENT batch-failed");
         orchestrate(failedOrderId);
         NotificationEvent failedEvent = getSingleNotificationEvent(failedOrderId);
-        updateNextAttemptAt(failedEvent.getId(), batchRunAt.minusMinutes(1));
+        makeRetryDue(failedEvent.getId(), batchRunAt);
 
         Long futureOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-future");
         orchestrate(futureOrderId);
         NotificationEvent futureEvent = getSingleNotificationEvent(futureOrderId);
-        updateNextAttemptAt(futureEvent.getId(), batchRunAt.plusMinutes(10));
+        makeRetryFuture(futureEvent.getId(), batchRunAt);
 
-        assertThat(notificationEventRepository.findDueRetryScheduledEvents(
-                io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus.RETRY_SCHEDULED,
-                batchRunAt,
-                3,
-                org.springframework.data.domain.PageRequest.of(0, 10)
-        ))
-                .extracting(NotificationEvent::getId)
+        assertThat(findDueRetryEventIds(batchRunAt))
                 .containsExactly(successEvent.getId(), failedEvent.getId());
 
         MvcResult result = mockMvc.perform(post("/api/admin/notification-events/retry-due")
@@ -284,11 +280,31 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         return orderRepository.findById(orderId).orElseThrow();
     }
 
+    private void makeRetryDue(Long notificationEventId, LocalDateTime batchRunAt) {
+        updateNextAttemptAt(notificationEventId, batchRunAt.minusMinutes(10));
+    }
+
+    private void makeRetryFuture(Long notificationEventId, LocalDateTime batchRunAt) {
+        updateNextAttemptAt(notificationEventId, batchRunAt.plusMinutes(10));
+    }
+
+    private List<Long> findDueRetryEventIds(LocalDateTime batchRunAt) {
+        return notificationEventRepository.findDueRetryScheduledEvents(
+                        NotificationEventStatus.RETRY_SCHEDULED,
+                        batchRunAt,
+                        3,
+                        PageRequest.of(0, 10)
+                ).stream()
+                .map(NotificationEvent::getId)
+                .toList();
+    }
+
     private void updateNextAttemptAt(Long notificationEventId, LocalDateTime nextAttemptAt) {
-        jdbcTemplate.update(
+        int updatedRows = jdbcTemplate.update(
                 "update notification_events set next_attempt_at = ? where id = ?",
                 nextAttemptAt,
                 notificationEventId
         );
+        assertThat(updatedRows).isEqualTo(1);
     }
 }
