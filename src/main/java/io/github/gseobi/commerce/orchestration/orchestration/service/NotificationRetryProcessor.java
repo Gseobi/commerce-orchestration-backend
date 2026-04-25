@@ -11,6 +11,7 @@ import io.github.gseobi.commerce.orchestration.order.api.OrderRecoveryApplicatio
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,10 +48,11 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
         List<NotificationRetryCandidateView> dueEvents = notificationRetryOperations.findDueRetryScheduledEvents(now, limit);
 
         int successCount = 0;
-        int rescheduledCount = 0;
-        int manualRequiredCount = 0;
+        int failedCount = 0;
+        List<Long> processedEventIds = new ArrayList<>(dueEvents.size());
 
         for (NotificationRetryCandidateView event : dueEvents) {
+            processedEventIds.add(event.notificationEventId());
             OrderExecutionView order = orderWorkflowAccess.getOrderExecutionView(event.orderId());
             if (descriptionContains(order.description(), TOKEN_RETRY_PERSISTENT)) {
                 if (event.retryCount() + 1 >= MAX_AUTO_RETRY_COUNT) {
@@ -62,7 +64,7 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
                     );
                     auditRecorder.record(event.orderId(), "NOTIFICATION_RETRY_MANUAL_INTERVENTION_REQUIRED",
                             "notificationEventId=%s, retryCount=%s".formatted(event.notificationEventId(), event.retryCount() + 1));
-                    manualRequiredCount++;
+                    failedCount++;
                     continue;
                 }
 
@@ -76,7 +78,7 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
                 auditRecorder.record(event.orderId(), "NOTIFICATION_RETRY_RESCHEDULED",
                         "notificationEventId=%s, retryCount=%s, nextAttemptAt=%s"
                                 .formatted(event.notificationEventId(), event.retryCount() + 1, now.plus(RETRY_BACKOFF)));
-                rescheduledCount++;
+                failedCount++;
                 continue;
             }
 
@@ -87,11 +89,12 @@ class NotificationRetryProcessor implements NotificationRetryProcessorApplicatio
             successCount++;
         }
 
-        return new NotificationRetryProcessingResult(
+        return NotificationRetryProcessingResult.completed(
                 dueEvents.size(),
                 successCount,
-                rescheduledCount,
-                manualRequiredCount
+                failedCount,
+                0,
+                processedEventIds
         );
     }
 

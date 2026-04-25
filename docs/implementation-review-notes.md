@@ -81,7 +81,7 @@
   - `notification.retry.scheduler.enabled=true`일 때 등록을 확인합니다.
 - admin endpoint test 추가 여부
   - 현재 코드 기준으로 `AdminNotificationRetryControllerTest`가 추가되어 있습니다.
-  - 이 테스트는 `ADMIN` role 사용자로 `POST /api/admin/notification-events/retry-due`를 호출했을 때 `200 OK`와 `{ "status": "triggered" }` 응답을 확인하고, `NotificationRetrySchedulerTrigger` 호출을 검증합니다.
+  - 이 테스트는 `ADMIN` role 사용자로 `POST /api/admin/notification-events/retry-due`를 호출했을 때 `200 OK`와 batch 처리 결과 응답을 확인하고, `NotificationRetrySchedulerTrigger` 호출을 검증합니다.
   - 다만 현재 테스트는 성공 경로 중심이며, 세분화된 권한 실패 시나리오까지 넓게 다루는 상태는 아닙니다.
 - compileJava 통과 여부
   - 이번 review 마무리 단계에서 `./gradlew compileJava` 실행 기준 통과를 다시 확인했습니다.

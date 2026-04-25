@@ -48,7 +48,7 @@ class NotificationRetrySchedulerTest {
     static class NoOpNotificationRetryProcessor implements NotificationRetrySchedulerTrigger {
 
         private static final NotificationRetryProcessingResult EMPTY_RESULT =
-                new NotificationRetryProcessingResult(0, 0, 0, 0);
+                NotificationRetryProcessingResult.completed(0, 0, 0, 0, java.util.List.of());
 
         @Override
         public NotificationRetryProcessingResult processDueRetryEvents() {

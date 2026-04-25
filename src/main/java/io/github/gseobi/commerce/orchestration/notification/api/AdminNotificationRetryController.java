@@ -13,15 +13,7 @@ public class AdminNotificationRetryController {
     private final NotificationRetrySchedulerTrigger notificationRetrySchedulerTrigger;
 
     @PostMapping("/retry-due")
-    public NotificationRetryBatchResponse retryDueNotificationEvents() {
-        notificationRetrySchedulerTrigger.processDueRetryEvents();
-        return NotificationRetryBatchResponse.triggered();
-    }
-
-    public record NotificationRetryBatchResponse(String status) {
-
-        public static NotificationRetryBatchResponse triggered() {
-            return new NotificationRetryBatchResponse("triggered");
-        }
+    public NotificationRetryProcessingResult retryDueNotificationEvents() {
+        return notificationRetrySchedulerTrigger.processDueRetryEvents();
     }
 }

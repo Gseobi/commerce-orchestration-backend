@@ -1,9 +1,30 @@
 package io.github.gseobi.commerce.orchestration.notification.api;
 
+import java.util.List;
+
 public record NotificationRetryProcessingResult(
-        int scannedCount,
+        String status,
+        int processedCount,
         int successCount,
-        int rescheduledCount,
-        int manualRequiredCount
+        int failedCount,
+        int skippedCount,
+        List<Long> processedEventIds
 ) {
+
+    public static NotificationRetryProcessingResult completed(
+            int processedCount,
+            int successCount,
+            int failedCount,
+            int skippedCount,
+            List<Long> processedEventIds
+    ) {
+        return new NotificationRetryProcessingResult(
+                "completed",
+                processedCount,
+                successCount,
+                failedCount,
+                skippedCount,
+                List.copyOf(processedEventIds)
+        );
+    }
 }

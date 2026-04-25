@@ -20,6 +20,7 @@ import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
 import io.github.gseobi.commerce.orchestration.order.repository.OrderRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -80,10 +81,12 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         Order order = getOrder(orderId);
         List<AuditLog> audits = auditLogRepository.findAllByOrderIdOrderByIdAsc(orderId);
 
-        assertThat(result.scannedCount()).isEqualTo(1);
+        assertThat(result.status()).isEqualTo("completed");
+        assertThat(result.processedCount()).isEqualTo(1);
         assertThat(result.successCount()).isEqualTo(1);
-        assertThat(result.rescheduledCount()).isZero();
-        assertThat(result.manualRequiredCount()).isZero();
+        assertThat(result.failedCount()).isZero();
+        assertThat(result.skippedCount()).isZero();
+        assertThat(result.processedEventIds()).containsExactly(scheduledEvent.getId());
         assertThat(retriedEvent.getStatus().name()).isEqualTo("SENT");
         assertThat(retriedEvent.getHandlingPolicy()).isEqualTo(NotificationHandlingPolicy.NONE);
         assertThat(retriedEvent.getRetryCount()).isEqualTo(2);
@@ -109,10 +112,12 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         NotificationEvent untouchedEvent = getSingleNotificationEvent(orderId);
         Order order = getOrder(orderId);
 
-        assertThat(result.scannedCount()).isZero();
+        assertThat(result.status()).isEqualTo("completed");
+        assertThat(result.processedCount()).isZero();
         assertThat(result.successCount()).isZero();
-        assertThat(result.rescheduledCount()).isZero();
-        assertThat(result.manualRequiredCount()).isZero();
+        assertThat(result.failedCount()).isZero();
+        assertThat(result.skippedCount()).isZero();
+        assertThat(result.processedEventIds()).isEmpty();
         assertThat(untouchedEvent.getStatus().name()).isEqualTo("RETRY_SCHEDULED");
         assertThat(untouchedEvent.getHandlingPolicy()).isEqualTo(NotificationHandlingPolicy.AUTO_RETRY);
         assertThat(order.getStatus()).isEqualTo(OrderStatus.FAILED);
@@ -139,15 +144,19 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         Order order = getOrder(orderId);
         List<AuditLog> audits = auditLogRepository.findAllByOrderIdOrderByIdAsc(orderId);
 
-        assertThat(firstAttempt.scannedCount()).isEqualTo(1);
+        assertThat(firstAttempt.status()).isEqualTo("completed");
+        assertThat(firstAttempt.processedCount()).isEqualTo(1);
         assertThat(firstAttempt.successCount()).isZero();
-        assertThat(firstAttempt.rescheduledCount()).isEqualTo(1);
-        assertThat(firstAttempt.manualRequiredCount()).isZero();
+        assertThat(firstAttempt.failedCount()).isEqualTo(1);
+        assertThat(firstAttempt.skippedCount()).isZero();
+        assertThat(firstAttempt.processedEventIds()).containsExactly(firstScheduledEvent.getId());
 
-        assertThat(secondAttempt.scannedCount()).isEqualTo(1);
+        assertThat(secondAttempt.status()).isEqualTo("completed");
+        assertThat(secondAttempt.processedCount()).isEqualTo(1);
         assertThat(secondAttempt.successCount()).isZero();
-        assertThat(secondAttempt.rescheduledCount()).isZero();
-        assertThat(secondAttempt.manualRequiredCount()).isEqualTo(1);
+        assertThat(secondAttempt.failedCount()).isEqualTo(1);
+        assertThat(secondAttempt.skippedCount()).isZero();
+        assertThat(secondAttempt.processedEventIds()).containsExactly(rescheduledEvent.getId());
 
         assertThat(manualEvent.getStatus().name()).isEqualTo("MANUAL_INTERVENTION_REQUIRED");
         assertThat(manualEvent.getHandlingPolicy()).isEqualTo(NotificationHandlingPolicy.MANUAL_INTERVENTION);
@@ -159,6 +168,51 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         assertThat(audits)
                 .extracting(AuditLog::getAction)
                 .contains("NOTIFICATION_RETRY_RESCHEDULED", "NOTIFICATION_RETRY_MANUAL_INTERVENTION_REQUIRED");
+    }
+
+    @Test
+    void retryDueNotificationEvents_returnsBatchResultSummary() throws Exception {
+        Long successOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-success");
+        orchestrate(successOrderId);
+        NotificationEvent successEvent = getSingleNotificationEvent(successOrderId);
+
+        Long failedOrderId = createOrder("FAIL_NOTIFICATION_RETRY_PERSISTENT batch-failed");
+        orchestrate(failedOrderId);
+        NotificationEvent failedEvent = getSingleNotificationEvent(failedOrderId);
+
+        Long futureOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-future");
+        orchestrate(futureOrderId);
+        NotificationEvent futureEvent = getSingleNotificationEvent(futureOrderId);
+
+        MvcResult result = mockMvc.perform(post("/api/admin/notification-events/retry-due")
+                        .header("Authorization", "Bearer " + adminAccessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
+
+        assertThat(root.get("status").asText()).isEqualTo("completed");
+        assertThat(root.get("processedCount").asInt()).isEqualTo(2);
+        assertThat(root.get("successCount").asInt()).isEqualTo(1);
+        assertThat(root.get("failedCount").asInt()).isEqualTo(1);
+        assertThat(root.get("skippedCount").asInt()).isEqualTo(0);
+        assertThat(StreamSupport.stream(root.withArray("processedEventIds").spliterator(), false)
+                .map(JsonNode::asLong)
+                .toList())
+                .containsExactly(successEvent.getId(), failedEvent.getId());
+
+        NotificationEvent processedSuccessEvent = notificationEventRepository.findById(successEvent.getId()).orElseThrow();
+        NotificationEvent processedFailedEvent = notificationEventRepository.findById(failedEvent.getId()).orElseThrow();
+        NotificationEvent untouchedFutureEvent = notificationEventRepository.findById(futureEvent.getId()).orElseThrow();
+
+        assertThat(processedSuccessEvent.getStatus().name()).isEqualTo("SENT");
+        assertThat(processedFailedEvent.getStatus().name()).isEqualTo("RETRY_SCHEDULED");
+        assertThat(processedFailedEvent.getRetryCount()).isEqualTo(failedEvent.getRetryCount() + 1);
+        assertThat(processedFailedEvent.getNextAttemptAt()).isAfter(failedEvent.getNextAttemptAt());
+        assertThat(untouchedFutureEvent.getStatus().name()).isEqualTo("RETRY_SCHEDULED");
+        assertThat(untouchedFutureEvent.getRetryCount()).isEqualTo(futureEvent.getRetryCount());
+        assertThat(untouchedFutureEvent.getLastAttemptAt()).isEqualTo(futureEvent.getLastAttemptAt());
+        assertThat(untouchedFutureEvent.getNextAttemptAt()).isEqualTo(futureEvent.getNextAttemptAt());
     }
 
     private String issueToken(String username, String rolesJson) throws Exception {
