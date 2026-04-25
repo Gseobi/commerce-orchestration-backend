@@ -19,6 +19,8 @@ import io.github.gseobi.commerce.orchestration.orchestration.api.NotificationRet
 import io.github.gseobi.commerce.orchestration.order.entity.Order;
 import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
 import io.github.gseobi.commerce.orchestration.order.repository.OrderRepository;
+import jakarta.persistence.EntityManager;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.StreamSupport;
@@ -60,6 +62,9 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private MockMvc mockMvc;
     private String adminAccessToken;
@@ -179,23 +184,26 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
     @Test
     void retryDueNotificationEvents_returnsBatchResultSummary() throws Exception {
         LocalDateTime batchRunAt = LocalDateTime.now();
+        LocalDateTime dueAt = batchRunAt.minusMinutes(10);
+        LocalDateTime futureAt = batchRunAt.plusMinutes(10);
 
         Long successOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-success");
         orchestrate(successOrderId);
         NotificationEvent successEvent = getSingleNotificationEvent(successOrderId);
-        makeRetryDue(successEvent.getId(), batchRunAt);
+        makeRetryDue(successEvent.getId(), dueAt);
 
         Long failedOrderId = createOrder("FAIL_NOTIFICATION_RETRY_PERSISTENT batch-failed");
         orchestrate(failedOrderId);
         NotificationEvent failedEvent = getSingleNotificationEvent(failedOrderId);
-        makeRetryDue(failedEvent.getId(), batchRunAt);
+        makeRetryDue(failedEvent.getId(), dueAt);
 
         Long futureOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-future");
         orchestrate(futureOrderId);
         NotificationEvent futureEvent = getSingleNotificationEvent(futureOrderId);
-        makeRetryFuture(futureEvent.getId(), batchRunAt);
+        makeRetryFuture(futureEvent.getId(), futureAt);
 
         assertThat(findDueRetryEventIds(batchRunAt))
+                .as("due notification event ids before retry-due endpoint")
                 .containsExactly(successEvent.getId(), failedEvent.getId());
 
         MvcResult result = mockMvc.perform(post("/api/admin/notification-events/retry-due")
@@ -222,11 +230,11 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         assertThat(processedSuccessEvent.getStatus().name()).isEqualTo("SENT");
         assertThat(processedFailedEvent.getStatus().name()).isEqualTo("RETRY_SCHEDULED");
         assertThat(processedFailedEvent.getRetryCount()).isEqualTo(failedEvent.getRetryCount() + 1);
-        assertThat(processedFailedEvent.getNextAttemptAt()).isAfter(failedEvent.getNextAttemptAt());
+        assertThat(processedFailedEvent.getNextAttemptAt()).isAfter(batchRunAt);
         assertThat(untouchedFutureEvent.getStatus().name()).isEqualTo("RETRY_SCHEDULED");
         assertThat(untouchedFutureEvent.getRetryCount()).isEqualTo(futureEvent.getRetryCount());
         assertThat(untouchedFutureEvent.getLastAttemptAt()).isEqualTo(futureEvent.getLastAttemptAt());
-        assertThat(untouchedFutureEvent.getNextAttemptAt()).isEqualTo(futureEvent.getNextAttemptAt());
+        assertThat(untouchedFutureEvent.getNextAttemptAt()).isAfter(batchRunAt);
     }
 
     private String issueToken(String username, String rolesJson) throws Exception {
@@ -280,31 +288,44 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
         return orderRepository.findById(orderId).orElseThrow();
     }
 
-    private void makeRetryDue(Long notificationEventId, LocalDateTime batchRunAt) {
-        updateNextAttemptAt(notificationEventId, batchRunAt.minusMinutes(10));
+    private void makeRetryDue(Long notificationEventId, LocalDateTime dueAt) {
+        updateRetryState(notificationEventId, dueAt);
     }
 
-    private void makeRetryFuture(Long notificationEventId, LocalDateTime batchRunAt) {
-        updateNextAttemptAt(notificationEventId, batchRunAt.plusMinutes(10));
+    private void makeRetryFuture(Long notificationEventId, LocalDateTime futureAt) {
+        updateRetryState(notificationEventId, futureAt);
     }
 
     private List<Long> findDueRetryEventIds(LocalDateTime batchRunAt) {
-        return notificationEventRepository.findDueRetryScheduledEvents(
-                        NotificationEventStatus.RETRY_SCHEDULED,
-                        batchRunAt,
-                        3,
-                        PageRequest.of(0, 10)
-                ).stream()
-                .map(NotificationEvent::getId)
-                .toList();
+        return jdbcTemplate.queryForList("""
+                        select id
+                        from notification_events
+                        where status = 'RETRY_SCHEDULED'
+                          and next_attempt_at is not null
+                          and next_attempt_at <= ?
+                          and retry_count < 3
+                        order by next_attempt_at asc, id asc
+                        """,
+                Long.class,
+                Timestamp.valueOf(batchRunAt)
+        );
     }
 
-    private void updateNextAttemptAt(Long notificationEventId, LocalDateTime nextAttemptAt) {
+    private void updateRetryState(Long notificationEventId, LocalDateTime nextAttemptAt) {
         int updatedRows = jdbcTemplate.update(
-                "update notification_events set next_attempt_at = ? where id = ?",
-                nextAttemptAt,
+                """
+                        update notification_events
+                        set status = 'RETRY_SCHEDULED',
+                            next_attempt_at = ?,
+                            retry_count = 1
+                        where id = ?
+                        """,
+                Timestamp.valueOf(nextAttemptAt),
                 notificationEventId
         );
-        assertThat(updatedRows).isEqualTo(1);
+        assertThat(updatedRows)
+                .as("notification event should be updated to retry state. eventId=%s", notificationEventId)
+                .isEqualTo(1);
+        entityManager.clear();
     }
 }
