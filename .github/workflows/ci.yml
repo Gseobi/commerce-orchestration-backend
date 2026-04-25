@@ -8,6 +8,10 @@ on:
       - develop
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -18,6 +22,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Print commit
+        run: |
+          echo "github.sha=${{ github.sha }}"
+          echo "checked out HEAD=$(git rev-parse HEAD)"
+          git log --oneline -1
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -39,7 +49,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gradle-unit-test-reports
+          name: gradle-unit-test-reports-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: warn
           path: |
             build/reports/tests/test
@@ -52,6 +62,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Print commit
+        run: |
+          echo "github.sha=${{ github.sha }}"
+          echo "checked out HEAD=$(git rev-parse HEAD)"
+          git log --oneline -1
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -72,18 +88,22 @@ jobs:
         shell: bash
         run: |
           set +e
-          ./gradlew --no-daemon --stacktrace --info integrationTest
+          ./gradlew --no-daemon --stacktrace --info --no-parallel clean integrationTest --rerun-tasks
           status=$?
           echo "exit_code=$status" >> "$GITHUB_OUTPUT"
-          exit 0
+          exit $status
 
       - name: Report integration exit code
         if: always()
         run: |
+          echo "integration outcome: ${{ steps.integration.outcome }}"
+          echo "integration conclusion: ${{ steps.integration.conclusion }}"
           echo "integration exit code: ${{ steps.integration.outputs.exit_code }}"
           {
             echo "### integration-test result"
             echo
+            echo "- outcome: ${{ steps.integration.outcome }}"
+            echo "- conclusion: ${{ steps.integration.conclusion }}"
             echo "- exit code: ${{ steps.integration.outputs.exit_code }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -153,14 +173,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gradle-integration-test-reports
+          name: gradle-integration-test-reports-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: warn
           path: |
             build/reports/tests/integrationTest
             build/test-results/integrationTest
 
       - name: Propagate integration test failure after diagnostics
-        if: ${{ steps.integration.outputs.exit_code != '0' }}
+        if: ${{ steps.integration.outputs.exit_code != '' && steps.integration.outputs.exit_code != '0' }}
         run: |
           echo "Propagating integration test failure after diagnostics"
           echo "integration exit code: ${{ steps.integration.outputs.exit_code }}"
