@@ -132,8 +132,33 @@ class AdminReprocessingIntegrationTest {
         mockMvc.perform(post("/api/admin/outbox-events/{outboxEventId}/retry", outboxEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status", is("PUBLISHED")))
-                .andExpect(jsonPath("$.data.action", is("RETRY_OUTBOX_DEAD_LETTER")));
+                .andExpect(jsonPath("$.data.eventId", is(outboxEvent.getId().intValue())))
+                .andExpect(jsonPath("$.data.aggregateId", is(orderId.intValue())))
+                .andExpect(jsonPath("$.data.eventType", is(outboxEvent.getEventType())))
+                .andExpect(jsonPath("$.data.action", is("RETRY_DEAD_LETTER")))
+                .andExpect(jsonPath("$.data.result", is("PUBLISHED")))
+                .andExpect(jsonPath("$.data.previousStatus", is("DEAD_LETTER")))
+                .andExpect(jsonPath("$.data.currentStatus", is("PUBLISHED")))
+                .andExpect(jsonPath("$.data.retryCount", is(0)))
+                .andExpect(jsonPath("$.data.failureCode").doesNotExist())
+                .andExpect(jsonPath("$.data.failureReason").doesNotExist())
+                .andExpect(jsonPath("$.data.message", is("Outbox event was republished successfully.")));
+    }
+
+    @Test
+    void adminRetryOutboxDeadLetter_rejectsNonDeadLetterEvent() throws Exception {
+        Long orderId = createOrder("normal happy path");
+
+        mockMvc.perform(post("/api/orders/{orderId}/orchestrate", orderId)
+                        .header("Authorization", "Bearer " + adminAccessToken))
+                .andExpect(status().isOk());
+
+        OutboxEvent outboxEvent = outboxEventRepository.findAllByOrderIdOrderByIdAsc(orderId).getFirst();
+
+        mockMvc.perform(post("/api/admin/outbox-events/{outboxEventId}/retry", outboxEvent.getId())
+                        .header("Authorization", "Bearer " + adminAccessToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("ADMIN_REPROCESS_NOT_ALLOWED")));
     }
 
     private String issueToken(String username, String rolesJson) throws Exception {

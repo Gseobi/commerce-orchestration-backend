@@ -59,8 +59,26 @@ class AdminReprocessingService implements AdminReprocessingFacade {
     @Override
     public AdminOutboxReprocessResponse retryOutboxDeadLetter(Long outboxEventId) {
         OutboxAdminView view = outboxAdminApplication.retryDeadLetterEvent(outboxEventId);
-        auditRecorder.record(view.orderId(), "ADMIN_OUTBOX_RETRIED",
+        auditRecorder.record(view.aggregateId(), "ADMIN_OUTBOX_RETRIED",
                 "outboxEventId=" + outboxEventId + ", status=" + view.status());
-        return AdminOutboxReprocessResponse.from(view, "RETRY_OUTBOX_DEAD_LETTER");
+        return AdminOutboxReprocessResponse.from(
+                view,
+                "RETRY_DEAD_LETTER",
+                resolveOutboxRetryResult(view),
+                resolveOutboxRetryMessage(view)
+        );
+    }
+
+    private String resolveOutboxRetryResult(OutboxAdminView view) {
+        return view.status();
+    }
+
+    private String resolveOutboxRetryMessage(OutboxAdminView view) {
+        return switch (view.status()) {
+            case "PUBLISHED" -> "Outbox event was republished successfully.";
+            case "RETRY_WAIT" -> "Outbox event republish failed and was rescheduled for retry.";
+            case "DEAD_LETTER" -> "Outbox event republish failed and remains dead-lettered.";
+            default -> "Outbox event retry finished with status " + view.status() + ".";
+        };
     }
 }

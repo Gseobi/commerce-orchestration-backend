@@ -83,6 +83,7 @@
 - `notification-events/{id}/retry` 또는 `ignore`는 실패한 notification 처리 단위만 복구하고, 성공 시 주문 상태를 `COMPLETED`로 복구합니다.
 - 성공 응답에는 `eventId`, `orderId`, `action`, `result`, `previousStatus`, `currentStatus`, `message`가 포함되어 운영자가 상태 전이를 바로 확인할 수 있습니다.
 - `outbox-events/{id}/retry`는 `DEAD_LETTER` outbox event만 즉시 재발행 대상으로 허용합니다.
+- 성공 시 응답에는 `eventId`, `aggregateId`, `eventType`, `action=RETRY_DEAD_LETTER`, `result=PUBLISHED`, `previousStatus=DEAD_LETTER`, `currentStatus=PUBLISHED`, `message`가 포함됩니다.
 
 ### 2.6 notification retry processor가 대상을 처리하지 않는 경우
 

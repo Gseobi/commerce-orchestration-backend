@@ -55,6 +55,7 @@ class OutboxService implements OutboxApplication, OutboxAdminApplication {
     public OutboxAdminView retryDeadLetterEvent(Long outboxEventId) {
         OutboxEvent outboxEvent = outboxEventRepository.findById(outboxEventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTBOX_EVENT_NOT_FOUND));
+        String previousStatus = outboxEvent.getStatus().name();
 
         if (outboxEvent.getStatus() != OutboxStatus.DEAD_LETTER) {
             throw new BusinessException(ErrorCode.ADMIN_REPROCESS_NOT_ALLOWED,
@@ -63,13 +64,15 @@ class OutboxService implements OutboxApplication, OutboxAdminApplication {
 
         outboxEvent.resetForAdminRetry();
         OutboxEvent retriedEvent = outboxPublisherService.publishEvent(outboxEventId);
-        return toAdminView(retriedEvent);
+        return toAdminView(retriedEvent, previousStatus);
     }
 
-    private OutboxAdminView toAdminView(OutboxEvent event) {
+    private OutboxAdminView toAdminView(OutboxEvent event, String previousStatus) {
         return new OutboxAdminView(
                 event.getId(),
                 event.getOrderId(),
+                event.getEventType(),
+                previousStatus,
                 event.getStatus().name(),
                 event.getRetryCount(),
                 event.getNextAttemptAt(),

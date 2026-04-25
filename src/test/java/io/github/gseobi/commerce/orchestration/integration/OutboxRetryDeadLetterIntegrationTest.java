@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFacade;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
 import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminApplication;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminView;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
 import io.github.gseobi.commerce.orchestration.outbox.service.OutboxPublisherService;
@@ -34,6 +36,9 @@ class OutboxRetryDeadLetterIntegrationTest extends TestcontainersIntegrationSupp
 
     @Autowired
     private OutboxApplication outboxApplication;
+
+    @Autowired
+    private OutboxAdminApplication outboxAdminApplication;
 
     @Autowired
     private OutboxPublisherService outboxPublisherService;
@@ -85,5 +90,40 @@ class OutboxRetryDeadLetterIntegrationTest extends TestcontainersIntegrationSupp
         assertThat(secondEvents.getFirst().retryCount()).isEqualTo(2);
         assertThat(secondEvents.getFirst().deadLetteredAt()).isNotNull();
         assertThat(secondEvents.getFirst().failureReason()).contains("forced integration publish failure");
+    }
+
+    @Test
+    void retryDeadLetterEvent_returnsRetryWaitResultWhenRepublishFails() {
+        OrderResponse order = orderFacade.createOrder(new CreateOrderRequest(
+                "customer-retry",
+                BigDecimal.valueOf(9000),
+                "KRW",
+                "integration-admin-retry-failure-path"
+        ));
+        outboxApplication.appendOrderEvent(
+                order.orderId(),
+                "commerce.notification.requested",
+                "NOTIFICATION_REQUESTED",
+                "{\"orderId\":" + order.orderId() + "}"
+        );
+
+        outboxPublisherService.publishReadyEvents(10);
+        outboxPublisherService.publishReadyEvents(10);
+
+        OutboxEventSummary deadLetterEvent = outboxApplication.getOrderEvents(order.orderId()).getFirst();
+        assertThat(deadLetterEvent.status()).isEqualTo("DEAD_LETTER");
+
+        OutboxAdminView retried = outboxAdminApplication.retryDeadLetterEvent(deadLetterEvent.outboxEventId());
+
+        assertThat(retried.outboxEventId()).isEqualTo(deadLetterEvent.outboxEventId());
+        assertThat(retried.aggregateId()).isEqualTo(order.orderId());
+        assertThat(retried.eventType()).isEqualTo("NOTIFICATION_REQUESTED");
+        assertThat(retried.previousStatus()).isEqualTo("DEAD_LETTER");
+        assertThat(retried.status()).isEqualTo("RETRY_WAIT");
+        assertThat(retried.retryCount()).isEqualTo(1);
+        assertThat(retried.failureCode()).isEqualTo("ExecutionException");
+        assertThat(retried.failureReason()).contains("forced integration publish failure");
+        assertThat(retried.nextAttemptAt()).isNotNull();
+        assertThat(retried.deadLetteredAt()).isNull();
     }
 }

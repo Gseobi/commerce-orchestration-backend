@@ -4,32 +4,45 @@ import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminView;
 import java.time.LocalDateTime;
 
 public record AdminOutboxReprocessResponse(
-        Long outboxEventId,
-        Long orderId,
-        String status,
+        Long eventId,
+        Long aggregateId,
+        String eventType,
+        String action,
+        String result,
+        String previousStatus,
+        String currentStatus,
         int retryCount,
+        String failureCode,
+        String failureReason,
+        String message,
         LocalDateTime nextAttemptAt,
         LocalDateTime lastAttemptAt,
         LocalDateTime publishedAt,
-        LocalDateTime deadLetteredAt,
-        String failureCode,
-        String failureReason,
-        String action
+        LocalDateTime deadLetteredAt
 ) {
 
-    public static AdminOutboxReprocessResponse from(OutboxAdminView view, String action) {
+    public static AdminOutboxReprocessResponse from(
+            OutboxAdminView view,
+            String action,
+            String result,
+            String message
+    ) {
         return new AdminOutboxReprocessResponse(
                 view.outboxEventId(),
-                view.orderId(),
+                view.aggregateId(),
+                view.eventType(),
+                action,
+                result,
+                view.previousStatus(),
                 view.status(),
                 view.retryCount(),
+                view.failureCode(),
+                view.failureReason(),
+                message,
                 view.nextAttemptAt(),
                 view.lastAttemptAt(),
                 view.publishedAt(),
-                view.deadLetteredAt(),
-                view.failureCode(),
-                view.failureReason(),
-                action
+                view.deadLetteredAt()
         );
     }
 }

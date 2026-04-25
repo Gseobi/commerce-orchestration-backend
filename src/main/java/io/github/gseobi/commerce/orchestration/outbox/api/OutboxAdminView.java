@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 public record OutboxAdminView(
         Long outboxEventId,
-        Long orderId,
+        Long aggregateId,
+        String eventType,
+        String previousStatus,
         String status,
         int retryCount,
         LocalDateTime nextAttemptAt,
