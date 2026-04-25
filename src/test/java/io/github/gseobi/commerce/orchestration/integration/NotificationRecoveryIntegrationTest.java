@@ -122,7 +122,13 @@ class NotificationRecoveryIntegrationTest extends TestcontainersIntegrationSuppo
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("SENT"))
+                .andExpect(jsonPath("$.data.eventId").value(notificationEvent.getId()))
+                .andExpect(jsonPath("$.data.orderId").value(orderId))
+                .andExpect(jsonPath("$.data.action").value("RETRY"))
+                .andExpect(jsonPath("$.data.result").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.previousStatus").value("RETRY_SCHEDULED"))
+                .andExpect(jsonPath("$.data.currentStatus").value("SENT"))
+                .andExpect(jsonPath("$.data.message").value("Notification event was retried successfully."))
                 .andExpect(jsonPath("$.data.orderStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.handlingPolicy").value("NONE"));
 
@@ -174,9 +180,15 @@ class NotificationRecoveryIntegrationTest extends TestcontainersIntegrationSuppo
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/ignore", notificationEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("IGNORED"))
+                .andExpect(jsonPath("$.data.eventId").value(notificationEvent.getId()))
+                .andExpect(jsonPath("$.data.orderId").value(orderId))
+                .andExpect(jsonPath("$.data.action").value("IGNORE"))
+                .andExpect(jsonPath("$.data.result").value("IGNORED"))
+                .andExpect(jsonPath("$.data.previousStatus").value("MANUAL_INTERVENTION_REQUIRED"))
+                .andExpect(jsonPath("$.data.currentStatus").value("IGNORED"))
+                .andExpect(jsonPath("$.data.message").value("Notification event was marked as ignored."))
                 .andExpect(jsonPath("$.data.orderStatus").value("COMPLETED"))
-                .andExpect(jsonPath("$.data.action").value("IGNORE_NOTIFICATION"));
+                .andExpect(jsonPath("$.data.handlingPolicy").value("IGNORE"));
 
         NotificationEvent recoveredEvent = getSingleNotificationEvent(orderId);
         Order recoveredOrder = getOrder(orderId);

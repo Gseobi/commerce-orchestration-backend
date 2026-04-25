@@ -30,7 +30,13 @@ class AdminReprocessingService implements AdminReprocessingFacade {
         orderRecoveryApplication.completeAfterNotificationRecovery(view.orderId());
         auditRecorder.record(view.orderId(), "ADMIN_NOTIFICATION_RETRIED",
                 "notificationEventId=" + notificationEventId + ", status=" + view.status());
-        return AdminNotificationReprocessResponse.from(view, "COMPLETED", "RETRY_NOTIFICATION");
+        return AdminNotificationReprocessResponse.from(
+                view,
+                "COMPLETED",
+                "RETRY",
+                "SUCCESS",
+                "Notification event was retried successfully."
+        );
     }
 
     @Transactional
@@ -40,7 +46,13 @@ class AdminReprocessingService implements AdminReprocessingFacade {
         orderRecoveryApplication.completeAfterNotificationRecovery(view.orderId());
         auditRecorder.record(view.orderId(), "ADMIN_NOTIFICATION_IGNORED",
                 "notificationEventId=" + notificationEventId + ", status=" + view.status());
-        return AdminNotificationReprocessResponse.from(view, "COMPLETED", "IGNORE_NOTIFICATION");
+        return AdminNotificationReprocessResponse.from(
+                view,
+                "COMPLETED",
+                "IGNORE",
+                "IGNORED",
+                "Notification event was marked as ignored."
+        );
     }
 
     @Transactional

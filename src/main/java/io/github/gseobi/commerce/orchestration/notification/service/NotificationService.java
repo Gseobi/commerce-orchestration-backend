@@ -117,8 +117,9 @@ class NotificationService implements NotificationApplication, NotificationAdminA
     @Override
     public NotificationAdminView markRetrySucceeded(Long notificationEventId, LocalDateTime attemptedAt) {
         NotificationEvent event = getNotificationEvent(notificationEventId);
+        String previousStatus = event.getStatus().name();
         event.markSent(attemptedAt);
-        return toAdminView(event);
+        return toAdminView(event, previousStatus);
     }
 
     @Transactional
@@ -156,8 +157,9 @@ class NotificationService implements NotificationApplication, NotificationAdminA
             throw new BusinessException(ErrorCode.ADMIN_REPROCESS_NOT_ALLOWED,
                     "재처리 가능한 알림 이벤트가 아닙니다. current=%s".formatted(event.getStatus()));
         }
+        String previousStatus = event.getStatus().name();
         event.markSentByAdminRetry();
-        return toAdminView(event);
+        return toAdminView(event, previousStatus);
     }
 
     @Transactional
@@ -168,8 +170,9 @@ class NotificationService implements NotificationApplication, NotificationAdminA
             throw new BusinessException(ErrorCode.ADMIN_REPROCESS_NOT_ALLOWED,
                     "무시 처리 가능한 알림 이벤트가 아닙니다. current=%s".formatted(event.getStatus()));
         }
+        String previousStatus = event.getStatus().name();
         event.markIgnoredByAdmin();
-        return toAdminView(event);
+        return toAdminView(event, previousStatus);
     }
 
     private NotificationEvent getNotificationEvent(Long notificationEventId) {
@@ -189,10 +192,11 @@ class NotificationService implements NotificationApplication, NotificationAdminA
                 || event.getStatus() == NotificationEventStatus.FAILED;
     }
 
-    private NotificationAdminView toAdminView(NotificationEvent event) {
+    private NotificationAdminView toAdminView(NotificationEvent event, String previousStatus) {
         return new NotificationAdminView(
                 event.getId(),
                 event.getOrderId(),
+                previousStatus,
                 event.getStatus().name(),
                 event.getHandlingPolicy().name(),
                 event.getRetryCount(),

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public record NotificationAdminView(
         Long notificationEventId,
         Long orderId,
+        String previousStatus,
         String status,
         String handlingPolicy,
         int retryCount,

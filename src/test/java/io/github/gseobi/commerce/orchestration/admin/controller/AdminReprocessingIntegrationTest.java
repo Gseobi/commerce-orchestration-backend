@@ -91,9 +91,20 @@ class AdminReprocessingIntegrationTest {
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status", is("SENT")))
+                .andExpect(jsonPath("$.data.eventId", is(notificationEvent.getId().intValue())))
+                .andExpect(jsonPath("$.data.orderId", is(orderId.intValue())))
+                .andExpect(jsonPath("$.data.action", is("RETRY")))
+                .andExpect(jsonPath("$.data.result", is("SUCCESS")))
+                .andExpect(jsonPath("$.data.previousStatus", is("RETRY_SCHEDULED")))
+                .andExpect(jsonPath("$.data.currentStatus", is("SENT")))
+                .andExpect(jsonPath("$.data.message", is("Notification event was retried successfully.")))
                 .andExpect(jsonPath("$.data.orderStatus", is("COMPLETED")))
-                .andExpect(jsonPath("$.data.action", is("RETRY_NOTIFICATION")));
+                .andExpect(jsonPath("$.data.handlingPolicy", is("NONE")));
+
+        mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
+                        .header("Authorization", "Bearer " + adminAccessToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("ADMIN_REPROCESS_NOT_ALLOWED")));
 
         mockMvc.perform(get("/api/orders/{orderId}", orderId)
                         .header("Authorization", "Bearer " + adminAccessToken))

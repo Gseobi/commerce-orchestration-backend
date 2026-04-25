@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -54,6 +55,9 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
 
     @Autowired
     private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private MockMvc mockMvc;
     private String adminAccessToken;
@@ -172,17 +176,31 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
 
     @Test
     void retryDueNotificationEvents_returnsBatchResultSummary() throws Exception {
+        LocalDateTime batchRunAt = LocalDateTime.now();
+
         Long successOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-success");
         orchestrate(successOrderId);
         NotificationEvent successEvent = getSingleNotificationEvent(successOrderId);
+        updateNextAttemptAt(successEvent.getId(), batchRunAt.minusMinutes(1));
 
         Long failedOrderId = createOrder("FAIL_NOTIFICATION_RETRY_PERSISTENT batch-failed");
         orchestrate(failedOrderId);
         NotificationEvent failedEvent = getSingleNotificationEvent(failedOrderId);
+        updateNextAttemptAt(failedEvent.getId(), batchRunAt.minusMinutes(1));
 
         Long futureOrderId = createOrder("FAIL_NOTIFICATION_RETRY batch-future");
         orchestrate(futureOrderId);
         NotificationEvent futureEvent = getSingleNotificationEvent(futureOrderId);
+        updateNextAttemptAt(futureEvent.getId(), batchRunAt.plusMinutes(10));
+
+        assertThat(notificationEventRepository.findDueRetryScheduledEvents(
+                io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus.RETRY_SCHEDULED,
+                batchRunAt,
+                3,
+                org.springframework.data.domain.PageRequest.of(0, 10)
+        ))
+                .extracting(NotificationEvent::getId)
+                .containsExactly(successEvent.getId(), failedEvent.getId());
 
         MvcResult result = mockMvc.perform(post("/api/admin/notification-events/retry-due")
                         .header("Authorization", "Bearer " + adminAccessToken))
@@ -264,5 +282,13 @@ class NotificationRetryProcessorIntegrationTest extends TestcontainersIntegratio
 
     private Order getOrder(Long orderId) {
         return orderRepository.findById(orderId).orElseThrow();
+    }
+
+    private void updateNextAttemptAt(Long notificationEventId, LocalDateTime nextAttemptAt) {
+        jdbcTemplate.update(
+                "update notification_events set next_attempt_at = ? where id = ?",
+                nextAttemptAt,
+                notificationEventId
+        );
     }
 }
