@@ -47,6 +47,16 @@ source / png / pdf는 동일 basename을 사용합니다.
 | `commerce_orchestration_notification_outbox_processing_claim_flow` | notification/outbox `PROCESSING` claim 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_notification_outbox_processing_claim_flow.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_notification_outbox_processing_claim_flow.pdf) |
 | `commerce_orchestration_outbox_publisher_adapter` | `OutboxPublisherService`와 `KafkaOutboxEventPublisher` 분리 구조 | [draw.io](/docs/diagrams/source/commerce_orchestration_outbox_publisher_adapter.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_outbox_publisher_adapter.pdf) |
 
+## Observability / Recovery Architecture
+
+| Diagram | Source | PNG | PDF | Purpose |
+|---|---|---|---|---|
+| Observability / Recovery Architecture | [source/commerce_orchestration_observability_recovery_architecture.drawio](/docs/diagrams/source/commerce_orchestration_observability_recovery_architecture.drawio) | [png/commerce_orchestration_observability_recovery_architecture.png](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png) | [pdf/commerce_orchestration_observability_recovery_architecture.pdf](/docs/diagrams/pdf/commerce_orchestration_observability_recovery_architecture.pdf) | metric/log/audit/runbook 기반 운영 복구 관측성 구조 |
+
+이 다이어그램은 Outbox publish, notification retry, admin recovery 흐름에서 발생하는 운영 이벤트가 Micrometer counter, key-value structured log, audit log, SQL inspection, admin recovery runbook으로 어떻게 연결되는지 설명합니다.
+
+현재 범위는 custom metric과 structured log 기반의 관측성 보강이며, Prometheus/Grafana dashboard, alert rule, stale `PROCESSING` automatic recovery job은 포함하지 않습니다.
+
 ## Reference Assets
 
 | Diagram | Description | Source |

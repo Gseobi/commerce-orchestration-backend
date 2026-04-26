@@ -41,6 +41,7 @@
 | Payment idempotency | Implemented | 같은 `paymentRequestId` replay 시 provider approve/save 1회 검증 |
 | Outbox publisher adapter | Implemented | `KafkaTemplate` 없이 `OutboxEventPublisher` mock 기반 publish/retry/dead-letter 검증 |
 | Outbox publish claim | Implemented | claim 성공 시에만 publish, `PROCESSING` event 중복 publish 방지 검증 |
+| Operational observability metrics | Implemented | outbox publish, notification retry, admin recovery counter와 tag normalization 검증 |
 | Modulith architecture verification | Implemented | `ApplicationModules.verify()` 기준 module boundary 검증 |
 
 ## 3. Reliability Hardening Test Matrix
@@ -62,7 +63,23 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 | `./gradlew clean test --rerun-tasks` | 단위 테스트, MockMvc 테스트, Modulith boundary 검증 | PASS |
 | `./gradlew clean integrationTest --rerun-tasks --stacktrace` | PostgreSQL/Kafka Testcontainers, Flyway migration, outbox/notification integration flow | PASS |
 
-## 4. 테스트 종류 차이
+## 4. Observability Tests
+
+이번 metric/log 보강 후 실제 실행 결과 기준입니다.
+
+| Test | Purpose | Result |
+|---|---|---|
+| `CommerceRecoveryMetricsTest` | custom metric counter와 tag normalization 검증 | PASS |
+| `OutboxPublisherServiceTest` | outbox publish success/failure/skipped/dead-letter metric 검증 | PASS |
+| `NotificationRetryProcessorTest` | retry success/skipped/manual-required metric 검증 | PASS |
+| `AdminReprocessingServiceTest` | admin recovery request/success/failure metric 검증 | PASS |
+
+실행 명령:
+
+- `./gradlew clean test --rerun-tasks` PASS
+- `./gradlew clean integrationTest --rerun-tasks --stacktrace` PASS
+
+## 5. 테스트 종류 차이
 
 ### `test`
 
@@ -78,7 +95,7 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 - Flyway migration 적용 후 JPA `validate`
 - outbox publish와 DB 스키마를 실인프라에 가깝게 검증
 
-## 5. GitHub Actions 검증 범위
+## 6. GitHub Actions 검증 범위
 
 현재 workflow는 아래 두 job을 수행합니다.
 
@@ -92,7 +109,7 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 - `gradle-unit-test-reports`
 - `gradle-integration-test-reports`
 
-## 6. CI 안정화 메모
+## 7. CI 안정화 메모
 
 이번 정리에서 `integrationTest` 실패 원인은 단순 Docker 부재가 아니라 Kafka Testcontainers 조합 문제로 확인했습니다.
 
@@ -105,7 +122,7 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - `./gradlew clean integrationTest --rerun-tasks --stacktrace`
 - `./gradlew integrationTest --rerun-tasks --stacktrace`
 
-## 7. 아직 검증하지 않은 범위
+## 8. 아직 검증하지 않은 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip
 - notification 채널별 retry policy / 운영자 승인 절차
@@ -114,4 +131,6 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - WebClient timeout 이후 confirmation flow
 - provider callback API와 `providerTransactionId` 기반 callback idempotency
 - admin 레벨 재처리 / 재검증 API 고도화
+- Prometheus/Grafana dashboard와 alert rule
+- stale `PROCESSING` automatic recovery job
 - refresh token / key rotation / user store 연동

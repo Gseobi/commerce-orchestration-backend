@@ -20,7 +20,9 @@
    paymentRequestId 기반 결제 멱등성, notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리 흐름과 draw.io 원본, PNG, PDF 자산을 확인합니다.
 5. [Test Report](/docs/test-report.md)
    실제로 검증한 범위, reliability hardening 테스트 결과, 아직 검증하지 않은 범위를 구분합니다.
-6. [Troubleshooting](/docs/troubleshooting.md)
+6. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
+   notification retry, outbox dead-letter, `PROCESSING` 장기 체류를 metric/log/SQL/admin API 기준으로 확인하는 운영 복구 절차입니다. 관련 observability/recovery diagram은 [Diagram Guide](/docs/diagrams/README.md)에서 확인할 수 있습니다.
+7. [Troubleshooting](/docs/troubleshooting.md)
    로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
@@ -29,6 +31,8 @@
   현재 구조를 왜 이렇게 나눴는지, compensation / notification policy / outbox reliability / DB claim 기준을 정리합니다.
 - [SQL Guide](/docs/sql/README.md)  
   Flyway migration과 운영 점검용 SQL 문서의 역할을 구분합니다.
+- [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)  
+  notification retry, outbox dead-letter, admin recovery 실패를 metric/log/SQL/admin API 기준으로 점검하는 절차입니다.
 
 ## 3. Diagram Status
 

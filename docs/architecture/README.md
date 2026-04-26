@@ -21,6 +21,7 @@
 - `NotificationRetryProcessor`와 outbox publisher는 Java `synchronized`가 아니라 DB 조건부 상태 전이를 통해 처리 권한을 선점합니다.
 - `OutboxPublisherService`는 `KafkaTemplate`을 직접 알지 않고 `OutboxEventPublisher` interface에 의존합니다.
 - `KafkaOutboxEventPublisher`는 `infrastructure/kafka` adapter로 분리되어 `KafkaTemplate` 발행과 timeout/failure 변환을 담당합니다.
+- `CommerceRecoveryMetrics`는 `common.metrics`에 둔 운영 관측성 wrapper이며, 각 service가 `MeterRegistry`를 직접 흩뿌리지 않도록 감쌉니다.
 
 ## 2. Dependency Direction
 
@@ -31,6 +32,7 @@
 - 다른 domain의 repository를 직접 주입해서 흐름을 제어하지 않습니다.
 - repository 패키지를 외부에 공개하는 방식보다 `*.api` 공개 계약을 통해 협력하는 방식을 우선합니다.
 - Spring Modulith의 `@NamedInterface("api")`와 `allowedDependencies`를 통해 module boundary를 명시합니다.
+- outbox, admin, orchestration은 `common::metrics` 공개 계약에만 의존하고 서로의 내부 구현체를 직접 참조하지 않습니다.
 
 ## 3. Current Assets
 
@@ -122,6 +124,16 @@ OutboxPublisherService
 ```
 
 `OutboxPublisherService`는 outbox 상태 전이, retry count, backoff, dead-letter 정책을 담당합니다. Kafka 발행 세부 구현과 failure message truncation은 `KafkaOutboxEventPublisher`가 담당합니다.
+
+### Observability Boundary
+
+`CommerceRecoveryMetrics`는 outbox publish, notification retry, admin recovery 결과를 counter로 기록하는 공통 wrapper입니다. metric/log는 상태 전이 책임을 대체하지 않고, 처리 결과를 관측하기 위한 보조 장치입니다.
+
+![Observability recovery architecture](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)
+
+이 다이어그램은 `OutboxPublisherService`, `NotificationRetryProcessor`, `AdminReprocessingService`에서 발생한 복구 이벤트가 `CommerceRecoveryMetrics`, structured log, audit log, SQL inspection, admin recovery runbook으로 이어지는 관측성 경계를 보여줍니다.
+
+metric tag에는 `eventId`, `orderId`, `paymentRequestId` 같은 high-cardinality 값을 넣지 않습니다. 이 값들은 필요한 경우 structured log field로만 제한적으로 남깁니다. payload, token, authorization header, secret 값은 metric/log에 남기지 않습니다.
 
 ![Outbox publisher adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
 

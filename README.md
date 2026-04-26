@@ -126,6 +126,12 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 - **Outbox Publisher Adapter:** `OutboxPublisherService`는 retry/dead-letter 상태 전이만 담당하고, Kafka 발행은 `KafkaOutboxEventPublisher`가 담당합니다.
 - **Outbox Publish Claim:** `READY` / `RETRY_WAIT` event를 `PROCESSING`으로 선점한 뒤 publish해 중복 발행 가능성을 줄입니다.
 
+### Observability & Recovery Notes
+
+- Outbox publish, notification retry, admin recovery 경계에 Micrometer counter와 key-value structured log를 추가했으며, 전체 관측/복구 흐름은 [Observability Recovery Architecture Diagram](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)에서 확인할 수 있습니다.
+- 이 지표와 로그는 retry/dead-letter 증가, claim skipped, admin recovery 결과를 확인하기 위한 운영 관측성 기준입니다.
+- 자세한 복구 절차는 [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)에서 확인할 수 있습니다.
+
 ---
 
 ## 4. 문제 정의
