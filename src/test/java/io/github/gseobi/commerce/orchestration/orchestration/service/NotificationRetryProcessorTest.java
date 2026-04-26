@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.gseobi.commerce.orchestration.audit.api.AuditRecorder;
+import io.github.gseobi.commerce.orchestration.common.metrics.CommerceRecoveryMetrics;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationAdminView;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetryCandidateView;
@@ -15,6 +16,7 @@ import io.github.gseobi.commerce.orchestration.notification.api.NotificationRetr
 import io.github.gseobi.commerce.orchestration.order.api.OrderExecutionView;
 import io.github.gseobi.commerce.orchestration.order.api.OrderRecoveryApplication;
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,6 +34,8 @@ class NotificationRetryProcessorTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 4, 25, 12, 0);
     private static final NotificationRetryCandidateView RETRY_CANDIDATE =
             new NotificationRetryCandidateView(10L, 20L, 1, NOW.minusMinutes(1));
+    private static final NotificationRetryCandidateView MANUAL_CANDIDATE =
+            new NotificationRetryCandidateView(11L, 21L, 2, NOW.minusMinutes(1));
 
     @Test
     void processDueRetries_skipsStaleCandidateAlreadyClaimedAsProcessing() {
@@ -39,11 +43,13 @@ class NotificationRetryProcessorTest {
         OrderWorkflowAccess orderWorkflowAccess = mock(OrderWorkflowAccess.class);
         OrderRecoveryApplication orderRecoveryApplication = mock(OrderRecoveryApplication.class);
         AuditRecorder auditRecorder = mock(AuditRecorder.class);
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         NotificationRetryProcessor processor = new NotificationRetryProcessor(
                 retryOperations,
                 orderWorkflowAccess,
                 orderRecoveryApplication,
-                auditRecorder
+                auditRecorder,
+                new CommerceRecoveryMetrics(meterRegistry)
         );
 
         NotificationRetryProcessingResult result = processor.processDueRetries(NOW, 10);
@@ -53,6 +59,12 @@ class NotificationRetryProcessorTest {
         assertThat(result.failedCount()).isZero();
         assertThat(result.skippedCount()).isEqualTo(1);
         assertThat(result.processedEventIds()).isEmpty();
+        assertThat(counter(meterRegistry, "commerce.notification.retry.batch.started")).isEqualTo(1.0);
+        assertThat(meterRegistry.find("commerce.notification.retry.skipped")
+                .tag("reason", "claim_failed")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
         verify(orderWorkflowAccess, times(0)).getOrderExecutionView(RETRY_CANDIDATE.orderId());
         verify(orderRecoveryApplication, times(0)).completeAfterNotificationRecovery(RETRY_CANDIDATE.orderId());
     }
@@ -70,11 +82,13 @@ class NotificationRetryProcessorTest {
                 ));
         OrderRecoveryApplication orderRecoveryApplication = mock(OrderRecoveryApplication.class);
         AuditRecorder auditRecorder = mock(AuditRecorder.class);
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         NotificationRetryProcessor processor = new NotificationRetryProcessor(
                 retryOperations,
                 orderWorkflowAccess,
                 orderRecoveryApplication,
-                auditRecorder
+                auditRecorder,
+                new CommerceRecoveryMetrics(meterRegistry)
         );
 
         ExecutorService executorService = Executors.newFixedThreadPool(4);
@@ -104,12 +118,92 @@ class NotificationRetryProcessorTest {
         assertThat(results).extracting(NotificationRetryProcessingResult::skippedCount).containsExactlyInAnyOrder(0, 1, 1, 1);
         assertThat(results.stream().flatMap(result -> result.processedEventIds().stream()).toList())
                 .containsExactly(RETRY_CANDIDATE.notificationEventId());
+        assertThat(meterRegistry.find("commerce.notification.retry.success")
+                .tag("failureCode", "none")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
+        assertThat(meterRegistry.find("commerce.notification.retry.skipped")
+                .tag("reason", "claim_failed")
+                .counter()
+                .count())
+                .isEqualTo(3.0);
         verify(orderRecoveryApplication, times(1)).completeAfterNotificationRecovery(RETRY_CANDIDATE.orderId());
         verify(auditRecorder, times(1)).record(
                 RETRY_CANDIDATE.orderId(),
                 "NOTIFICATION_RETRY_PROCESSED_SUCCESS",
                 "notificationEventId=10, retryCount=2"
         );
+    }
+
+    @Test
+    void processDueRetries_successIncrementsRetrySuccessMetric() {
+        NotificationRetryOperations retryOperations = new CandidateRetryOperations(RETRY_CANDIDATE, 1);
+        OrderWorkflowAccess orderWorkflowAccess = mock(OrderWorkflowAccess.class);
+        when(orderWorkflowAccess.getOrderExecutionView(RETRY_CANDIDATE.orderId()))
+                .thenReturn(new OrderExecutionView(
+                        RETRY_CANDIDATE.orderId(),
+                        "FAILED",
+                        BigDecimal.valueOf(10000),
+                        "transient notification retry"
+                ));
+        OrderRecoveryApplication orderRecoveryApplication = mock(OrderRecoveryApplication.class);
+        AuditRecorder auditRecorder = mock(AuditRecorder.class);
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        NotificationRetryProcessor processor = new NotificationRetryProcessor(
+                retryOperations,
+                orderWorkflowAccess,
+                orderRecoveryApplication,
+                auditRecorder,
+                new CommerceRecoveryMetrics(meterRegistry)
+        );
+
+        NotificationRetryProcessingResult result = processor.processDueRetries(NOW, 10);
+
+        assertThat(result.successCount()).isEqualTo(1);
+        assertThat(meterRegistry.find("commerce.notification.retry.success")
+                .tag("failureCode", "none")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
+    }
+
+    @Test
+    void processDueRetries_manualInterventionIncrementsManualRequiredMetric() {
+        NotificationRetryOperations retryOperations = new CandidateRetryOperations(MANUAL_CANDIDATE, 1);
+        OrderWorkflowAccess orderWorkflowAccess = mock(OrderWorkflowAccess.class);
+        when(orderWorkflowAccess.getOrderExecutionView(MANUAL_CANDIDATE.orderId()))
+                .thenReturn(new OrderExecutionView(
+                        MANUAL_CANDIDATE.orderId(),
+                        "FAILED",
+                        BigDecimal.valueOf(10000),
+                        "FAIL_NOTIFICATION_RETRY_PERSISTENT"
+                ));
+        OrderRecoveryApplication orderRecoveryApplication = mock(OrderRecoveryApplication.class);
+        AuditRecorder auditRecorder = mock(AuditRecorder.class);
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        NotificationRetryProcessor processor = new NotificationRetryProcessor(
+                retryOperations,
+                orderWorkflowAccess,
+                orderRecoveryApplication,
+                auditRecorder,
+                new CommerceRecoveryMetrics(meterRegistry)
+        );
+
+        NotificationRetryProcessingResult result = processor.processDueRetries(NOW, 10);
+
+        assertThat(result.failedCount()).isEqualTo(1);
+        assertThat(meterRegistry.find("commerce.notification.retry.manual_required")
+                .tag("failureCode", "NOTIFICATION_RETRY_EXHAUSTED")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
+    }
+
+    private double counter(SimpleMeterRegistry meterRegistry, String name) {
+        return meterRegistry.find(name)
+                .counter()
+                .count();
     }
 
     private static class SingleCandidateRetryOperations implements NotificationRetryOperations {
@@ -178,6 +272,53 @@ class NotificationRetryProcessorTest {
         @Override
         public int claimRetryScheduledEvent(Long notificationEventId, LocalDateTime now, int maxRetryCount) {
             return claimed.compareAndSet(false, true) ? 1 : 0;
+        }
+    }
+
+    private static class CandidateRetryOperations implements NotificationRetryOperations {
+
+        private final NotificationRetryCandidateView candidate;
+        private final int claimResult;
+
+        CandidateRetryOperations(NotificationRetryCandidateView candidate, int claimResult) {
+            this.candidate = candidate;
+            this.claimResult = claimResult;
+        }
+
+        @Override
+        public List<NotificationRetryCandidateView> findDueRetryScheduledEvents(LocalDateTime now, int limit) {
+            return List.of(candidate);
+        }
+
+        @Override
+        public int claimRetryScheduledEvent(Long notificationEventId, LocalDateTime now, int maxRetryCount) {
+            return claimResult;
+        }
+
+        @Override
+        public NotificationAdminView markRetrySucceeded(Long notificationEventId, LocalDateTime attemptedAt) {
+            return null;
+        }
+
+        @Override
+        public NotificationFailureView rescheduleRetry(
+                Long notificationEventId,
+                String failureCode,
+                String failureReason,
+                LocalDateTime attemptedAt,
+                LocalDateTime nextAttemptAt
+        ) {
+            return null;
+        }
+
+        @Override
+        public NotificationFailureView requireManualIntervention(
+                Long notificationEventId,
+                String failureCode,
+                String failureReason,
+                LocalDateTime attemptedAt
+        ) {
+            return null;
         }
     }
 }

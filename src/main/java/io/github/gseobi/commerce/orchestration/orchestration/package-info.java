@@ -2,6 +2,7 @@
         allowedDependencies = {
                 "common",
                 "common::error",
+                "common::metrics",
                 "infrastructure",
                 "order::api",
                 "payment::api",

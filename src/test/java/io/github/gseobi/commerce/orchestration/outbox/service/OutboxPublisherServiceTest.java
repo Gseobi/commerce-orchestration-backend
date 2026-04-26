@@ -8,12 +8,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.github.gseobi.commerce.orchestration.common.metrics.CommerceRecoveryMetrics;
 import io.github.gseobi.commerce.orchestration.config.OutboxProperties;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventPublisher;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishResult;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
 import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,14 +49,17 @@ class OutboxPublisherServiceTest {
     @Mock
     private OutboxEventRepository outboxEventRepository;
 
+    private SimpleMeterRegistry meterRegistry;
     private OutboxPublisherService outboxPublisherService;
 
     @BeforeEach
     void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
         outboxPublisherService = new OutboxPublisherService(
                 outboxEventPublisher,
                 outboxEventRepository,
-                OUTBOX_PROPERTIES
+                OUTBOX_PROPERTIES,
+                new CommerceRecoveryMetrics(meterRegistry)
         );
     }
 
@@ -74,6 +79,8 @@ class OutboxPublisherServiceTest {
         assertThat(publishedCount).isEqualTo(1);
         assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
         assertThat(outboxEvent.getRetryCount()).isZero();
+        assertThat(counter("commerce.outbox.publish.attempts")).isEqualTo(1.0);
+        assertThat(counter("commerce.outbox.publish.success")).isEqualTo(1.0);
     }
 
     @Test
@@ -95,6 +102,13 @@ class OutboxPublisherServiceTest {
         assertThat(outboxEvent.getRetryCount()).isEqualTo(1);
         assertThat(outboxEvent.getNextAttemptAt()).isNotNull();
         assertThat(outboxEvent.getFailureReason()).contains("broker unavailable");
+        assertThat(meterRegistry.find("commerce.outbox.publish.failure")
+                .tag("eventType", "NOTIFICATION")
+                .tag("topic", "commerce.notification.requested")
+                .tag("failureCode", "IllegalStateException")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
     }
 
     @Test
@@ -117,6 +131,7 @@ class OutboxPublisherServiceTest {
         assertThat(outboxEvent.getRetryCount()).isEqualTo(2);
         assertThat(outboxEvent.getDeadLetteredAt()).isNotNull();
         assertThat(outboxEvent.getFailureReason()).contains("still unavailable");
+        assertThat(counter("commerce.outbox.dead_letter.count")).isEqualTo(1.0);
     }
 
     @Test
@@ -132,11 +147,24 @@ class OutboxPublisherServiceTest {
 
         assertThat(publishedCount).isZero();
         verify(outboxEventPublisher, never()).publish(ArgumentMatchers.any(OutboxEvent.class));
+        assertThat(meterRegistry.find("commerce.outbox.publish.skipped")
+                .tag("reason", "claim_failed")
+                .counter()
+                .count())
+                .isEqualTo(1.0);
     }
 
     private OutboxEvent outboxEvent(Long id, OutboxStatus status) {
         OutboxEvent event = new OutboxEvent(1L, "commerce.notification.requested", "NOTIFICATION", "{}", status);
         ReflectionTestUtils.setField(event, "id", id);
         return event;
+    }
+
+    private double counter(String name) {
+        return meterRegistry.find(name)
+                .tag("eventType", "NOTIFICATION")
+                .tag("topic", "commerce.notification.requested")
+                .counter()
+                .count();
     }
 }
