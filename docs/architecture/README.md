@@ -38,13 +38,29 @@
 - [PNG 이미지](/docs/diagrams/png/commerce_orchestration_overall_architecture.png)
 - [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf)
 
-## 4. Reference Assets
+## 4. Reliability Hardening View
+
+최근 보강에서는 주문 이후 흐름 전체를 새로 비동기화하기보다, 기존 orchestration 흐름 위에 중복 요청과 재처리 동시 실행을 방어하는 장치를 추가했습니다.
+
+주요 보강 지점은 다음과 같습니다.
+
+- `paymentRequestId` 기반 결제 승인 멱등성
+- notification retry의 `PROCESSING` claim
+- outbox publish의 `PROCESSING` claim
+- `OutboxPublisherService`와 Kafka 발행 adapter 분리
+
+![Reliability hardening overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png)
+
+- [draw.io 원본](/docs/diagrams/source/commerce_orchestration_reliability_hardening_overview.drawio)
+- [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_reliability_hardening_overview.pdf)
+
+## 5. Reference Assets
 
 - [reference draw.io](/docs/diagrams/source/commerce_orchestration_overall_architecture_reference.drawio)
 - [reference PNG](/docs/diagrams/png/commerce_orchestration_overall_architecture_reference.png)
 - [reference PDF](/docs/diagrams/pdf/commerce_orchestration_overall_architecture_reference.pdf)
 
-## 5. Current Scope
+## 6. Current Scope
 
 - controller
 - orchestration
@@ -54,7 +70,7 @@
 - admin
 - common
 
-## 6. Table Relation Overview
+## 7. Table Relation Overview
 
 - [draw.io 원본](/docs/diagrams/source/commerce_orchestration_table_relation_overview.drawio)
 - [PNG 이미지](/docs/diagrams/png/commerce_orchestration_table_relation_overview.png)
@@ -64,7 +80,7 @@
 
 실제 FK constraint를 새로 추가한 것이 아니라, 대부분 `order_id`를 기준으로 `orders`와 연결되는 운영/상태 추적 구조를 보여줍니다.
 
-## 7. Why This Matters
+## 8. Why This Matters
 
 커머스 거래 흐름에서는 결제, 정산, 알림, 이벤트 발행이 모두 같은 실패 의미를 가지지 않습니다.
 
@@ -72,7 +88,7 @@
 
 이 구조를 통해 실패 지점을 추적하고, 재시도/보상/수동 개입 대상을 하위 처리 단위로 좁힐 수 있습니다.
 
-## 8. Reliability Hardening Structure
+## 9. Reliability Hardening Structure
 
 ### Payment Idempotency
 
@@ -106,3 +122,8 @@ OutboxPublisherService
 ```
 
 `OutboxPublisherService`는 outbox 상태 전이, retry count, backoff, dead-letter 정책을 담당합니다. Kafka 발행 세부 구현과 failure message truncation은 `KafkaOutboxEventPublisher`가 담당합니다.
+
+![Outbox publisher adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
+
+- [draw.io 원본](/docs/diagrams/source/commerce_orchestration_outbox_publisher_adapter.drawio)
+- [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_outbox_publisher_adapter.pdf)

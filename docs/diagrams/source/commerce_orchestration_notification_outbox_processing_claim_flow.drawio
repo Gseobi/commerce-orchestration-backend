@@ -1,0 +1,128 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram name="commerce_orchestration_notification_outbox_processing_claim_flow" id="0">
+    <mxGraphModel dx="2044" dy="1001" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Notification Retry Candidate&#xa;RETRY_SCHEDULED&#xa;nextAttemptAt &lt;= now" vertex="1">
+          <mxGeometry height="92" width="270" x="50" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0eafa;strokeColor=#8b6ecb;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Outbox Publish Candidate&#xa;READY / RETRY_WAIT&#xa;nextAttemptAt &lt;= now" vertex="1">
+          <mxGeometry height="92" width="270" x="50" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;" value="Conditional UPDATE&#xa;claim event?" vertex="1">
+          <mxGeometry height="105" width="190" x="395" y="227.5" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff0df;strokeColor=#df8b36;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="PROCESSING&#xa;worker owns this event" vertex="1">
+          <mxGeometry height="80" width="230" x="740" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;" value="Process result" vertex="1">
+          <mxGeometry height="105" width="170" x="1010" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Success&#xa;SENT / PUBLISHED" vertex="1">
+          <mxGeometry height="75" width="280" x="1282" y="103" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Retryable failure&lt;br&gt;RETRY_SCHEDULED /&lt;br&gt;RETRY_WAIT" vertex="1">
+          <mxGeometry height="80" width="280" x="1282" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Terminal failure&lt;br&gt;MANUAL_INTERVENTION_REQUIRED / &lt;br&gt;DEAD_LETTER" vertex="1">
+          <mxGeometry height="90" width="280" x="1282" y="383" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#777777;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Skipped&#xa;update count = 0" vertex="1">
+          <mxGeometry height="75" width="230" x="740" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="14" edge="1" parent="1" source="5" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="7" value="candidate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="15" edge="1" parent="1" source="6" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="7" value="candidate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="16" edge="1" parent="1" source="7" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="8" value="update count = 1">
+          <mxGeometry relative="1" x="-0.0323" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="17" edge="1" parent="1" source="8" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="18" edge="1" parent="1" source="9" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="10" value="success">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="281" />
+              <mxPoint x="1200" y="141" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="19" edge="1" parent="1" source="9" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="11" value="retryable">
+          <mxGeometry relative="1" x="0.1816" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="20" edge="1" parent="1" source="9" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="12" value="max retry / manual">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="281" />
+              <mxPoint x="1200" y="428" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" edge="1" parent="1" source="7" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="13" value="update count = 0">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="280" />
+              <mxPoint x="600" y="390" />
+              <mxPoint x="875" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=13;spacing=8;" value="Claim condition concept&#xa;WHERE id = ?&#xa;  AND status = target_state&#xa;  AND next_attempt_at &lt;= now()" vertex="1">
+          <mxGeometry height="120" width="430" x="70" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="23" edge="1" parent="1" source="22" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#9ca3af;fontSize=14;fontColor=#6b7280;edgeStyle=orthogonalEdgeStyle;" target="7" value="DB state based">
+          <mxGeometry relative="1" x="0.0009" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="350" y="426" />
+              <mxPoint x="490" y="426" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="24" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=13;spacing=8;" value="Why DB state?&#xa;JVM lock is not enough for multiple instances.&#xa;DB state transition is shared by scheduler, admin API, and workers." vertex="1">
+          <mxGeometry height="120" width="520" x="570" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="25" edge="1" parent="1" source="24" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#9ca3af;fontSize=14;fontColor=#6b7280;edgeStyle=orthogonalEdgeStyle;" target="7" value="reason">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="426" />
+              <mxPoint x="490" y="426" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="26" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#374151;fontStyle=1;" value="Legend" vertex="1">
+          <mxGeometry height="25" width="90" x="70" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Normal flow" vertex="1">
+          <mxGeometry height="42" width="145" x="70" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="28" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Risk point" vertex="1">
+          <mxGeometry height="42" width="145" x="240" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Control / Guard" vertex="1">
+          <mxGeometry height="42" width="160" x="410" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="MIMfb1skeTbgT1jnRCAM-30" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="70" width="560" x="37" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="MIMfb1skeTbgT1jnRCAM-31" parent="1" style="shape=line;html=1;strokeWidth=2;strokeColor=light-dark(#E5E7EB,#FFFFFF);" value="" vertex="1">
+          <mxGeometry height="2.24" width="660" x="37" y="99" as="geometry" />
+        </mxCell>
+        <mxCell id="2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontColor=#1f2937;fontStyle=1;" value="Notification / Outbox PROCESSING Claim Flow" vertex="1">
+          <mxGeometry height="40" width="549.0848585690516" x="40" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#6b7280;" value="scheduler/admin/worker 동시 실행 상황에서 DB 상태 전이로 처리 권한을 선점" vertex="1">
+          <mxGeometry height="30" width="529" x="41" y="62" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

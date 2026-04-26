@@ -1,0 +1,96 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram name="01-outbox-retry-duplication-points" id="0">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-48" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="70" width="560" x="10" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-23" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontColor=#1f2937;fontStyle=1;" value="Payment Idempotency Flow" vertex="1">
+          <mxGeometry height="40" width="540" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-24" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#6b7280;" value="동일 주문의 결제 승인 replay가 발생해도 provider를 중복 호출하지 않는 흐름" vertex="1">
+          <mxGeometry height="30" width="538" x="21" y="47" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-25" parent="1" style="shape=line;html=1;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="2.24" width="660" x="10" y="85" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="CommerceOrchestrationService&#xa;requests payment approve" vertex="1">
+          <mxGeometry height="78" width="270" x="30" y="143" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Build deterministic key&#xa;ORDER-{orderId}-PAYMENT-APPROVE" vertex="1">
+          <mxGeometry height="78" width="290" x="330" y="143" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-28" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;" value="Payment exists by&#xa;paymentRequestId?" vertex="1">
+          <mxGeometry height="95" width="190" x="660" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0eafa;strokeColor=#8b6ecb;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Load existing Payment&#xa;from repository" vertex="1">
+          <mxGeometry height="78" width="250" x="910" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Return existing&#xa;PaymentResponse" vertex="1">
+          <mxGeometry height="78" width="180" x="1210" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-31" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff0df;strokeColor=#df8b36;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Call PaymentProviderClient&#xa;approve()" vertex="1">
+          <mxGeometry height="78" width="250" x="910" y="217" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-32" parent="1" style="shape=cylinder3d;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=15;html=1;fillColor=#f5f5f5;strokeColor=#777777;fontColor=#1f2937;fontSize=13;spacing=8;" value="Save Payment&#xa;with paymentRequestId" vertex="1">
+          <mxGeometry height="78" width="180" x="1210" y="217" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-33" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Return new&#xa;PaymentResponse" vertex="1">
+          <mxGeometry height="78" width="180" x="1210" y="332" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-34" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-26" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=12;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-27" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-35" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-27" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=12;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-28" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-36" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-28" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-29" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-37" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-29" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=12;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-30" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-38" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-28" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="sEjeUvrJlKfB1oKccCdH-31" value="No">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="183" />
+              <mxPoint x="880" y="256" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-39" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-31" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=12;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-32" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-40" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-32" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=12;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-33" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-41" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=13;spacing=8;" value="DB guard&#xa;UNIQUE INDEX(payment_request_id)&#xa;WHERE payment_request_id IS NOT NULL" vertex="1">
+          <mxGeometry height="95" width="440" x="910" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-42" edge="1" parent="1" source="sEjeUvrJlKfB1oKccCdH-41" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#9ca3af;fontSize=14;fontColor=#6b7280;edgeStyle=orthogonalEdgeStyle;" target="sEjeUvrJlKfB1oKccCdH-28" value="guard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="HO3Tf08S3rK_GiSOchc5-1" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="207" width="500" x="40" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-43" parent="HO3Tf08S3rK_GiSOchc5-1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=13;spacing=8;" value="Test focus&#xa;- same paymentRequestId twice&#xa;- provider approve called once&#xa;- existing payment returned" vertex="1">
+          <mxGeometry height="120" width="420" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-44" parent="HO3Tf08S3rK_GiSOchc5-1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#374151;fontStyle=1;" value="Legend" vertex="1">
+          <mxGeometry height="25" width="90" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-45" parent="HO3Tf08S3rK_GiSOchc5-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Normal flow" vertex="1">
+          <mxGeometry height="42" width="145" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-46" parent="HO3Tf08S3rK_GiSOchc5-1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Risk point" vertex="1">
+          <mxGeometry height="42" width="145" x="170" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="sEjeUvrJlKfB1oKccCdH-47" parent="HO3Tf08S3rK_GiSOchc5-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Control / Guard" vertex="1">
+          <mxGeometry height="42" width="160" x="340" y="165" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

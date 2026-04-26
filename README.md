@@ -43,6 +43,7 @@ Spring Boot 기반 commerce orchestration backend입니다.
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
 - [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/%EC%BB%A4%EB%A8%B8%EC%8A%A4-%EC%A3%BC%EB%AC%B8-%EC%9D%B4%ED%9B%84-%ED%9D%90%EB%A6%84%EC%9D%84-%EC%83%81%ED%83%9C-%EC%A0%84%EC%9D%B4%EC%99%80-Orchestration%EC%9C%BC%EB%A1%9C-%EC%84%A4%EA%B3%84%ED%95%98%EA%B8%B0)
+- [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)
 
 draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리합니다.  
 현재 overall architecture는 README 대표 이미지로만 유지하고, 세부 흐름과 테이블 관계는 Architecture Notes / Flow Notes / Diagram Guide에서 이어서 확인할 수 있습니다.
@@ -59,6 +60,22 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
   [commerce_orchestration_overall_architecture.drawio](/docs/diagrams/source/commerce_orchestration_overall_architecture.drawio)
 - PDF:  
   [commerce_orchestration_overall_architecture.pdf](/docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf)
+
+### Diagrams
+
+이 프로젝트의 주요 흐름과 최근 reliability hardening 작업은 아래 다이어그램으로 정리했습니다.
+
+| Diagram | Purpose |
+|---|---|
+| [Overall Architecture](/docs/diagrams/png/commerce_orchestration_overall_architecture.png) | 주문 이후 payment, settlement, notification, outbox 흐름의 전체 구조 |
+| [Notification Recovery Flow](/docs/diagrams/png/commerce_orchestration_notification_recovery_flow.png) | notification 실패 이후 retry/manual intervention 흐름 |
+| [Outbox Retry / Dead Letter](/docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png) | outbox publish 실패 이후 retry/dead-letter 흐름 |
+| [Reliability Hardening Overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png) | payment idempotency, retry claim, publisher adapter 보강 요약 |
+| [Payment Idempotency Flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png) | paymentRequestId 기반 중복 결제 요청 방어 |
+| [Notification / Outbox Processing Claim Flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png) | `PROCESSING` claim 기반 중복 재처리 방어 |
+| [Outbox Publisher Adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png) | Outbox 상태 관리와 Kafka 발행 구현 분리 |
+
+![Reliability hardening overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png)
 
 ---
 

@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram name="commerce_orchestration_outbox_publisher_adapter" id="0">
+    <mxGraphModel dx="1533" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="yYOewkDMvQiMxXED4hoz-27" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="70" width="560" x="36" y="22" as="geometry" />
+        </mxCell>
+        <mxCell id="2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontColor=#1f2937;fontStyle=1;" value="Outbox Publisher Adapter" vertex="1">
+          <mxGeometry height="40" width="550" x="41" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#6b7280;" value="Outbox 상태 관리와 Kafka 발행 구현을 분리해 service 책임을 명확히 함" vertex="1">
+          <mxGeometry height="30" width="548" x="42" y="62" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="shape=line;html=1;strokeWidth=2;strokeColor=light-dark(#E5E7EB,#FFFFFF);" value="" vertex="1">
+          <mxGeometry height="0.86" width="610" x="40" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;fontStyle=1;" value="OutboxPublisherService&#xa;application/service layer" vertex="1">
+          <mxGeometry height="85" width="290" x="70" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0eafa;strokeColor=#8b6ecb;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;fontStyle=1;" value="OutboxEventPublisher&#xa;interface" vertex="1">
+          <mxGeometry height="85" width="260" x="540" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;fontStyle=1;" value="KafkaOutboxEventPublisher&#xa;infrastructure/kafka adapter" vertex="1">
+          <mxGeometry height="85" width="310" x="930" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="KafkaTemplate&#xa;Spring Kafka client" vertex="1">
+          <mxGeometry height="85" width="230" x="1320" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="9" edge="1" parent="1" source="5" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="6" value="depends on abstraction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" edge="1" parent="1" source="6" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="7" value="implemented by">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" edge="1" parent="1" source="7" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="8" value="send">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=13;spacing=8;" value="Service responsibilities&#xa;- find publishable events&#xa;- PROCESSING claim&#xa;- mark PUBLISHED&#xa;- mark RETRY_WAIT&#xa;- mark DEAD_LETTER" vertex="1">
+          <mxGeometry height="165" width="360" x="70" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=13;spacing=8;" value="Adapter responsibilities&#xa;- serialize topic/key/payload&#xa;- send to Kafka&#xa;- map broker exception&#xa;- return OutboxPublishResult" vertex="1">
+          <mxGeometry height="150" width="360" x="790" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0eafa;strokeColor=#8b6ecb;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="OutboxPublishResult&#xa;success | failureCode | failureReason" vertex="1">
+          <mxGeometry height="90" width="260" x="470" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="15" edge="1" parent="1" source="5" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#9ca3af;fontSize=14;fontColor=#6b7280;edgeStyle=orthogonalEdgeStyle;" target="12" value="owns">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="215" y="293" />
+              <mxPoint x="250" y="293" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="16" edge="1" parent="1" source="7" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#9ca3af;fontSize=14;fontColor=#6b7280;edgeStyle=orthogonalEdgeStyle;" target="13" value="owns">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="17" edge="1" parent="1" source="7" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="14" value="returns">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="290" />
+              <mxPoint x="600" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18" edge="1" parent="1" source="14" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="5" value="state transition decision">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="420" />
+              <mxPoint x="450" y="290" />
+              <mxPoint x="270" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="READY / RETRY_WAIT" vertex="1">
+          <mxGeometry height="60" width="210" x="240" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff0df;strokeColor=#df8b36;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="PROCESSING" vertex="1">
+          <mxGeometry height="60" width="210" x="520" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="PUBLISHED" vertex="1">
+          <mxGeometry height="60" width="210" x="900" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7db;strokeColor=#c49a18;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="RETRY_WAIT" vertex="1">
+          <mxGeometry height="60" width="210" x="900" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="DEAD_LETTER" vertex="1">
+          <mxGeometry height="60" width="210" x="1260" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="24" edge="1" parent="1" source="19" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="20" value="claim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="25" edge="1" parent="1" source="20" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="21" value="publish success">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="26" edge="1" parent="1" source="20" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="22" value="retryable failure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="27" edge="1" parent="1" source="22" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="23" value="max retry exceeded">
+          <mxGeometry relative="1" x="-0.0667" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

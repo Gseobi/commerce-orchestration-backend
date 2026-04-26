@@ -55,6 +55,33 @@ notification 실패 시 `handling_policy` 기준으로 `AUTO_RETRY`, `MANUAL_INT
 - 명시적 ignore 처리 시 주문은 `COMPLETED`로 복구됩니다.
 - 실패/보류 상태는 audit log 또는 orchestration step 기록 포인트로 남습니다.
 
+### Payment Idempotency Flow
+
+동일 주문의 결제 승인 요청이 orchestration replay나 client timeout 이후 반복될 수 있으므로, `paymentRequestId` 기준으로 기존 payment를 먼저 조회합니다.
+
+- 기존 payment가 있으면 provider를 다시 호출하지 않습니다.
+- 기존 payment가 없을 때만 provider approve를 호출합니다.
+- 같은 `paymentRequestId` 요청은 같은 결과를 반환합니다.
+
+![Payment idempotency flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png)
+
+- [draw.io 원본](/docs/diagrams/source/commerce_orchestration_payment_idempotency_flow.drawio)
+- [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_payment_idempotency_flow.pdf)
+
+### Notification / Outbox Processing Claim Flow
+
+notification retry와 outbox publish는 scheduler, admin API, multiple worker에 의해 같은 event가 동시에 처리될 수 있습니다. 이를 방지하기 위해 처리 전 `PROCESSING` 상태로 claim합니다.
+
+- claim update count = `1`이면 처리 권한 획득
+- claim update count = `0`이면 skipped
+- notification은 `SENT`, `RETRY_SCHEDULED`, `MANUAL_INTERVENTION_REQUIRED`로 전이
+- outbox는 `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER`로 전이
+
+![Notification and outbox processing claim flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
+
+- [draw.io 원본](/docs/diagrams/source/commerce_orchestration_notification_outbox_processing_claim_flow.drawio)
+- [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_notification_outbox_processing_claim_flow.pdf)
+
 ### Reliability State Transitions
 
 #### Payment approve

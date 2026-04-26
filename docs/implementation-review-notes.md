@@ -149,3 +149,21 @@
 
 - `./gradlew clean test --rerun-tasks`
 - `./gradlew clean integrationTest --rerun-tasks --stacktrace`
+
+## 9. Reliability Hardening Diagram Update
+
+이번 문서 보강에서는 최근 구현한 reliability hardening 내용을 다이어그램으로 정리했습니다.
+
+추가된 다이어그램:
+
+- [commerce_orchestration_reliability_hardening_overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png)
+- [commerce_orchestration_payment_idempotency_flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png)
+- [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
+- [commerce_orchestration_outbox_publisher_adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
+
+각 다이어그램은 다음 구현을 설명합니다.
+
+- `paymentRequestId` 기반 결제 승인 멱등성
+- notification retry `PROCESSING` claim
+- outbox publish `PROCESSING` claim
+- `OutboxPublisherService`와 `KafkaOutboxEventPublisher` 분리

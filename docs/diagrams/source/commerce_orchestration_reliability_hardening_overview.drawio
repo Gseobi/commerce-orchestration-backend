@@ -1,0 +1,170 @@
+<mxfile host="app.diagrams.net" agent="OpenAI">
+  <diagram name="commerce_orchestration_reliability_hardening_overview" id="0">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Order State Change&#xa;@Transactional" vertex="1">
+          <mxGeometry height="75" width="200" x="70" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="1" style="shape=cylinder3d;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=15;html=1;fillColor=#f0eafa;strokeColor=#8b6ecb;fontColor=#1f2937;fontSize=13;spacing=8;" value="Outbox Event&#xa;READY / RETRY_WAIT" vertex="1">
+          <mxGeometry height="85" width="210" x="400" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff0df;strokeColor=#df8b36;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Publisher / Retry Processor&#xa;Scheduler or Admin" vertex="1">
+          <mxGeometry height="85" width="260" x="770" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Kafka Publish&#xa;or Follow-up Processing" vertex="1">
+          <mxGeometry height="85" width="250" x="1190" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="9" edge="1" parent="1" source="5" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="6" value="same transaction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" edge="1" parent="1" source="6" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="7" value="candidate event">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" edge="1" parent="1" source="7" style="endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#4b5563;fontSize=14;fontColor=#374151;edgeStyle=orthogonalEdgeStyle;" target="8" value="process / publish">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#b91c1c;fontStyle=1;" value="Duplicate risk points" vertex="1">
+          <mxGeometry height="30" width="260" x="70" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Client timeout&#xa;retries payment approve" vertex="1">
+          <mxGeometry height="75" width="210" x="70" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Scheduler and Admin&#xa;retry same event" vertex="1">
+          <mxGeometry height="75" width="210" x="320" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Multiple workers&#xa;read same candidate" vertex="1">
+          <mxGeometry height="75" width="210" x="570" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Kafka timeout&#xa;unknown publish result" vertex="1">
+          <mxGeometry height="75" width="210" x="820" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Manual reprocess&#xa;after auto retry" vertex="1">
+          <mxGeometry height="75" width="210" x="1070" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="18" edge="1" parent="1" source="13" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#d05b5b;fontSize=14;fontColor=#b91c1c;edgeStyle=orthogonalEdgeStyle;" target="7" value="risk">
+          <mxGeometry relative="1" x="-0.798" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="290" y="388" />
+              <mxPoint x="290" y="270" />
+              <mxPoint x="900" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="19" edge="1" parent="1" source="14" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#d05b5b;fontSize=14;fontColor=#b91c1c;edgeStyle=orthogonalEdgeStyle;" target="7" value="risk">
+          <mxGeometry relative="1" x="-0.8974" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="425" y="280" />
+              <mxPoint x="900" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="20" edge="1" parent="1" source="15" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#d05b5b;fontSize=14;fontColor=#b91c1c;edgeStyle=orthogonalEdgeStyle;" target="7" value="risk">
+          <mxGeometry relative="1" x="-0.8209" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="675" y="290" />
+              <mxPoint x="900" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" edge="1" parent="1" source="16" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#d05b5b;fontSize=14;fontColor=#b91c1c;edgeStyle=orthogonalEdgeStyle;" target="7" value="risk">
+          <mxGeometry relative="1" x="-0.5554" as="geometry">
+            <mxPoint y="-1" as="offset" />
+            <Array as="points">
+              <mxPoint x="925" y="280" />
+              <mxPoint x="900" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" edge="1" parent="1" source="17" style="dashed=1;endArrow=open;html=1;rounded=1;strokeWidth=2;strokeColor=#d05b5b;fontSize=14;fontColor=#b91c1c;edgeStyle=orthogonalEdgeStyle;" target="7" value="risk">
+          <mxGeometry relative="1" x="-0.8441" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="1175" y="270" />
+              <mxPoint x="900" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontColor=#166534;fontStyle=1;" value="Controls added in this hardening step" vertex="1">
+          <mxGeometry height="30" width="450" x="70" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Payment Idempotency&#xa;paymentRequestId" vertex="1">
+          <mxGeometry height="75" width="245" x="70" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="25" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Notification Claim&#xa;RETRY_SCHEDULED → PROCESSING" vertex="1">
+          <mxGeometry height="75" width="290" x="380" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Outbox Claim&#xa;READY/RETRY_WAIT → PROCESSING" vertex="1">
+          <mxGeometry height="75" width="290" x="730" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Publisher Adapter&#xa;OutboxEventPublisher interface" vertex="1">
+          <mxGeometry height="75" width="290" x="1070" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="28" edge="1" parent="1" source="24" style="dashed=1;endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#3f9b55;fontSize=14;fontColor=#166534;edgeStyle=orthogonalEdgeStyle;" target="7" value="prevents provider re-call">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="592" />
+              <mxPoint x="370" y="460" />
+              <mxPoint x="790" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="29" edge="1" parent="1" source="25" style="dashed=1;endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#3f9b55;fontSize=14;fontColor=#166534;edgeStyle=orthogonalEdgeStyle;" target="7" value="claim before retry">
+          <mxGeometry relative="1" x="-0.462" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="720" y="592" />
+              <mxPoint x="720" y="470" />
+              <mxPoint x="800" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="30" edge="1" parent="1" source="26" style="dashed=1;endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#3f9b55;fontSize=14;fontColor=#166534;edgeStyle=orthogonalEdgeStyle;" target="7" value="claim before publish">
+          <mxGeometry relative="1" x="-0.7631" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="875" y="470" />
+              <mxPoint x="810" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" edge="1" parent="1" source="27" style="dashed=1;endArrow=block;html=1;rounded=1;strokeWidth=2;strokeColor=#3f9b55;fontSize=14;fontColor=#166534;edgeStyle=orthogonalEdgeStyle;" target="8" value="decouples broker implementation">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1220" y="480" />
+              <mxPoint x="1315" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#374151;fontStyle=1;" value="Legend" vertex="1">
+          <mxGeometry height="25" width="90" x="70" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="33" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#5b7cfa;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Normal flow" vertex="1">
+          <mxGeometry height="42" width="145" x="70" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="34" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d05b5b;fontColor=#1f2937;fontSize=13;spacing=8;" value="Risk point" vertex="1">
+          <mxGeometry height="42" width="145" x="240" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="35" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf7ec;strokeColor=#3f9b55;fontColor=#1f2937;fontSize=14;spacing=8;arcSize=12;" value="Control / Guard" vertex="1">
+          <mxGeometry height="42" width="160" x="410" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="LPU7YFRdvRTjuk632pjz-35" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="70" width="560" x="40" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="LPU7YFRdvRTjuk632pjz-36" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontColor=#1f2937;fontStyle=1;" value="Commerce Orchestration Reliability Hardening" vertex="1">
+          <mxGeometry height="40" width="540" x="50" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="LPU7YFRdvRTjuk632pjz-37" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontColor=#6b7280;" value="Outbox / Retry 구조에서 중복 요청, 동시 재처리, 중복 publish 위험을 제어하는 보강 범위" vertex="1">
+          <mxGeometry height="30" width="538" x="51" y="47" as="geometry" />
+        </mxCell>
+        <mxCell id="LPU7YFRdvRTjuk632pjz-38" parent="1" style="shape=line;html=1;strokeWidth=2;strokeColor=light-dark(#000000,#2A2828);" value="" vertex="1">
+          <mxGeometry height="2.24" width="660" x="40" y="85" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

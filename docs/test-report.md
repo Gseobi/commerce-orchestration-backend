@@ -47,6 +47,12 @@
 
 이번 문서 정리 전 실제 실행 결과 기준입니다.
 
+Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 검증했습니다.
+
+- Payment idempotency: [commerce_orchestration_payment_idempotency_flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png)
+- Notification retry claim: [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
+- Outbox publish claim / adapter: [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png), [commerce_orchestration_outbox_publisher_adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
+
 | Test / Command | Coverage | Result |
 |---|---|---|
 | `PaymentServiceTest` | 같은 `paymentRequestId` replay 시 `PaymentProviderClient.approve` 중복 호출 방지, `paymentRepository.save` 1회 검증 | PASS |

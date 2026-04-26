@@ -103,6 +103,8 @@ due retry event는 처리 전에 `PROCESSING`으로 claim합니다. claim에 실
 
 ## 6. DB 상태 기반 claim을 사용한 이유
 
+Outbox/Retry 구조는 이벤트 유실과 복구 문제를 줄이지만 중복 처리를 자동으로 막지는 않습니다.
+
 scheduler와 admin API는 같은 notification event 또는 outbox event를 비슷한 시점에 처리할 수 있습니다. 단일 JVM 내부라면 `synchronized` 같은 프로세스 내부 락이 일부 중복 실행을 줄일 수 있지만, 다중 인스턴스 배포나 운영자 수동 실행까지 고려하면 충분하지 않습니다.
 
 그래서 retry/publish 처리 권한은 DB 조건부 update로 선점합니다.
@@ -110,10 +112,16 @@ scheduler와 admin API는 같은 notification event 또는 outbox event를 비�
 - 대상 상태와 due 조건을 만족할 때만 `PROCESSING`으로 update합니다.
 - update count가 `1`이면 처리 권한을 획득한 것으로 봅니다.
 - update count가 `0`이면 다른 실행자가 선점했거나 더 이상 대상 상태가 아니므로 skipped로 봅니다.
+- 이 기준은 notification retry와 outbox publish에 동일하게 적용됩니다.
 
 Outbox는 이벤트 유실을 줄이는 구조지만, 중복 발행 방어는 별도 claim/idempotency 전략이 필요합니다. 현재 구현은 publish 직전 `PROCESSING` claim으로 중복 publish 가능성을 줄이고, retry/dead-letter 전이는 `OutboxPublisherService`가 담당합니다.
 
 Payment는 `paymentRequestId`를 기준으로 provider 중복 호출을 방지합니다. 외부 provider callback 멱등성은 `providerTransactionId` 컬럼과 repository 조회 메서드까지만 준비되어 있으며, callback API가 구체화될 때 후속 확장할 수 있습니다.
+
+관련 다이어그램:
+
+- [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
+- [commerce_orchestration_outbox_publisher_adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
 
 ## 7. Admin 재처리 기준
 
