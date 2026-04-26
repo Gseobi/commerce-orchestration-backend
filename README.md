@@ -439,6 +439,9 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 ## 15. Blog / Notes
 
 - Velog: [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/%EC%BB%A4%EB%A8%B8%EC%8A%A4-%EC%A3%BC%EB%AC%B8-%EC%9D%B4%ED%9B%84-%ED%9D%90%EB%A6%84%EC%9D%84-%EC%83%81%ED%83%9C-%EC%A0%84%EC%9D%B4%EC%99%80-Orchestration%EC%9C%BC%EB%A1%9C-%EC%84%A4%EA%B3%84%ED%95%98%EA%B8%B0)
+  - 주문 이후 결제, 정산, 알림, Outbox 흐름을 상태 전이와 Orchestration 관점에서 정리한 대표 설계 글입니다.
+- Velog: [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)  
+  - Outbox와 Retry 구조에서 발생할 수 있는 중복 요청, 동시 재처리, 중복 publish 가능성을 `paymentRequestId`와 `PROCESSING` claim으로 방어한 과정을 정리한 심화 글입니다.
 - Portfolio Index: [Backend Portfolio / Notes Index](https://velog.io/@wsx2386/%EB%B0%B1%EC%97%94%EB%93%9C-%ED%8F%AC%ED%8A%B8%ED%8F%B4%EB%A6%AC%EC%98%A4-%EA%B8%80-%EB%AA%A8%EC%9D%8C-%EC%9A%B4%EC%98%81%ED%98%95-Backend-%EB%AC%B8%EC%A0%9C%EB%A5%BC-%EA%B5%AC%EC%A1%B0%EB%A1%9C-%ED%92%80%EC%96%B4%EB%82%B8-%EA%B8%B0%EB%A1%9D)
 
 ---
