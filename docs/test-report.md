@@ -148,7 +148,8 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - notification 채널별 retry policy / 운영자 승인 절차
 - dead-letter 운영 자동화
 - Kafka consumer 기반 상태 전이
-- WebClient timeout 이후 confirmation flow
+- WebClient timeout 이후 confirmation flow 구현
+  - 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
 - provider callback API와 `providerTransactionId` 기반 callback idempotency
 - admin 레벨 재처리 / 재검증 API 고도화
 - Prometheus/Grafana dashboard와 alert rule

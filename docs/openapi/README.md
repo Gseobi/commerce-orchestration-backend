@@ -56,6 +56,7 @@ Docker Compose 또는 local profile 실행 방법은 repository root의 `README.
 ## Rules / 작성 규칙
 
 - Future Scope API는 구현되기 전까지 OpenAPI paths에 추가하지 않습니다.
+- Payment timeout confirmation API는 [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) 설계가 구현된 뒤에만 OpenAPI paths에 추가합니다.
 - Controller path, request DTO, response shape가 바뀌면 OpenAPI도 같은 작업에서 갱신합니다.
 - 인증이 필요한 API는 security requirement를 명시합니다.
 - demo token 발급 API는 production auth로 오해되지 않게 설명합니다.

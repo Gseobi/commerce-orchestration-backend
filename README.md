@@ -40,8 +40,9 @@ Spring Boot 기반 commerce orchestration backend입니다.
 5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
 6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
 7. **AI-assisted 검증 기준:** [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
-8. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
-9. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+8. **Future Scope 설계:** [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+9. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
+10. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
@@ -345,11 +346,13 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
 아래는 현재도 후속 과제로 유지하는 항목입니다.
 
 - 실제 payment provider별 timeout / retry / error mapping 고도화
+- WebClient timeout 이후 provider confirmation flow 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+  현재는 Future Scope / Design Note이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
 - notification 채널별 retry policy 세분화
 - dead-letter 이벤트의 운영 자동화
 - refresh token / key rotation / user store 연동
 - admin 레벨 재처리 / 재검증 API 고도화
-- provider callback API와 WebClient timeout confirmation flow
+- provider callback API와 WebClient timeout confirmation flow 구현
 
 짧게 말해 이 프로젝트는 CRUD showcase보다는 커머스 거래 흐름의 orchestration, explicit state transition, failure handling, compensation, retry/dead-letter, 운영 복구 지점을 보여주는 포트폴리오 성격이 강합니다.
 

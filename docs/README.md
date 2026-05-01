@@ -16,27 +16,31 @@
    주문 이후 payment / settlement / notification / outbox 흐름, 멱등성 replay, retry/publish claim 상태 전이를 확인합니다.
 3. [Design Notes](/docs/design-notes.md)
    compensation, notification policy, outbox reliability, DB 상태 기반 claim을 선택한 이유를 확인합니다.
-4. [Reliability Hardening Diagrams](/docs/diagrams/README.md#reliability-hardening-diagrams)
+4. [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+   WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 확인합니다. 현재는 Future Scope / Design Note이며 구현된 API가 아닙니다.
+5. [Reliability Hardening Diagrams](/docs/diagrams/README.md#reliability-hardening-diagrams)
    paymentRequestId 기반 결제 멱등성, notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리 흐름과 draw.io 원본, PNG, PDF 자산을 확인합니다.
-5. [Test Report](/docs/test-report.md)
+6. [Test Report](/docs/test-report.md)
    실제로 검증한 범위, reliability hardening 테스트 결과, 아직 검증하지 않은 범위를 구분합니다.
-6. [Verification Matrix](/docs/verification-matrix.md)
+7. [Verification Matrix](/docs/verification-matrix.md)
    구현 위치, 테스트 커버리지, 문서 위치, 현재 상태를 한 표로 대조합니다.
-7. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
+8. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
    AI Agent 활용 범위와 개발자 주도 검증 기준을 확인합니다.
-8. [Claim Audit](/docs/verification/claim-audit.md)
+9. [Claim Audit](/docs/verification/claim-audit.md)
    주요 포트폴리오 claim이 코드, 테스트, 문서 어디에 근거하는지 확인합니다.
-9. [OpenAPI / ApiDog](/docs/openapi/README.md)
+10. [OpenAPI / ApiDog](/docs/openapi/README.md)
    구현된 HTTP API만 포함한 ApiDog import-ready OpenAPI 파일을 확인합니다.
-10. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
+11. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
    notification retry, outbox dead-letter, `PROCESSING` 장기 체류를 metric/log/SQL/admin API 기준으로 확인하는 운영 복구 절차입니다. 관련 observability/recovery diagram은 [Diagram Guide](/docs/diagrams/README.md)에서 확인할 수 있습니다.
-11. [Troubleshooting](/docs/troubleshooting.md)
+12. [Troubleshooting](/docs/troubleshooting.md)
    로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
 
 - [Design Notes](/docs/design-notes.md)  
   현재 구조를 왜 이렇게 나눴는지, compensation / notification policy / outbox reliability / DB claim 기준을 정리합니다.
+- [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+  WebClient timeout 이후 provider approval state가 불명확한 경우의 confirmation, retry, compensation 판단 기준을 정리한 Future Scope / Design Note입니다.
 - [SQL Guide](/docs/sql/README.md)  
   Flyway migration과 운영 점검용 SQL 문서의 역할을 구분합니다.
 - [Verification Matrix](/docs/verification-matrix.md)
