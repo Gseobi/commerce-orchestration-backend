@@ -40,7 +40,7 @@ Spring Boot 기반 commerce orchestration backend입니다.
 5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
 6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
 7. **AI-assisted 검증 기준:** [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
-8. **Future Scope 설계:** [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+8. **Future Scope 설계:** [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) / [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
 9. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
 10. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
@@ -348,6 +348,8 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
 - 실제 payment provider별 timeout / retry / error mapping 고도화
 - WebClient timeout 이후 provider confirmation flow 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
   현재는 Future Scope / Design Note이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
+- provider callback flow 구현 판단 문서: [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
+  현재는 Future Scope / Design Review이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
 - notification 채널별 retry policy 세분화
 - dead-letter 이벤트의 운영 자동화
 - refresh token / key rotation / user store 연동

@@ -73,6 +73,11 @@ notification 실패 시 `handling_policy` 기준으로 `AUTO_RETRY`, `MANUAL_INT
 - [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md): WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 정리한 Future Scope / Design Note 문서입니다.
 - 현재 production code, OpenAPI path, automated test에는 구현되어 있지 않습니다.
 
+### Provider Callback Flow Review
+
+- [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md): 외부 payment provider callback을 구현할지 검토하고, 필요한 상태 전이·멱등성·보안·테스트 범위를 Future Scope / Design Review로 정리합니다.
+- 현재 production code, OpenAPI path, automated test에는 구현되어 있지 않습니다.
+
 ### Notification / Outbox Processing Claim Flow
 
 notification retry와 outbox publish는 scheduler, admin API, multiple worker에 의해 같은 event가 동시에 처리될 수 있습니다. 이를 방지하기 위해 처리 전 `PROCESSING` 상태로 claim합니다.
