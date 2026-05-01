@@ -38,7 +38,8 @@ Spring Boot 기반 commerce orchestration backend입니다.
 3. **Order / Payment / Settlement 흐름:** [Flow Notes](/docs/flows/README.md)
 4. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
 5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
-6. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
+7. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
@@ -98,7 +99,7 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
   `./gradlew clean test --rerun-tasks`,  
   `./gradlew clean integrationTest --rerun-tasks --stacktrace` 기준 통과
 - **현재 CI 상태:**  
-  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, 현재 기준 green baseline을 확보했습니다.
+  GitHub Actions는 `build-and-test`, `integration-test` 두 job으로 유지 중이며, compile/test/integration 검증 의미를 유지합니다.
 
 ---
 
@@ -344,7 +345,7 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
 - dead-letter 이벤트의 운영 자동화
 - refresh token / key rotation / user store 연동
 - admin 레벨 재처리 / 재검증 API 고도화
-- notification retry batch 응답에 processedCount 등 운영 지표 추가
+- OpenAPI / ApiDog import 가능한 구현 API 명세 정리
 
 짧게 말해 이 프로젝트는 CRUD showcase보다는 커머스 거래 흐름의 orchestration, explicit state transition, failure handling, compensation, retry/dead-letter, 운영 복구 지점을 보여주는 포트폴리오 성격이 강합니다.
 
@@ -476,6 +477,7 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 - [Flow Notes](/docs/flows/README.md)
 - [Diagram Guide](/docs/diagrams/README.md)
 - [Design Notes](/docs/design-notes.md)
+- [Verification Matrix](/docs/verification-matrix.md)
 - [Test Report](/docs/test-report.md)
 - [Troubleshooting](/docs/troubleshooting.md)
 - [SQL Guide](/docs/sql/README.md)

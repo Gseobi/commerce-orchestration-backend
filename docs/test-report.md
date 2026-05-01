@@ -35,6 +35,7 @@
 | PostgreSQL / Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
 | PostgreSQL / Kafka outbox dead-letter path | Implemented | retry 후 dead-letter 전환 검증 |
 | Notification retry processor | Implemented | `RETRY_SCHEDULED` due event 재처리, 성공/재스케줄/manual 전환 검증 |
+| Admin notification retry-due HTTP trigger | Implemented | `POST /api/admin/notification-events/retry-due`, batch result summary 응답 검증 |
 | Notification retry claim | Implemented | due event claim, claim 실패 skippedCount 집계, 동시 실행 시 단일 성공 처리 검증 |
 | Notification future retry skip | Implemented | `nextAttemptAt`이 미래인 이벤트는 처리 대상에서 제외 |
 | Notification max retry exceeded | Implemented | 반복 실패 시 `MANUAL_INTERVENTION_REQUIRED` 전환 |
@@ -58,6 +59,8 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 |---|---|---|
 | `PaymentServiceTest` | 같은 `paymentRequestId` replay 시 `PaymentProviderClient.approve` 중복 호출 방지, `paymentRepository.save` 1회 검증 | PASS |
 | `NotificationRetryProcessorIntegrationTest` | due retry event 처리, retry success/reschedule/manual 전환, skippedCount 필드 유지 검증 | PASS |
+| `NotificationRetryProcessorIntegrationTest.retryDueNotificationEvents_returnsBatchResultSummary` | `POST /api/admin/notification-events/retry-due`가 due event만 처리하고 batch summary를 반환하는지 검증 | PASS |
+| `AdminNotificationRetryControllerTest` | ADMIN role로 retry-due endpoint 호출 시 trigger port 위임과 응답 필드 검증 | PASS |
 | `NotificationRetryProcessorTest` | claim 실패 시 skippedCount 증가, 같은 due event 동시 processor 실행 시 최종 성공 처리 1회 검증 | PASS |
 | `OutboxPublisherServiceTest` | `OutboxEventPublisher` mock 기반 publish 성공/실패, retry/dead-letter, `PROCESSING` skip 검증 | PASS |
 | `./gradlew clean test --rerun-tasks` | 단위 테스트, MockMvc 테스트, Modulith boundary 검증 | PASS |
@@ -106,8 +109,8 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 
 현재 artifact 이름은 아래와 같습니다.
 
-- `gradle-unit-test-reports`
-- `gradle-integration-test-reports`
+- `gradle-unit-test-reports-${{ github.run_id }}-${{ github.run_attempt }}`
+- `gradle-integration-test-reports-${{ github.run_id }}-${{ github.run_attempt }}`
 
 ## 7. CI 안정화 메모
 
