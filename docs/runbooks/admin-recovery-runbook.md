@@ -29,6 +29,17 @@
 5. admin API를 실행합니다.
 6. audit log와 상태 전이를 확인합니다.
 
+Admin notification retry, notification ignore, outbox dead-letter retry API는 선택적 request body로 `operatorId`, `reason`을 받을 수 있습니다. 기존 no-body 호출도 계속 지원합니다. 값이 없거나 blank이면 audit detail에는 `operatorId=unknown`, `reason=not-provided`가 기록됩니다.
+
+```json
+{
+  "operatorId": "ops-admin",
+  "reason": "manual recovery after dependency restored"
+}
+```
+
+`operatorId`와 `reason`은 audit detail에만 안전하게 남기고 metric tag나 structured log field에는 사용하지 않습니다. 긴 값은 저장 길이에 맞춰 잘립니다.
+
 ## 3. Notification retry due batch
 
 ### 증상
@@ -123,7 +134,15 @@ order by id desc;
 ```http
 POST /api/admin/notification-events/{notificationEventId}/retry
 Authorization: Bearer <admin-token>
+Content-Type: application/json
+
+{
+  "operatorId": "ops-admin",
+  "reason": "manual retry after notification channel recovery"
+}
 ```
+
+body 없이 호출해도 기존과 동일하게 동작합니다.
 
 성공 기준:
 
@@ -137,7 +156,15 @@ Authorization: Bearer <admin-token>
 ```http
 POST /api/admin/notification-events/{notificationEventId}/ignore
 Authorization: Bearer <admin-token>
+Content-Type: application/json
+
+{
+  "operatorId": "ops-admin",
+  "reason": "customer accepted missing notification"
+}
 ```
+
+body 없이 호출해도 기존과 동일하게 동작합니다.
 
 성공 기준:
 
@@ -160,6 +187,7 @@ order by id desc;
 ```
 
 `detail`에는 `action`, `result`, `previousStatus`, `currentStatus`, target id가 포함됩니다.
+admin request body가 전달된 경우 `operatorId`, `reason`도 포함됩니다. 값이 없으면 `unknown`, `not-provided`가 기록됩니다.
 
 ## 5. Outbox DEAD_LETTER 재발행
 
@@ -184,7 +212,15 @@ order by dead_lettered_at desc, id desc;
 ```http
 POST /api/admin/outbox-events/{outboxEventId}/retry
 Authorization: Bearer <admin-token>
+Content-Type: application/json
+
+{
+  "operatorId": "outbox-operator",
+  "reason": "Kafka broker recovered"
+}
 ```
+
+body 없이 호출해도 기존과 동일하게 동작합니다.
 
 ### 결과별 조치
 

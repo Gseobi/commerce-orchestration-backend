@@ -273,6 +273,8 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 - `POST /api/admin/outbox-events/{id}/retry`  
   `DEAD_LETTER` outbox event만 대상으로 즉시 재발행을 시도합니다. 응답은 `eventId`, `aggregateId`, `eventType`, `action=RETRY_DEAD_LETTER`, `result`, `previousStatus`, `currentStatus`, `retryCount`, `failureCode`, `failureReason`, `message`를 포함합니다.
 
+세 admin 재처리 API는 선택적 request body로 `operatorId`, `reason`을 받을 수 있습니다. 기존처럼 body 없이 호출해도 동작하며, body가 없거나 값이 비어 있으면 audit detail에는 `operatorId=unknown`, `reason=not-provided`가 기록됩니다. `operatorId`와 `reason`은 trim/truncate 후 audit detail에만 반영하고 metric tag나 log field에는 넣지 않습니다.
+
 현재 admin 재처리는 전체 orchestration 재실행이 아니라, 실패한 하위 처리 단위를 명시적으로 복구하는 방식입니다.
 
 ---

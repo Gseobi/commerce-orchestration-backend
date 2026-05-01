@@ -30,6 +30,7 @@
 | Notification failure branch | Implemented | compensation step `READY` 검증 |
 | Notification ignore policy | Implemented | ignore 가능한 실패는 주문 완료 유지 |
 | Admin notification reprocessing | Implemented | retry 후 주문 `COMPLETED` 복구 |
+| Admin recovery traceability | Implemented | optional operator/reason request body, no-body compatibility, audit detail 검증 |
 | Admin outbox reprocessing | Implemented | dead-letter 즉시 재발행 검증 |
 | Outbox publish unit test | Implemented | `PUBLISHED`, `RETRY_WAIT`, `DEAD_LETTER` 전이 검증 |
 | PostgreSQL / Kafka outbox happy path | Implemented | publish 후 Kafka 소비 검증 |
@@ -75,7 +76,8 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 | `CommerceRecoveryMetricsTest` | custom metric counter와 tag normalization 검증 | PASS |
 | `OutboxPublisherServiceTest` | outbox publish success/failure/skipped/dead-letter metric 검증 | PASS |
 | `NotificationRetryProcessorTest` | retry success/skipped/manual-required metric 검증 | PASS |
-| `AdminReprocessingServiceTest` | admin recovery request/success/failure metric 검증 | PASS |
+| `AdminReprocessingServiceTest` | admin recovery request/success/failure metric, optional context default, blank/long context normalization, audit detail truncation 검증 | PASS |
+| `AdminReprocessingIntegrationTest` | admin notification/outbox recovery body의 `operatorId`, `reason`이 audit detail에 반영되는지 검증 | PASS |
 
 실행 명령:
 

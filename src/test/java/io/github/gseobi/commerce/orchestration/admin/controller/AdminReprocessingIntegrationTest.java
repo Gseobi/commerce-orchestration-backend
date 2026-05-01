@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.gseobi.commerce.orchestration.audit.entity.AuditLog;
+import io.github.gseobi.commerce.orchestration.audit.repository.AuditLogRepository;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEvent;
 import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
@@ -48,6 +50,9 @@ class AdminReprocessingIntegrationTest {
 
     @Autowired
     private OutboxEventRepository outboxEventRepository;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     private MockMvc mockMvc;
     private String adminAccessToken;
@@ -89,7 +94,14 @@ class AdminReprocessingIntegrationTest {
         NotificationEvent notificationEvent = notificationEventRepository.findAllByOrderIdOrderByIdAsc(orderId).getFirst();
 
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
-                        .header("Authorization", "Bearer " + adminAccessToken))
+                        .header("Authorization", "Bearer " + adminAccessToken)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "operatorId": "ops-admin",
+                                  "reason": "manual retry after notification channel recovery"
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.eventId", is(notificationEvent.getId().intValue())))
                 .andExpect(jsonPath("$.data.orderId", is(orderId.intValue())))
@@ -100,6 +112,17 @@ class AdminReprocessingIntegrationTest {
                 .andExpect(jsonPath("$.data.message", is("Notification event was retried successfully.")))
                 .andExpect(jsonPath("$.data.orderStatus", is("COMPLETED")))
                 .andExpect(jsonPath("$.data.handlingPolicy", is("NONE")));
+
+        String auditDetail = latestAuditDetail(orderId, "ADMIN_NOTIFICATION_RETRIED");
+        org.assertj.core.api.Assertions.assertThat(auditDetail)
+                .contains("action=RETRY")
+                .contains("targetType=notification")
+                .contains("targetId=" + notificationEvent.getId())
+                .contains("previousStatus=RETRY_SCHEDULED")
+                .contains("currentStatus=SENT")
+                .contains("result=SUCCESS")
+                .contains("operatorId=ops-admin")
+                .contains("reason=manual retry after notification channel recovery");
 
         mockMvc.perform(post("/api/admin/notification-events/{notificationEventId}/retry", notificationEvent.getId())
                         .header("Authorization", "Bearer " + adminAccessToken))
@@ -130,7 +153,14 @@ class AdminReprocessingIntegrationTest {
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/admin/outbox-events/{outboxEventId}/retry", outboxEvent.getId())
-                        .header("Authorization", "Bearer " + adminAccessToken))
+                        .header("Authorization", "Bearer " + adminAccessToken)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "operatorId": "outbox-operator",
+                                  "reason": "Kafka broker recovered"
+                                }
+                                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.eventId", is(outboxEvent.getId().intValue())))
                 .andExpect(jsonPath("$.data.aggregateId", is(orderId.intValue())))
@@ -143,6 +173,17 @@ class AdminReprocessingIntegrationTest {
                 .andExpect(jsonPath("$.data.failureCode").doesNotExist())
                 .andExpect(jsonPath("$.data.failureReason").doesNotExist())
                 .andExpect(jsonPath("$.data.message", is("Outbox event was republished successfully.")));
+
+        String auditDetail = latestAuditDetail(orderId, "ADMIN_OUTBOX_RETRIED");
+        org.assertj.core.api.Assertions.assertThat(auditDetail)
+                .contains("action=RETRY_DEAD_LETTER")
+                .contains("targetType=outbox")
+                .contains("targetId=" + outboxEvent.getId())
+                .contains("previousStatus=DEAD_LETTER")
+                .contains("currentStatus=PUBLISHED")
+                .contains("result=PUBLISHED")
+                .contains("operatorId=outbox-operator")
+                .contains("reason=Kafka broker recovered");
     }
 
     @Test
@@ -194,5 +235,14 @@ class AdminReprocessingIntegrationTest {
 
         JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
         return root.get("data").get("orderId").asLong();
+    }
+
+    private String latestAuditDetail(Long orderId, String action) {
+        return auditLogRepository.findAllByOrderIdOrderByIdAsc(orderId)
+                .stream()
+                .filter(auditLog -> action.equals(auditLog.getAction()))
+                .reduce((first, second) -> second)
+                .map(AuditLog::getDetail)
+                .orElseThrow();
     }
 }

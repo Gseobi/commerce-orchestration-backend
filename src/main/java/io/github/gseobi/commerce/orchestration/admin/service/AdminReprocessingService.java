@@ -1,5 +1,6 @@
 package io.github.gseobi.commerce.orchestration.admin.service;
 
+import io.github.gseobi.commerce.orchestration.admin.api.AdminRecoveryContext;
 import io.github.gseobi.commerce.orchestration.admin.api.AdminReprocessingFacade;
 import io.github.gseobi.commerce.orchestration.admin.dto.response.AdminNotificationReprocessResponse;
 import io.github.gseobi.commerce.orchestration.admin.dto.response.AdminOutboxReprocessResponse;
@@ -28,6 +29,7 @@ class AdminReprocessingService implements AdminReprocessingFacade {
     private static final String ACTION_RETRY_DEAD_LETTER = "RETRY_DEAD_LETTER";
     private static final String RESULT_SUCCESS = "SUCCESS";
     private static final String RESULT_IGNORED = "IGNORED";
+    private static final int MAX_AUDIT_DETAIL_LENGTH = 255;
 
     private final NotificationAdminApplication notificationAdminApplication;
     private final OutboxAdminApplication outboxAdminApplication;
@@ -38,6 +40,15 @@ class AdminReprocessingService implements AdminReprocessingFacade {
     @Transactional
     @Override
     public AdminNotificationReprocessResponse retryNotification(Long notificationEventId) {
+        return retryNotification(notificationEventId, AdminRecoveryContext.defaults());
+    }
+
+    @Transactional
+    @Override
+    public AdminNotificationReprocessResponse retryNotification(
+            Long notificationEventId,
+            AdminRecoveryContext recoveryContext
+    ) {
         commerceRecoveryMetrics.incrementAdminRecoveryRequest(TARGET_NOTIFICATION, ACTION_RETRY);
         log.info("event=admin_notification_retry_requested notificationEventId={} action={}",
                 notificationEventId,
@@ -46,7 +57,7 @@ class AdminReprocessingService implements AdminReprocessingFacade {
             NotificationAdminView view = notificationAdminApplication.retryNotification(notificationEventId);
             orderRecoveryApplication.completeAfterNotificationRecovery(view.orderId());
             auditRecorder.record(view.orderId(), "ADMIN_NOTIFICATION_RETRIED",
-                    notificationAuditDetail(notificationEventId, ACTION_RETRY, RESULT_SUCCESS, view));
+                    notificationAuditDetail(notificationEventId, ACTION_RETRY, RESULT_SUCCESS, view, recoveryContext));
             commerceRecoveryMetrics.incrementAdminRecoverySuccess(TARGET_NOTIFICATION, ACTION_RETRY);
             log.info("event=admin_notification_retry_completed notificationEventId={} orderId={} action={} result={} previousStatus={} currentStatus={}",
                     notificationEventId,
@@ -71,6 +82,15 @@ class AdminReprocessingService implements AdminReprocessingFacade {
     @Transactional
     @Override
     public AdminNotificationReprocessResponse ignoreNotification(Long notificationEventId) {
+        return ignoreNotification(notificationEventId, AdminRecoveryContext.defaults());
+    }
+
+    @Transactional
+    @Override
+    public AdminNotificationReprocessResponse ignoreNotification(
+            Long notificationEventId,
+            AdminRecoveryContext recoveryContext
+    ) {
         commerceRecoveryMetrics.incrementAdminRecoveryRequest(TARGET_NOTIFICATION, ACTION_IGNORE);
         log.info("event=admin_notification_ignore_requested notificationEventId={} action={}",
                 notificationEventId,
@@ -79,7 +99,7 @@ class AdminReprocessingService implements AdminReprocessingFacade {
             NotificationAdminView view = notificationAdminApplication.ignoreNotification(notificationEventId);
             orderRecoveryApplication.completeAfterNotificationRecovery(view.orderId());
             auditRecorder.record(view.orderId(), "ADMIN_NOTIFICATION_IGNORED",
-                    notificationAuditDetail(notificationEventId, ACTION_IGNORE, RESULT_IGNORED, view));
+                    notificationAuditDetail(notificationEventId, ACTION_IGNORE, RESULT_IGNORED, view, recoveryContext));
             commerceRecoveryMetrics.incrementAdminRecoverySuccess(TARGET_NOTIFICATION, ACTION_IGNORE);
             log.info("event=admin_notification_ignore_completed notificationEventId={} orderId={} action={} result={} previousStatus={} currentStatus={}",
                     notificationEventId,
@@ -104,6 +124,15 @@ class AdminReprocessingService implements AdminReprocessingFacade {
     @Transactional
     @Override
     public AdminOutboxReprocessResponse retryOutboxDeadLetter(Long outboxEventId) {
+        return retryOutboxDeadLetter(outboxEventId, AdminRecoveryContext.defaults());
+    }
+
+    @Transactional
+    @Override
+    public AdminOutboxReprocessResponse retryOutboxDeadLetter(
+            Long outboxEventId,
+            AdminRecoveryContext recoveryContext
+    ) {
         commerceRecoveryMetrics.incrementAdminRecoveryRequest(TARGET_OUTBOX, ACTION_RETRY_DEAD_LETTER);
         log.info("event=admin_outbox_retry_requested outboxEventId={} action={}",
                 outboxEventId,
@@ -112,7 +141,7 @@ class AdminReprocessingService implements AdminReprocessingFacade {
             OutboxAdminView view = outboxAdminApplication.retryDeadLetterEvent(outboxEventId);
             String result = resolveOutboxRetryResult(view);
             auditRecorder.record(view.aggregateId(), "ADMIN_OUTBOX_RETRIED",
-                    outboxAuditDetail(outboxEventId, ACTION_RETRY_DEAD_LETTER, result, view));
+                    outboxAuditDetail(outboxEventId, ACTION_RETRY_DEAD_LETTER, result, view, recoveryContext));
             commerceRecoveryMetrics.incrementAdminRecoverySuccess(TARGET_OUTBOX, ACTION_RETRY_DEAD_LETTER);
             log.info("event=admin_outbox_retry_completed outboxEventId={} aggregateId={} eventType={} action={} result={} previousStatus={} currentStatus={} retryCount={} failureCode={}",
                     outboxEventId,
@@ -164,19 +193,49 @@ class AdminReprocessingService implements AdminReprocessingFacade {
             Long notificationEventId,
             String action,
             String result,
-            NotificationAdminView view
+            NotificationAdminView view,
+            AdminRecoveryContext recoveryContext
     ) {
-        return "action=%s, result=%s, previousStatus=%s, currentStatus=%s, notificationEventId=%s"
-                .formatted(action, result, view.previousStatus(), view.status(), notificationEventId);
+        return truncateAuditDetail(
+                "action=%s, targetType=%s, targetId=%s, previousStatus=%s, currentStatus=%s, result=%s, operatorId=%s, reason=%s"
+                        .formatted(
+                                action,
+                                TARGET_NOTIFICATION,
+                                notificationEventId,
+                                view.previousStatus(),
+                                view.status(),
+                                result,
+                                recoveryContext.operatorId(),
+                                recoveryContext.reason()
+                        )
+        );
     }
 
     private String outboxAuditDetail(
             Long outboxEventId,
             String action,
             String result,
-            OutboxAdminView view
+            OutboxAdminView view,
+            AdminRecoveryContext recoveryContext
     ) {
-        return "action=%s, result=%s, previousStatus=%s, currentStatus=%s, outboxEventId=%s"
-                .formatted(action, result, view.previousStatus(), view.status(), outboxEventId);
+        return truncateAuditDetail(
+                "action=%s, targetType=%s, targetId=%s, previousStatus=%s, currentStatus=%s, result=%s, operatorId=%s, reason=%s"
+                        .formatted(
+                                action,
+                                TARGET_OUTBOX,
+                                outboxEventId,
+                                view.previousStatus(),
+                                view.status(),
+                                result,
+                                recoveryContext.operatorId(),
+                                recoveryContext.reason()
+                        )
+        );
+    }
+
+    private String truncateAuditDetail(String detail) {
+        return detail.length() > MAX_AUDIT_DETAIL_LENGTH
+                ? detail.substring(0, MAX_AUDIT_DETAIL_LENGTH)
+                : detail;
     }
 }

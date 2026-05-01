@@ -100,7 +100,8 @@
   - 현재 admin retry-due endpoint는 `NotificationRetryProcessingResult`를 반환하며 `processedCount`, `successCount`, `failedCount`, `skippedCount`, `processedEventIds`를 포함합니다.
   - 운영자 실행 actor trace, batch id, 상세 실패 리스트는 후속 확장 후보입니다.
 - retry 실행 결과에 대한 audit log 강화
-  - 현재 processor 내부 audit는 있으나, batch trigger 단위 실행 결과와 운영자 실행 맥락까지 더 풍부하게 남길 여지가 있습니다.
+  - admin notification retry/ignore와 outbox dead-letter retry는 optional `operatorId`, `reason`을 audit detail에 남깁니다.
+  - 현재 retry-due batch trigger는 기존 processor contract를 유지하며, trigger 단위 actor trace나 batch id는 후속 확장 후보입니다.
 - admin endpoint 인증/권한 정책 추가
   - 현재 `/api/admin/**`는 `ADMIN` role 보호가 걸려 있지만, retry batch trigger 전용 권한 분리, actor trace, 운영 승인 정책 같은 세분화는 후속 과제로 볼 수 있습니다.
 - channel별 notification retry policy 세분화
