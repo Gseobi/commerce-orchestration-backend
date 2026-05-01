@@ -22,19 +22,21 @@
    외부 payment provider callback을 지금 구현할지 검토하고, 상태 전이·멱등성·보안·테스트 영향을 Future Scope / Design Review로 확인합니다.
 6. [Reliability Hardening Diagrams](/docs/diagrams/README.md#reliability-hardening-diagrams)
    paymentRequestId 기반 결제 멱등성, notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리 흐름과 draw.io 원본, PNG, PDF 자산을 확인합니다.
-7. [Test Report](/docs/test-report.md)
+7. [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
+   현재 metric/log/audit 신호를 기준으로 alert 후보와 metric tag 원칙을 확인합니다. Prometheus/Grafana dashboard 구현은 Future Scope입니다.
+8. [Test Report](/docs/test-report.md)
    실제로 검증한 범위, reliability hardening 테스트 결과, 아직 검증하지 않은 범위를 구분합니다.
-8. [Verification Matrix](/docs/verification-matrix.md)
+9. [Verification Matrix](/docs/verification-matrix.md)
    구현 위치, 테스트 커버리지, 문서 위치, 현재 상태를 한 표로 대조합니다.
-9. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
+10. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
    AI Agent 활용 범위와 개발자 주도 검증 기준을 확인합니다.
-10. [Claim Audit](/docs/verification/claim-audit.md)
+11. [Claim Audit](/docs/verification/claim-audit.md)
    주요 포트폴리오 claim이 코드, 테스트, 문서 어디에 근거하는지 확인합니다.
-11. [OpenAPI / ApiDog](/docs/openapi/README.md)
+12. [OpenAPI / ApiDog](/docs/openapi/README.md)
    구현된 HTTP API만 포함한 ApiDog import-ready OpenAPI 파일을 확인합니다.
-12. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
+13. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
    notification retry, outbox dead-letter, `PROCESSING` 장기 체류를 metric/log/SQL/admin API 기준으로 확인하는 운영 복구 절차입니다. 관련 observability/recovery diagram은 [Diagram Guide](/docs/diagrams/README.md)에서 확인할 수 있습니다.
-13. [Troubleshooting](/docs/troubleshooting.md)
+14. [Troubleshooting](/docs/troubleshooting.md)
    로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
@@ -45,6 +47,8 @@
   WebClient timeout 이후 provider approval state가 불명확한 경우의 confirmation, retry, compensation 판단 기준을 정리한 Future Scope / Design Note입니다.
 - [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
   외부 payment provider callback을 구현할지 검토하고, 필요한 상태 전이·멱등성·보안·테스트 범위를 Future Scope / Design Review로 정리합니다.
+- [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
+  현재 metric/log/audit 신호를 기준으로 alert 후보와 metric tag 원칙을 정리합니다. Prometheus/Grafana dashboard 구현은 Future Scope입니다.
 - [SQL Guide](/docs/sql/README.md)  
   Flyway migration과 운영 점검용 SQL 문서의 역할을 구분합니다.
 - [Verification Matrix](/docs/verification-matrix.md)

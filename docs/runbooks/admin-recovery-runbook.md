@@ -10,6 +10,8 @@
 
 ![Observability recovery architecture](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)
 
+alert 후보와 metric naming/tag 기준은 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)을 참고합니다. 현재 문서 범위에는 Prometheus/Grafana dashboard나 alert rule 구현이 포함되지 않습니다.
+
 ## 2. 공통 확인 순서
 
 1. 장애 증상을 확인합니다.

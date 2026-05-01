@@ -41,8 +41,9 @@ Spring Boot 기반 commerce orchestration backend입니다.
 6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
 7. **AI-assisted 검증 기준:** [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
 8. **Future Scope 설계:** [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) / [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
-9. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
-10. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+9. **운영 관측성:** [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
+10. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
+11. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
@@ -134,6 +135,7 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 - Outbox publish, notification retry, admin recovery 경계에 Micrometer counter와 key-value structured log를 추가했으며, 전체 관측/복구 흐름은 [Observability Recovery Architecture Diagram](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)에서 확인할 수 있습니다.
 - 이 지표와 로그는 retry/dead-letter 증가, claim skipped, admin recovery 결과를 확인하기 위한 운영 관측성 기준입니다.
+- alert 후보와 metric tag 기준은 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 정리했습니다. Prometheus/Grafana dashboard와 alert rule 구현은 Future Scope입니다.
 - 자세한 복구 절차는 [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)에서 확인할 수 있습니다.
 
 ---

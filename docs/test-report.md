@@ -79,6 +79,8 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 | `AdminReprocessingServiceTest` | admin recovery request/success/failure metric, optional context default, blank/long context normalization, audit detail truncation 검증 | PASS |
 | `AdminReprocessingIntegrationTest` | admin notification/outbox recovery body의 `operatorId`, `reason`이 audit detail에 반영되는지 검증 | PASS |
 
+운영 alert 후보와 dashboard 후보는 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 문서화했습니다. 이는 현재 metric/log 신호의 운영 해석이며, Prometheus/Grafana dashboard나 alert rule 구현 검증은 아닙니다.
+
 실행 명령:
 
 - `./gradlew clean test --rerun-tasks` PASS

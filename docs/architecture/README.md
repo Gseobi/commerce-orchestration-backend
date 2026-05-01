@@ -135,6 +135,8 @@ OutboxPublisherService
 
 metric tag에는 `eventId`, `orderId`, `paymentRequestId` 같은 high-cardinality 값을 넣지 않습니다. 이 값들은 필요한 경우 structured log field로만 제한적으로 남깁니다. payload, token, authorization header, secret 값은 metric/log에 남기지 않습니다.
 
+운영 해석 기준과 alert/dashboard 후보는 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 별도로 정리합니다. 이 문서는 dashboard나 alert rule이 구현되었다고 주장하지 않습니다.
+
 ![Outbox publisher adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
 
 - [draw.io 원본](/docs/diagrams/source/commerce_orchestration_outbox_publisher_adapter.drawio)
