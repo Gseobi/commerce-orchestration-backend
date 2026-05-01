@@ -114,7 +114,19 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 - `gradle-unit-test-reports-${{ github.run_id }}-${{ github.run_attempt }}`
 - `gradle-integration-test-reports-${{ github.run_id }}-${{ github.run_attempt }}`
 
-## 7. CI 안정화 메모
+## 7. OpenAPI 문서 검증
+
+`docs/openapi/openapi.yaml`은 구현된 HTTP API만 포함하는 static OpenAPI 3.0.3 문서입니다.
+
+이번 OpenAPI partition에서는 아래를 확인합니다.
+
+- YAML syntax parse
+- `git diff --check`
+- `./gradlew compileJava`
+- `./gradlew test`
+- Docker 사용 가능 시 `./gradlew integrationTest --rerun-tasks`
+
+## 8. CI 안정화 메모
 
 이번 정리에서 `integrationTest` 실패 원인은 단순 Docker 부재가 아니라 Kafka Testcontainers 조합 문제로 확인했습니다.
 
@@ -127,7 +139,7 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - `./gradlew clean integrationTest --rerun-tasks --stacktrace`
 - `./gradlew integrationTest --rerun-tasks --stacktrace`
 
-## 8. 아직 검증하지 않은 범위
+## 9. 아직 검증하지 않은 범위
 
 - 실제 외부 payment provider와의 네트워크 round-trip
 - notification 채널별 retry policy / 운영자 승인 절차

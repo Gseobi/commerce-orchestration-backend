@@ -1,0 +1,1013 @@
+openapi: 3.0.3
+info:
+  title: Commerce Orchestration Backend API
+  version: 0.0.1
+  description: |
+    Import-ready OpenAPI specification for the implemented HTTP APIs in
+    commerce-orchestration-backend.
+
+    This document describes only currently implemented endpoints. Future scope
+    items such as provider callbacks, WebClient timeout confirmation flow,
+    Kafka consumer-based state transitions, Prometheus/Grafana dashboards,
+    stale PROCESSING recovery, refresh tokens, and real user-store APIs are not
+    included under paths.
+servers:
+  - url: http://localhost:8080
+    description: Local Spring Boot server
+tags:
+  - name: Auth
+    description: Demo-only JWT token issuance.
+  - name: Orders
+    description: Order creation, detail lookup, and orchestration flow APIs.
+  - name: Admin Recovery
+    description: ADMIN-only recovery APIs for failed notification and outbox sub-units.
+  - name: Health
+    description: Public health check endpoint.
+paths:
+  /api/auth/token:
+    post:
+      tags:
+        - Auth
+      summary: Issue a demo JWT access token
+      description: |
+        Issues a demo access token for local/manual API testing. This is not a
+        production login, refresh token, key rotation, or real user-store flow.
+      operationId: issueDemoToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+            examples:
+              adminToken:
+                summary: Demo ADMIN token request
+                value:
+                  username: demo-admin
+                  roles:
+                    - ROLE_USER
+                    - ROLE_ADMIN
+              userToken:
+                summary: Demo USER token request
+                value:
+                  username: demo-user
+                  roles:
+                    - ROLE_USER
+      responses:
+        '200':
+          description: Demo access token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseTokenResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      tokenType: Bearer
+                      accessToken: eyJhbGciOiJIUzI1NiJ9.demo-token-placeholder
+                      roles:
+                        - ROLE_USER
+                        - ROLE_ADMIN
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/orders:
+    post:
+      tags:
+        - Orders
+      summary: Create an order
+      description: Creates an order in CREATED status. Requires bearer authentication.
+      operationId: createOrder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              normalOrder:
+                value:
+                  customerId: customer-demo
+                  totalAmount: 12000
+                  currency: KRW
+                  description: normal happy path
+      responses:
+        '200':
+          description: Order created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOrderResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      orderId: 1
+                      customerId: customer-demo
+                      totalAmount: 12000
+                      currency: KRW
+                      description: normal happy path
+                      status: CREATED
+                      createdAt: '2026-05-01T10:00:00'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/orders/{orderId}/orchestrate:
+    post:
+      tags:
+        - Orders
+      summary: Run order orchestration
+      description: |
+        Starts the implemented order orchestration flow for an existing order:
+        payment approval, settlement request, notification request, outbox append,
+        and failure branching. Repeated calls for completed/cancelled states reuse
+        existing flow state instead of rerunning the full workflow.
+      operationId: orchestrateOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Current order flow state after orchestration attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOrderFlowResponse'
+              examples:
+                completed:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      orderId: 1
+                      orderStatus: COMPLETED
+                      steps:
+                        - stepId: 1
+                          stepType: ORDER_CREATE
+                          status: SUCCESS
+                          detail: Order already created
+                          createdAt: '2026-05-01T10:00:01'
+                        - stepId: 2
+                          stepType: PAYMENT
+                          status: SUCCESS
+                          detail: 'Payment approved: paymentId=1'
+                          createdAt: '2026-05-01T10:00:02'
+                      outboxEvents:
+                        - outboxEventId: 1
+                          topic: commerce.settlement.requested
+                          eventType: SETTLEMENT_REQUESTED
+                          status: READY
+                          payload: '{"orderId":1,"eventType":"SETTLEMENT_REQUESTED"}'
+                          retryCount: 0
+                          nextAttemptAt: '2026-05-01T10:00:02'
+                          createdAt: '2026-05-01T10:00:02'
+                          lastAttemptAt: null
+                          publishedAt: null
+                          deadLetteredAt: null
+                          failureCode: null
+                          failureReason: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order detail
+      description: Returns order state plus payment, settlement, and notification status summaries.
+      operationId: getOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOrderDetailResponse'
+              examples:
+                created:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      orderId: 1
+                      customerId: customer-demo
+                      totalAmount: 12000
+                      currency: KRW
+                      description: normal happy path
+                      orderStatus: CREATED
+                      createdAt: '2026-05-01T10:00:00'
+                      updatedAt: '2026-05-01T10:00:00'
+                      paymentStatuses: []
+                      settlementStatuses: []
+                      notificationStatuses: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/orders/{orderId}/flow:
+    get:
+      tags:
+        - Orders
+      summary: Get order orchestration flow
+      description: Returns orchestration steps and outbox events for an order.
+      operationId: getOrderFlow
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order flow state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseOrderFlowResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/admin/notification-events/{notificationEventId}/retry:
+    post:
+      tags:
+        - Admin Recovery
+      summary: Retry a failed notification event
+      description: |
+        ADMIN-only endpoint. Retries a failed notification event sub-unit and
+        completes the related order after successful recovery. The request body
+        is optional for backward compatibility. If present, `operatorId` and
+        `reason` are stored only in bounded audit detail.
+      operationId: retryNotificationEvent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationEventId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminRecoveryRequest'
+            examples:
+              withContext:
+                value:
+                  operatorId: ops-admin
+                  reason: manual retry after notification channel recovery
+      responses:
+        '200':
+          description: Notification event retried.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAdminNotificationReprocessResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      eventId: 10
+                      orderId: 1
+                      action: RETRY
+                      result: SUCCESS
+                      previousStatus: RETRY_SCHEDULED
+                      currentStatus: SENT
+                      message: Notification event was retried successfully.
+                      handlingPolicy: NONE
+                      retryCount: 1
+                      nextAttemptAt: null
+                      lastAttemptAt: '2026-05-01T10:05:00'
+                      failureCode: null
+                      failureReason: null
+                      orderStatus: COMPLETED
+        '400':
+          $ref: '#/components/responses/AdminReprocessNotAllowed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/admin/notification-events/{notificationEventId}/ignore:
+    post:
+      tags:
+        - Admin Recovery
+      summary: Ignore a failed notification event
+      description: |
+        ADMIN-only endpoint. Marks a retryable/manual notification failure as
+        ignored and completes the related order. The request body is optional
+        for backward compatibility.
+      operationId: ignoreNotificationEvent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationEventId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminRecoveryRequest'
+            examples:
+              withContext:
+                value:
+                  operatorId: ops-admin
+                  reason: customer accepted missing notification
+      responses:
+        '200':
+          description: Notification event ignored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAdminNotificationReprocessResponse'
+              examples:
+                ignored:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      eventId: 11
+                      orderId: 1
+                      action: IGNORE
+                      result: IGNORED
+                      previousStatus: MANUAL_INTERVENTION_REQUIRED
+                      currentStatus: IGNORED
+                      message: Notification event was marked as ignored.
+                      handlingPolicy: IGNORE
+                      retryCount: 1
+                      nextAttemptAt: null
+                      lastAttemptAt: '2026-05-01T10:07:00'
+                      failureCode: null
+                      failureReason: null
+                      orderStatus: COMPLETED
+        '400':
+          $ref: '#/components/responses/AdminReprocessNotAllowed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/admin/notification-events/retry-due:
+    post:
+      tags:
+        - Admin Recovery
+      summary: Process due notification retry events
+      description: |
+        ADMIN-only endpoint. Triggers the existing due notification retry batch
+        processor. This endpoint returns the batch result directly and does not
+        use the `ApiResponse<T>` envelope.
+      operationId: retryDueNotificationEvents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Batch processing summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationRetryProcessingResult'
+              examples:
+                completed:
+                  value:
+                    status: completed
+                    processedCount: 2
+                    successCount: 1
+                    failedCount: 1
+                    skippedCount: 0
+                    processedEventIds:
+                      - 10
+                      - 11
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/admin/outbox-events/{outboxEventId}/retry:
+    post:
+      tags:
+        - Admin Recovery
+      summary: Retry a dead-letter outbox event
+      description: |
+        ADMIN-only endpoint. Immediately retries a DEAD_LETTER outbox event.
+        The request body is optional for backward compatibility. Only
+        DEAD_LETTER events are accepted.
+      operationId: retryOutboxDeadLetter
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OutboxEventId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminRecoveryRequest'
+            examples:
+              withContext:
+                value:
+                  operatorId: outbox-operator
+                  reason: Kafka broker recovered
+      responses:
+        '200':
+          description: Outbox dead-letter retry result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAdminOutboxReprocessResponse'
+              examples:
+                published:
+                  value:
+                    success: true
+                    code: SUCCESS
+                    message: 요청이 정상 처리되었습니다.
+                    data:
+                      eventId: 20
+                      aggregateId: 1
+                      eventType: NOTIFICATION_REQUESTED
+                      action: RETRY_DEAD_LETTER
+                      result: PUBLISHED
+                      previousStatus: DEAD_LETTER
+                      currentStatus: PUBLISHED
+                      retryCount: 0
+                      failureCode: null
+                      failureReason: null
+                      message: Outbox event was republished successfully.
+                      nextAttemptAt: null
+                      lastAttemptAt: '2026-05-01T10:10:00'
+                      publishedAt: '2026-05-01T10:10:00'
+                      deadLetteredAt: null
+        '400':
+          $ref: '#/components/responses/AdminReprocessNotAllowed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /actuator/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Public Spring Boot Actuator health endpoint permitted by security configuration.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Application health status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                up:
+                  value:
+                    status: UP
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 1
+    NotificationEventId:
+      name: notificationEventId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 10
+    OutboxEventId:
+      name: outboxEventId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 20
+  responses:
+    BadRequest:
+      description: Bad request or validation failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            badRequest:
+              value:
+                success: false
+                code: BAD_REQUEST
+                message: 잘못된 요청입니다.
+                data: null
+    AdminReprocessNotAllowed:
+      description: The target event is not in a state that allows admin recovery.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            notAllowed:
+              value:
+                success: false
+                code: ADMIN_REPROCESS_NOT_ALLOWED
+                message: 현재 상태에서는 재처리할 수 없습니다.
+                data: null
+    Unauthorized:
+      description: Bearer token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            unauthorized:
+              value:
+                success: false
+                code: UNAUTHORIZED
+                message: 인증이 필요합니다.
+                data: null
+    Forbidden:
+      description: Authenticated user does not have the required role.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            forbidden:
+              value:
+                success: false
+                code: FORBIDDEN
+                message: 접근 권한이 없습니다.
+                data: null
+    NotFound:
+      description: Requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            orderNotFound:
+              value:
+                success: false
+                code: ORDER_NOT_FOUND
+                message: 주문을 찾을 수 없습니다.
+                data: null
+    InternalServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseError'
+          examples:
+            internal:
+              value:
+                success: false
+                code: INTERNAL_SERVER_ERROR
+                message: 서버 내부 오류가 발생했습니다.
+                data: null
+  schemas:
+    ApiResponseBase:
+      type: object
+      required:
+        - success
+        - code
+        - message
+      properties:
+        success:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          nullable: true
+    ApiResponseError:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              nullable: true
+    ApiResponseTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/TokenResponse'
+    ApiResponseOrderResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OrderResponse'
+    ApiResponseOrderDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OrderDetailResponse'
+    ApiResponseOrderFlowResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/OrderFlowResponse'
+    ApiResponseAdminNotificationReprocessResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminNotificationReprocessResponse'
+    ApiResponseAdminOutboxReprocessResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AdminOutboxReprocessResponse'
+    TokenRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 1
+          example: demo-admin
+        roles:
+          type: array
+          nullable: true
+          items:
+            type: string
+          example:
+            - ROLE_USER
+            - ROLE_ADMIN
+    TokenResponse:
+      type: object
+      required:
+        - tokenType
+        - accessToken
+        - roles
+      properties:
+        tokenType:
+          type: string
+          example: Bearer
+        accessToken:
+          type: string
+          description: Demo JWT access token. Example value is a placeholder.
+          example: eyJhbGciOiJIUzI1NiJ9.demo-token-placeholder
+        roles:
+          type: array
+          items:
+            type: string
+          example:
+            - ROLE_USER
+            - ROLE_ADMIN
+    CreateOrderRequest:
+      type: object
+      required:
+        - customerId
+        - totalAmount
+        - currency
+      properties:
+        customerId:
+          type: string
+          minLength: 1
+          example: customer-demo
+        totalAmount:
+          type: number
+          format: double
+          exclusiveMinimum: true
+          minimum: 0
+          example: 12000
+        currency:
+          type: string
+          minLength: 1
+          example: KRW
+        description:
+          type: string
+          nullable: true
+          example: normal happy path
+    AdminRecoveryRequest:
+      type: object
+      description: Optional context for admin recovery audit detail. No-body calls are supported.
+      properties:
+        operatorId:
+          type: string
+          nullable: true
+          maxLength: 100
+          example: ops-admin
+        reason:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: manual recovery after dependency restored
+    OrderResponse:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        customerId:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    OrderDetailResponse:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        customerId:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        description:
+          type: string
+          nullable: true
+        orderStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        paymentStatuses:
+          type: array
+          items:
+            type: string
+        settlementStatuses:
+          type: array
+          items:
+            type: string
+        notificationStatuses:
+          type: array
+          items:
+            type: string
+    OrderFlowResponse:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        orderStatus:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepResponse'
+        outboxEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxResponse'
+    StepResponse:
+      type: object
+      properties:
+        stepId:
+          type: integer
+          format: int64
+        stepType:
+          type: string
+        status:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    OutboxResponse:
+      type: object
+      properties:
+        outboxEventId:
+          type: integer
+          format: int64
+        topic:
+          type: string
+        eventType:
+          type: string
+        status:
+          type: string
+        payload:
+          type: string
+        retryCount:
+          type: integer
+          format: int32
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deadLetteredAt:
+          type: string
+          format: date-time
+          nullable: true
+        failureCode:
+          type: string
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+    AdminNotificationReprocessResponse:
+      type: object
+      properties:
+        eventId:
+          type: integer
+          format: int64
+        orderId:
+          type: integer
+          format: int64
+        action:
+          type: string
+          example: RETRY
+        result:
+          type: string
+          example: SUCCESS
+        previousStatus:
+          type: string
+        currentStatus:
+          type: string
+        message:
+          type: string
+        handlingPolicy:
+          type: string
+        retryCount:
+          type: integer
+          format: int32
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        failureCode:
+          type: string
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+        orderStatus:
+          type: string
+    AdminOutboxReprocessResponse:
+      type: object
+      properties:
+        eventId:
+          type: integer
+          format: int64
+        aggregateId:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        action:
+          type: string
+          example: RETRY_DEAD_LETTER
+        result:
+          type: string
+        previousStatus:
+          type: string
+        currentStatus:
+          type: string
+        retryCount:
+          type: integer
+          format: int32
+        failureCode:
+          type: string
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+        message:
+          type: string
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deadLetteredAt:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationRetryProcessingResult:
+      type: object
+      required:
+        - status
+        - processedCount
+        - successCount
+        - failedCount
+        - skippedCount
+        - processedEventIds
+      properties:
+        status:
+          type: string
+          example: completed
+        processedCount:
+          type: integer
+          format: int32
+        successCount:
+          type: integer
+          format: int32
+        failedCount:
+          type: integer
+          format: int32
+        skippedCount:
+          type: integer
+          format: int32
+        processedEventIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP

@@ -39,7 +39,8 @@ Spring Boot 기반 commerce orchestration backend입니다.
 4. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
 5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
 6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
-7. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+7. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
+8. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
@@ -480,6 +481,8 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 - [Diagram Guide](/docs/diagrams/README.md)
 - [Design Notes](/docs/design-notes.md)
 - [Verification Matrix](/docs/verification-matrix.md)
+- [OpenAPI Spec](/docs/openapi/openapi.yaml)
+- [OpenAPI Guide](/docs/openapi/README.md)
 - [Test Report](/docs/test-report.md)
 - [Troubleshooting](/docs/troubleshooting.md)
 - [SQL Guide](/docs/sql/README.md)
