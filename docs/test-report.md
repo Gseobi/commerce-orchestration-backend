@@ -121,10 +121,13 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 이번 OpenAPI partition에서는 아래를 확인합니다.
 
 - YAML syntax parse
+- ApiDog manual import: OpenAPI spec 생성 후 개발자가 로컬에서 수동 import 확인
 - `git diff --check`
 - `./gradlew compileJava`
 - `./gradlew test`
 - Docker 사용 가능 시 `./gradlew integrationTest --rerun-tasks`
+
+ApiDog import 확인은 수동 검증 기록이며, CI 자동 import 검증으로 주장하지 않습니다.
 
 ## 8. CI 안정화 메모
 
