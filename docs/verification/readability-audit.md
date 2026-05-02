@@ -2,19 +2,16 @@
 
 ## Purpose / 목적
 
-이 문서는 repository의 Java / Gradle / YAML / SQL / Markdown 파일이 리뷰 가능한 형태인지 점검하고,
-후속 formatting recovery 작업의 범위를 분리하기 위해 작성합니다.
+이 문서는 `commerce-orchestration-backend` repository의 tracked text file이 리뷰 가능한 형태인지 점검한 품질 관리 기록입니다.
+목표는 formatting recovery 범위를 behavior change와 분리하고, 문서·코드·테스트의 구현 claim을 변경하지 않은 상태로 reviewability 개선 대상을 추적하는 것입니다.
 
-이번 Partition 1은 audit and recovery plan 작성이 목적입니다.
-실제 formatting recovery는 수행하지 않습니다.
+이 문서는 임시 실행 로그가 아니라 portfolio repository의 품질 근거로 유지합니다.
+후속 점검은 같은 기준으로 반복할 수 있으며, 단계 이름은 future work의 partition 번호와 충돌하지 않도록 stable phase name을 사용합니다.
 
-## Audit Context / 점검 맥락
+## Audit Scope / 점검 범위
 
-- Branch: `development`
-- Commit: `7baaefb`
-- Scope: `git ls-files`로 조회한 tracked text files 186개
-- Script: 요청된 helper script를 사용했습니다. 로컬에 `python` 명령이 없어 `python` 실행은 실패했고, 동일 script를 `python3`로 재실행했습니다.
-- Documentation-only 여부: 이 partition은 문서 추가/갱신만 수행합니다.
+점검은 `git ls-files`로 조회되는 tracked text files 186개를 대상으로 수행했습니다.
+untracked build output, local cache, binary diagram asset은 제외했습니다.
 
 대상 file type:
 
@@ -32,27 +29,55 @@ compose.yaml
 docker-compose.yml
 ```
 
-## Summary / 요약
+점검 기준:
 
-helper script 기준 초기 복구 후보는 4개였습니다.
+- Java / Gradle / YAML / SQL / Markdown 파일이 minified 또는 single-line 상태가 아닌지 확인합니다.
+- UTF-8, LF, final newline, indentation 기준을 확인합니다.
+- Markdown long line은 raw review 가능성을 기준으로 별도 recovery 대상으로 분리합니다.
+- formatting change가 implementation claim, endpoint path, OpenAPI scope, Gradle dependency, CI command, Docker Compose behavior를 바꾸지 않도록 분리합니다.
 
-- `src/main/resources/application.yaml`: final newline 누락으로 기록되었으나 Partition 3 검사 시 이미 final newline이 확인되어 YAML 변경은 필요하지 않았습니다.
-- `docs/diagrams/README.md`: 긴 Markdown table line 다수
-- `docs/verification-matrix.md`: 긴 Markdown table line 다수
-- `docs/verification/claim-audit.md`: 긴 Markdown table line 다수
+## Current Status / 현재 상태
 
-수동 spot check 대상 중 `.editorconfig`, `README.md`, `PaymentService.java`, `ExternalPaymentProviderClient.java`는 현재 partition에서 즉시 복구가 필요한 single-line/minified 문제는 확인되지 않았습니다.
-다만 `README.md`는 외부 URL과 다이어그램 표로 인해 일부 긴 line이 있으므로 Markdown recovery partition에서 필요 시 함께 재검토할 수 있습니다.
+- Readability Audit 단계: 완료
+- EditorConfig Normalization 단계: 완료
+- Config Final Newline Check 단계: 진행 필요
+- Markdown Long-line Recovery 단계: 진행 필요
+- Final Readability Baseline 단계: 진행 필요
 
-## Script Evidence / 스크립트 근거
+`src/main/resources/application.yaml`은 final newline 재검증 결과 마지막 byte가 `30`으로 확인되었습니다.
+`0a`가 newline이고, `30`은 ASCII `0`이므로 final newline은 아직 없습니다.
+이번 문서 정제 작업에서는 config file을 수정하지 않았습니다.
 
-`python` 명령은 현재 환경에 없어 실패했습니다.
+## Findings / 점검 결과
 
-```text
-zsh:1: command not found: python
-```
+| File | Type | Status | Notes |
+|---|---|---|---|
+| `.editorconfig` | Formatting policy | Verified | Multi-line INI 구조이며 UTF-8, LF, final newline, Java/Gradle 4 spaces, YAML 2 spaces, SQL 4 spaces 기준을 정의합니다. |
+| `src/main/resources/application.yaml` | YAML config | Pending | Final newline이 아직 없습니다. YAML key/value 변경 없이 Config Final Newline Check 단계에서 복구해야 합니다. |
+| `docs/diagrams/README.md` | Markdown docs | Pending | 긴 Markdown table line이 다수 있어 raw review가 어렵습니다. Binary diagram asset은 수정하지 않습니다. |
+| `docs/verification-matrix.md` | Markdown docs | Pending | 구현-검증 매핑 표가 길어 Markdown Long-line Recovery 단계에서 의미 변경 없이 정리해야 합니다. |
+| `docs/verification/claim-audit.md` | Markdown docs | Pending | Claim audit 표가 길어 Markdown Long-line Recovery 단계에서 status/evidence 의미 변경 없이 정리해야 합니다. |
+| `README.md` | Markdown docs | Acceptable | 수동 확인 기준 single-line/minified 문제는 없습니다. 외부 URL과 일부 table line은 필요 시 Markdown Long-line Recovery 단계에서 재검토할 수 있습니다. |
+| `src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
+| `src/main/java/io/github/gseobi/commerce/orchestration/payment/client/ExternalPaymentProviderClient.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
+| `build.gradle`, `settings.gradle` | Gradle | Acceptable | helper script 기준 복구 후보에 포함되지 않았습니다. |
+| `compose.yaml`, `.env.example`, `.github/workflows/ci.yml` | Config / CI | Acceptable | helper script 기준 복구 후보에 포함되지 않았습니다. |
+| `docs/sql/*.sql`, `src/main/resources/db/migration/*.sql` | SQL | Acceptable | helper script 기준 복구 후보에 포함되지 않았습니다. |
 
-동일 helper script를 `python3`로 실행한 결과:
+## Recovery Phases / 복구 단계
+
+| Phase | Scope | Status | Notes |
+|---|---|---|---|
+| Readability Audit 단계 | tracked text files 점검과 recovery 대상 식별 | Done | helper script와 manual spot check로 recovery scope를 behavior change와 분리했습니다. |
+| EditorConfig Normalization 단계 | `.editorconfig` 구조와 formatting policy 정리 | Done | `.editorconfig`를 readable INI 구조로 유지하고 Java/Gradle/YAML/properties/SQL/Markdown 기준을 명확히 했습니다. |
+| Config Final Newline Check 단계 | `src/main/resources/application.yaml` final newline 복구 | Pending | 마지막 byte가 `30`으로 확인되어 final newline 복구가 필요합니다. YAML 값은 변경하지 않아야 합니다. |
+| Markdown Long-line Recovery 단계 | `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md` long line 정리 | Pending | claim status나 evidence 의미를 바꾸지 않고 raw review 가능한 문서 구조로 정리합니다. |
+| Final Readability Baseline 단계 | helper script 재실행과 `git diff --check` 확인 | Pending | recovery 후 `single-line-candidate`, `many-long-lines`, `missing-final-newline` 후보가 남았는지 확인합니다. |
+
+## Verification Evidence / 검증 근거
+
+Readability Audit 단계에서 helper script를 `python3`로 실행해 복구 후보를 식별했습니다.
+초기 script evidence:
 
 ```text
 ('src/main/resources/application.yaml', 59, 1732, 78, 'missing-final-newline', 'long_lines=0')
@@ -61,84 +86,32 @@ zsh:1: command not found: python
 ('docs/verification/claim-audit.md', 37, 7311, 403, 'many-long-lines', 'long_lines=20')
 ```
 
-## Files Requiring Recovery / 복구 대상 파일
+`application.yaml` final newline 재검증:
 
-| File | Type | Issue | Recommended Partition | Notes |
-|---|---|---|---|---|
-| `src/main/resources/application.yaml` | YAML config | Resolved before Partition 3 edit | Done | Partition 3 검사에서 final newline이 이미 확인되어 YAML 값/파일 변경은 수행하지 않았습니다. |
-| `docs/diagrams/README.md` | Markdown docs | `many-long-lines` | Partition 4 | Markdown table line이 길어 raw review가 어렵습니다. Binary diagram asset은 수정하지 않습니다. |
-| `docs/verification-matrix.md` | Markdown docs | `many-long-lines` | Partition 4 | 구현-검증 매핑 표가 길어 line break recovery 대상입니다. Claim 의미는 바꾸지 않습니다. |
-| `docs/verification/claim-audit.md` | Markdown docs | `many-long-lines` | Partition 4 | Claim audit 표가 길어 line break recovery 대상입니다. Status와 evidence 의미는 바꾸지 않습니다. |
+```text
+has_final_newline= False
+last_byte_hex= 30
+```
 
-## Files Checked but Acceptable / 점검했으나 정상인 파일
+검증 요약:
 
-| File | Notes |
-|---|---|
-| `.editorconfig` | UTF-8/LF/final newline, Java 4 spaces, YAML 2 spaces, SQL 4 spaces 기준이 명확합니다. |
-| `README.md` | 수동 확인 기준 single-line/minified 문제는 없습니다. 긴 Velog URL과 일부 table line은 Partition 4에서 필요 시 재검토합니다. |
-| `src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java` | Java formatting과 indentation이 리뷰 가능한 상태입니다. |
-| `src/main/java/io/github/gseobi/commerce/orchestration/payment/client/ExternalPaymentProviderClient.java` | Java formatting과 indentation이 리뷰 가능한 상태입니다. |
-| `AGENTS.md` | Partition 0 이후 concise entrypoint로 유지됩니다. |
-| `docs/agent-guides/*` | Partition 0에서 생성된 guide 문서는 현재 script 기준 복구 후보에 포함되지 않았습니다. |
-| `build.gradle`, `settings.gradle` | helper script 기준 복구 후보에 포함되지 않았습니다. |
-| `compose.yaml`, `.env.example`, `.github/workflows/ci.yml` | helper script 기준 복구 후보에 포함되지 않았습니다. |
-| `docs/sql/*.sql`, `src/main/resources/db/migration/*.sql` | helper script 기준 복구 후보에 포함되지 않았습니다. |
+- `git diff --check`: PASS
+- `./gradlew test`: PASS
+- 본 문서 정제 작업은 documentation-only 변경이며 production code, config file, Gradle, CI, Docker Compose, OpenAPI YAML을 변경하지 않았습니다.
 
-## Files Intentionally Excluded / 제외 대상
+## Excluded Files / 제외 대상
 
 | Path / Pattern | Reason |
 |---|---|
 | Untracked files | `git ls-files` 기반 audit이므로 build artifact와 local-only file은 제외합니다. |
 | `build/` | generated output이며 tracked audit 대상이 아닙니다. |
 | `.gradle/` | local Gradle cache이며 tracked audit 대상이 아닙니다. |
-| `docs/diagrams/png/*` | binary image asset입니다. 이번 partition에서 수정하지 않습니다. |
-| `docs/diagrams/pdf/*` | binary document asset입니다. 이번 partition에서 수정하지 않습니다. |
+| `docs/diagrams/png/*` | binary image asset입니다. readability recovery에서 수정하지 않습니다. |
+| `docs/diagrams/pdf/*` | binary document asset입니다. readability recovery에서 수정하지 않습니다. |
 | `docs/diagrams/source/*.drawio` | diagram source asset입니다. 명시 요청 없이는 수정하지 않습니다. |
-
-## Recovery Order / 복구 순서
-
-1. Partition 2 - `.editorconfig` normalization
-   현재 `.editorconfig`는 기본 기준을 갖추고 있으나, 필요한 경우 Markdown wrapping 정책과 config file final newline 정책을 명확히 합니다.
-2. Partition 3 - Java / Gradle / YAML / SQL / config formatting recovery
-   `src/main/resources/application.yaml` final newline은 Partition 3 검사 시 이미 확인되어 YAML 변경 없이 완료했습니다.
-3. Partition 4 - Markdown documentation line break recovery
-   `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md`의 긴 table line을 의미 변경 없이 분할하거나 표 구조를 리뷰 가능한 형태로 정리합니다.
-4. Partition 5 - Final readability baseline verification
-   helper script를 재실행해 `single-line-candidate`, `many-long-lines`, `missing-final-newline` 후보가 남았는지 확인합니다.
-
-## Verification Commands / 검증 명령
-
-Partition 1에서 실행한 audit command:
-
-```bash
-git branch --show-current
-git status --short
-git log --oneline -5
-git ls-files '*.java' '*.gradle' '*.yml' '*.yaml' '*.sql' '*.md' '.editorconfig' '.env.example' 'Dockerfile' 'compose.yaml' 'docker-compose.yml'
-python - <<'PY'
-# requested helper script
-PY
-python3 - <<'PY'
-# same helper script, used because python was unavailable
-PY
-sed -n '1,220p' .editorconfig
-sed -n '1,220p' README.md
-sed -n '1,260p' src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java
-sed -n '1,260p' src/main/java/io/github/gseobi/commerce/orchestration/payment/client/ExternalPaymentProviderClient.java
-sed -n '1,220p' docs/verification-matrix.md
-sed -n '1,220p' docs/verification/claim-audit.md
-```
-
-Partition 1 완료 verification:
-
-- `git diff --check`: PASS
-- `./gradlew test`: PASS (`BUILD SUCCESSFUL`, tasks up-to-date)
-
-Docker/PostgreSQL/Kafka/integrationTest는 이번 변경이 documentation-only이고 executable behavior, configuration, Docker Compose, CI path, test path를 바꾸지 않으므로 실행 대상에서 제외합니다.
 
 ## Remaining TODO / 남은 TODO
 
-- Partition 2에서 `.editorconfig` normalization 필요 여부를 결정합니다.
-- Partition 3에서 `src/main/resources/application.yaml` final newline 상태를 확인했고, YAML 변경 없이 완료했습니다.
-- Partition 4에서 긴 Markdown table line을 의미 변경 없이 정리합니다.
-- Partition 5에서 helper script와 `git diff --check`로 final readability baseline을 확인합니다.
+- Config Final Newline Check 단계에서 `src/main/resources/application.yaml` final newline을 YAML 값 변경 없이 복구합니다.
+- Markdown Long-line Recovery 단계에서 긴 Markdown table line을 의미 변경 없이 정리합니다.
+- Final Readability Baseline 단계에서 helper script와 `git diff --check`를 다시 실행합니다.
