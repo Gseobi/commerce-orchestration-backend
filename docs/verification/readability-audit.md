@@ -34,9 +34,9 @@ docker-compose.yml
 
 ## Summary / 요약
 
-helper script 기준으로 복구 후보는 4개입니다.
+helper script 기준 초기 복구 후보는 4개였습니다.
 
-- `src/main/resources/application.yaml`: final newline 누락
+- `src/main/resources/application.yaml`: final newline 누락으로 기록되었으나 Partition 3 검사 시 이미 final newline이 확인되어 YAML 변경은 필요하지 않았습니다.
 - `docs/diagrams/README.md`: 긴 Markdown table line 다수
 - `docs/verification-matrix.md`: 긴 Markdown table line 다수
 - `docs/verification/claim-audit.md`: 긴 Markdown table line 다수
@@ -65,7 +65,7 @@ zsh:1: command not found: python
 
 | File | Type | Issue | Recommended Partition | Notes |
 |---|---|---|---|---|
-| `src/main/resources/application.yaml` | YAML config | `missing-final-newline` | Partition 3 | Config file이므로 final newline만 복구하더라도 code/config baseline 검증 필요성을 판단해야 합니다. |
+| `src/main/resources/application.yaml` | YAML config | Resolved before Partition 3 edit | Done | Partition 3 검사에서 final newline이 이미 확인되어 YAML 값/파일 변경은 수행하지 않았습니다. |
 | `docs/diagrams/README.md` | Markdown docs | `many-long-lines` | Partition 4 | Markdown table line이 길어 raw review가 어렵습니다. Binary diagram asset은 수정하지 않습니다. |
 | `docs/verification-matrix.md` | Markdown docs | `many-long-lines` | Partition 4 | 구현-검증 매핑 표가 길어 line break recovery 대상입니다. Claim 의미는 바꾸지 않습니다. |
 | `docs/verification/claim-audit.md` | Markdown docs | `many-long-lines` | Partition 4 | Claim audit 표가 길어 line break recovery 대상입니다. Status와 evidence 의미는 바꾸지 않습니다. |
@@ -100,7 +100,7 @@ zsh:1: command not found: python
 1. Partition 2 - `.editorconfig` normalization
    현재 `.editorconfig`는 기본 기준을 갖추고 있으나, 필요한 경우 Markdown wrapping 정책과 config file final newline 정책을 명확히 합니다.
 2. Partition 3 - Java / Gradle / YAML / SQL / config formatting recovery
-   `src/main/resources/application.yaml` final newline을 복구합니다. Config path 변경이므로 `git diff --check`, `./gradlew compileJava`, `./gradlew test`, Docker/PostgreSQL/Kafka/integration baseline 필요성을 판단합니다.
+   `src/main/resources/application.yaml` final newline은 Partition 3 검사 시 이미 확인되어 YAML 변경 없이 완료했습니다.
 3. Partition 4 - Markdown documentation line break recovery
    `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md`의 긴 table line을 의미 변경 없이 분할하거나 표 구조를 리뷰 가능한 형태로 정리합니다.
 4. Partition 5 - Final readability baseline verification
@@ -139,6 +139,6 @@ Docker/PostgreSQL/Kafka/integrationTest는 이번 변경이 documentation-only�
 ## Remaining TODO / 남은 TODO
 
 - Partition 2에서 `.editorconfig` normalization 필요 여부를 결정합니다.
-- Partition 3에서 `src/main/resources/application.yaml` final newline을 복구합니다.
+- Partition 3에서 `src/main/resources/application.yaml` final newline 상태를 확인했고, YAML 변경 없이 완료했습니다.
 - Partition 4에서 긴 Markdown table line을 의미 변경 없이 정리합니다.
 - Partition 5에서 helper script와 `git diff --check`로 final readability baseline을 확인합니다.
