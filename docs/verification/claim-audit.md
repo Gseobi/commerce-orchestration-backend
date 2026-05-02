@@ -10,28 +10,186 @@ Status values:
 - `Future Scope`: intentionally left for later work.
 - `Not Implemented`: not present in current implementation.
 
-| Claim | Evidence | Status | Notes |
-|---|---|---|---|
-| Spring Modulith boundaries are preserved | `package-info.java` module rules, `*.api` named interfaces, `ModulithArchitectureTest#verifiesModularStructure`, `docs/architecture/README.md` | Verified | `ApplicationModules.verify()` is part of the test suite. |
-| Order orchestration handles order-payment-settlement-notification flow | `CommerceOrchestrationService`, `OrderController`, `OrderFlowIntegrationTest`, `OrderOutboxHappyPathIntegrationTest`, `docs/flows/README.md` | Verified | The flow records order state, orchestration steps, notification events, and outbox events. |
-| Payment approval idempotency is implemented | `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`, `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call` | Verified | Replayed `paymentRequestId` does not call the provider again. |
-| Settlement failure compensation is implemented | `CommerceOrchestrationService#handleSettlementFailure`, `PaymentService#cancelLatestApprovedPayment`, `OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation` | Verified | Settlement failure triggers payment cancel compensation and closes the order as cancelled. |
-| Notification failure policy branches into retry/manual/ignore behavior | `NotificationService`, `CommerceOrchestrationService#handleNotificationFailure`, `OrderFlowIntegrationTest`, `NotificationRecoveryIntegrationTest`, `docs/design-notes.md` | Verified | Policies are represented as retry scheduling, manual intervention, or ignore behavior. |
-| Notification retry processor supports due event batch processing | `NotificationRetryProcessor#processDueRetryEvents`, `NotificationRetryOperations`, `NotificationRetryProcessorTest`, `NotificationRetryProcessorIntegrationTest` | Verified | Due events are claimed and processed; future events are skipped. |
-| Admin notification retry supports optional operator/reason audit context | `AdminController#retryNotification`, `AdminRecoveryRequest`, `AdminRecoveryContext`, `AdminReprocessingService`, `AdminReprocessingServiceTest`, `AdminReprocessingIntegrationTest` | Verified | Audit detail includes bounded `operatorId` and `reason` when provided. |
-| Admin notification ignore supports optional operator/reason audit context | `AdminController#ignoreNotification`, `AdminRecoveryContext`, `AdminReprocessingServiceTest`, `NotificationRecoveryIntegrationTest`, `docs/runbooks/admin-recovery-runbook.md` | Verified | Optional context is recorded in audit detail; no-body default context remains valid. |
-| Admin outbox dead-letter retry supports optional operator/reason audit context | `AdminController#retryOutboxDeadLetter`, `AdminRecoveryContext`, `OutboxAdminApplication`, `AdminReprocessingServiceTest`, `AdminReprocessingIntegrationTest` | Verified | `DEAD_LETTER` outbox events can be retried with optional audit context. |
-| Existing no-body admin recovery calls remain backward compatible | `@RequestBody(required = false)` in `AdminController`, `AdminRecoveryContext.defaults()`, `AdminReprocessingServiceTest`, `AdminReprocessingIntegrationTest` | Verified | Missing body uses `operatorId=unknown` and `reason=not-provided`. |
-| OpenAPI documents implemented APIs only | `docs/openapi/openapi.yaml`, controller mapping grep, `docs/openapi/README.md`, `docs/verification-matrix.md` | Verified | Paths match implemented controllers and exclude future-scope APIs. |
-| ApiDog import was manually verified | `docs/openapi/README.md`, `docs/test-report.md`, developer manual import confirmation after OpenAPI partition | Verified | This is manual evidence, not CI automation. |
-| Metrics and structured logs exist for operation/debugging signals | `CommerceRecoveryMetrics`, `OutboxPublisherService`, `NotificationRetryProcessor`, `AdminReprocessingService`, `CommerceRecoveryMetricsTest`, `OutboxPublisherServiceTest`, `NotificationRetryProcessorTest`, `docs/operations/observability-alert-candidates.md` | Verified | Metrics avoid high-cardinality business identifiers as tags. |
-| Alert candidates are documented but not implemented as alert rules | `docs/operations/observability-alert-candidates.md` | Future Scope | The document maps current signals to candidate conditions, but no alert rule configuration exists. |
-| Prometheus/Grafana dashboard is not implemented | `docs/operations/observability-alert-candidates.md`, `docs/test-report.md`, `docs/runbooks/admin-recovery-runbook.md`, `docs/openapi/openapi.yaml` scope notes | Not Implemented | Micrometer metrics exist, but dashboards and alert rules are not implemented. |
-| Distributed tracing backend is not implemented | `RequestTraceFilter`, `TraceIdHolder`, `docs/operations/observability-alert-candidates.md` | Not Implemented | Request trace id correlation exists, but there is no distributed tracing backend integration. |
-| Kafka consumer-based state transition is not implemented | `OutboxPublisherService`, `KafkaOutboxEventPublisher`, `docs/implementation-review-notes.md`, `docs/troubleshooting.md` | Not Implemented | Current outbox state transition is based on publisher send result. |
-| Provider callback flow is reviewed but not implemented | `PaymentProviderClient`, `ExternalPaymentProviderClient`, `docs/flows/provider-callback-flow-review.md`, `README.md`, `docs/design-notes.md` | Future Scope | `providerTransactionId` is an extension point; there is no production code, OpenAPI path, or automated test yet. |
-| WebClient timeout confirmation flow is designed but not implemented | `ExternalPaymentProviderClient`, `docs/flows/payment-timeout-confirmation-flow.md`, `docs/design-notes.md`, `docs/test-report.md` | Future Scope | Timeout settings exist and the design note documents confirmation handling, but there is no production code, OpenAPI path, or automated test yet. |
-| Stale PROCESSING automatic recovery job is not implemented | `docs/runbooks/admin-recovery-runbook.md`, `docs/sql/README.md` | Not Implemented | Current support is SQL/runbook inspection, not automatic recovery. |
-| Refresh token/key rotation/real user store is not implemented | `AuthController`, `JwtTokenProvider`, `README.md`, `docs/openapi/openapi.yaml` | Not Implemented | `/api/auth/token` is demo-only access token issuance. |
-| Docker Compose local environment is preserved | `compose.yaml`, `.env.example`, `application-local.yaml`, `README.md`, `docs/troubleshooting.md` | Implemented | Provides PostgreSQL, Kafka, Kafka UI, and app connection settings. |
-| CI test workflow is preserved | `.github/workflows/ci.yml`, `docs/test-report.md`, `docs/verification-matrix.md` | Implemented | Workflow keeps compile/test and integration test jobs; this audit does not claim a fresh remote CI run. |
+## Verified Claims
+
+### Spring Modulith boundaries are preserved
+
+- Status: Verified
+- Evidence: `package-info.java` module rules, `*.api` named interfaces
+- Evidence: `ModulithArchitectureTest#verifiesModularStructure`
+- Evidence: `docs/architecture/README.md`
+- Notes: `ApplicationModules.verify()` is part of the test suite.
+
+### Order orchestration handles order-payment-settlement-notification flow
+
+- Status: Verified
+- Evidence: `CommerceOrchestrationService`, `OrderController`
+- Evidence: `OrderFlowIntegrationTest`, `OrderOutboxHappyPathIntegrationTest`
+- Evidence: `docs/flows/README.md`
+- Notes: The flow records order state, orchestration steps, notification events, and outbox events.
+
+### Payment approval idempotency is implemented
+
+- Status: Verified
+- Evidence: `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`
+- Evidence: `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
+- Notes: Replayed `paymentRequestId` does not call the provider again.
+
+### Settlement failure compensation is implemented
+
+- Status: Verified
+- Evidence: `CommerceOrchestrationService#handleSettlementFailure`
+- Evidence: `PaymentService#cancelLatestApprovedPayment`
+- Evidence: `OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation`
+- Notes: Settlement failure triggers payment cancel compensation and closes the order as cancelled.
+
+### Notification failure policy branches into retry/manual/ignore behavior
+
+- Status: Verified
+- Evidence: `NotificationService`, `CommerceOrchestrationService#handleNotificationFailure`
+- Evidence: `OrderFlowIntegrationTest`, `NotificationRecoveryIntegrationTest`
+- Evidence: `docs/design-notes.md`
+- Notes: Policies are represented as retry scheduling, manual intervention, or ignore behavior.
+
+### Notification retry processor supports due event batch processing
+
+- Status: Verified
+- Evidence: `NotificationRetryProcessor#processDueRetryEvents`, `NotificationRetryOperations`
+- Evidence: `NotificationRetryProcessorTest`, `NotificationRetryProcessorIntegrationTest`
+- Notes: Due events are claimed and processed; future events are skipped.
+
+### Admin notification retry supports optional operator/reason audit context
+
+- Status: Verified
+- Evidence: `AdminController#retryNotification`, `AdminRecoveryRequest`
+- Evidence: `AdminRecoveryContext`, `AdminReprocessingService`
+- Evidence: `AdminReprocessingServiceTest`, `AdminReprocessingIntegrationTest`
+- Notes: Audit detail includes bounded `operatorId` and `reason` when provided.
+
+### Admin notification ignore supports optional operator/reason audit context
+
+- Status: Verified
+- Evidence: `AdminController#ignoreNotification`, `AdminRecoveryContext`
+- Evidence: `AdminReprocessingServiceTest`, `NotificationRecoveryIntegrationTest`
+- Evidence: `docs/runbooks/admin-recovery-runbook.md`
+- Notes: Optional context is recorded in audit detail; no-body default context remains valid.
+
+### Admin outbox dead-letter retry supports optional operator/reason audit context
+
+- Status: Verified
+- Evidence: `AdminController#retryOutboxDeadLetter`, `AdminRecoveryContext`
+- Evidence: `OutboxAdminApplication`, `AdminReprocessingServiceTest`
+- Evidence: `AdminReprocessingIntegrationTest`
+- Notes: `DEAD_LETTER` outbox events can be retried with optional audit context.
+
+### Existing no-body admin recovery calls remain backward compatible
+
+- Status: Verified
+- Evidence: `@RequestBody(required = false)` in `AdminController`
+- Evidence: `AdminRecoveryContext.defaults()`
+- Evidence: `AdminReprocessingServiceTest`, `AdminReprocessingIntegrationTest`
+- Notes: Missing body uses `operatorId=unknown` and `reason=not-provided`.
+
+### OpenAPI documents implemented APIs only
+
+- Status: Verified
+- Evidence: `docs/openapi/openapi.yaml`, controller mapping grep
+- Evidence: `docs/openapi/README.md`, `docs/verification-matrix.md`
+- Notes: Paths match implemented controllers and exclude future-scope APIs.
+
+### ApiDog import was manually verified
+
+- Status: Verified
+- Evidence: `docs/openapi/README.md`, `docs/test-report.md`
+- Evidence: developer manual import confirmation after OpenAPI partition
+- Notes: This is manual evidence, not CI automation.
+
+### Metrics and structured logs exist for operation/debugging signals
+
+- Status: Verified
+- Evidence: `CommerceRecoveryMetrics`, `OutboxPublisherService`
+- Evidence: `NotificationRetryProcessor`, `AdminReprocessingService`
+- Evidence: `CommerceRecoveryMetricsTest`, `OutboxPublisherServiceTest`
+- Evidence: `NotificationRetryProcessorTest`
+- Evidence: `docs/operations/observability-alert-candidates.md`
+- Notes: Metrics avoid high-cardinality business identifiers as tags.
+
+## Implemented Claims
+
+### Docker Compose local environment is preserved
+
+- Status: Implemented
+- Evidence: `compose.yaml`, `.env.example`, `application-local.yaml`
+- Evidence: `README.md`, `docs/troubleshooting.md`
+- Notes: Provides PostgreSQL, Kafka, Kafka UI, and app connection settings.
+
+### CI test workflow is preserved
+
+- Status: Implemented
+- Evidence: `.github/workflows/ci.yml`, `docs/test-report.md`, `docs/verification-matrix.md`
+- Notes: Workflow keeps compile/test and integration test jobs.
+- Notes: This audit does not claim a fresh remote CI run.
+
+## Future Scope Claims
+
+### Alert candidates are documented but not implemented as alert rules
+
+- Status: Future Scope
+- Evidence: `docs/operations/observability-alert-candidates.md`
+- Notes: The document maps current signals to candidate conditions.
+- Notes: No alert rule configuration exists.
+
+### Provider callback flow is reviewed but not implemented
+
+- Status: Future Scope
+- Evidence: `PaymentProviderClient`, `ExternalPaymentProviderClient`
+- Evidence: `docs/flows/provider-callback-flow-review.md`
+- Evidence: `README.md`, `docs/design-notes.md`
+- Notes: `providerTransactionId` is an extension point.
+- Notes: There is no production code, OpenAPI path, or automated test yet.
+
+### WebClient timeout confirmation flow is designed but not implemented
+
+- Status: Future Scope
+- Evidence: `ExternalPaymentProviderClient`
+- Evidence: `docs/flows/payment-timeout-confirmation-flow.md`
+- Evidence: `docs/design-notes.md`, `docs/test-report.md`
+- Notes: Timeout settings exist and the design note documents confirmation handling.
+- Notes: There is no production code, OpenAPI path, or automated test yet.
+
+## Not Implemented Claims
+
+### Prometheus/Grafana dashboard is not implemented
+
+- Status: Not Implemented
+- Evidence: `docs/operations/observability-alert-candidates.md`
+- Evidence: `docs/test-report.md`, `docs/runbooks/admin-recovery-runbook.md`
+- Evidence: `docs/openapi/openapi.yaml` scope notes
+- Notes: Micrometer metrics exist, but dashboards and alert rules are not implemented.
+
+### Distributed tracing backend is not implemented
+
+- Status: Not Implemented
+- Evidence: `RequestTraceFilter`, `TraceIdHolder`
+- Evidence: `docs/operations/observability-alert-candidates.md`
+- Notes: Request trace id correlation exists, but there is no distributed tracing backend integration.
+
+### Kafka consumer-based state transition is not implemented
+
+- Status: Not Implemented
+- Evidence: `OutboxPublisherService`, `KafkaOutboxEventPublisher`
+- Evidence: `docs/implementation-review-notes.md`, `docs/troubleshooting.md`
+- Notes: Current outbox state transition is based on publisher send result.
+
+### Stale PROCESSING automatic recovery job is not implemented
+
+- Status: Not Implemented
+- Evidence: `docs/runbooks/admin-recovery-runbook.md`, `docs/sql/README.md`
+- Notes: Current support is SQL/runbook inspection, not automatic recovery.
+
+### Refresh token/key rotation/real user store is not implemented
+
+- Status: Not Implemented
+- Evidence: `AuthController`, `JwtTokenProvider`
+- Evidence: `README.md`, `docs/openapi/openapi.yaml`
+- Notes: `/api/auth/token` is demo-only access token issuance.

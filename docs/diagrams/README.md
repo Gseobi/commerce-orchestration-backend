@@ -30,35 +30,92 @@ source / png / pdf는 동일 basename을 사용합니다.
 
 ## Core Architecture Diagrams
 
-| Diagram | Description | Source |
-|---|---|---|
-| `commerce_orchestration_overall_architecture` | 전체 주문 이후 orchestration 구조 | [draw.io](/docs/diagrams/source/commerce_orchestration_overall_architecture.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_overall_architecture.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf) |
-| `commerce_orchestration_order_flow` | 주문 생성 이후 payment, settlement, notification 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_order_flow.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_order_flow.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_order_flow.pdf) |
-| `commerce_orchestration_notification_recovery_flow` | notification 실패 복구 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_notification_recovery_flow.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_notification_recovery_flow.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_notification_recovery_flow.pdf) |
-| `commerce_orchestration_outbox_retry_dead_letter` | outbox retry/dead-letter 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_outbox_retry_dead_letter.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_outbox_retry_dead_letter.pdf) |
-| `commerce_orchestration_table_relation_overview` | Flyway migration 기준 logical table relation overview | [draw.io](/docs/diagrams/source/commerce_orchestration_table_relation_overview.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_table_relation_overview.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_table_relation_overview.pdf) |
+### `commerce_orchestration_overall_architecture`
+
+- Description: 전체 주문 이후 orchestration 구조
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_overall_architecture.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_overall_architecture.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_overall_architecture.pdf)
+
+### `commerce_orchestration_order_flow`
+
+- Description: 주문 생성 이후 payment, settlement, notification 흐름
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_order_flow.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_order_flow.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_order_flow.pdf)
+
+### `commerce_orchestration_notification_recovery_flow`
+
+- Description: notification 실패 복구 흐름
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_notification_recovery_flow.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_notification_recovery_flow.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_notification_recovery_flow.pdf)
+
+### `commerce_orchestration_outbox_retry_dead_letter`
+
+- Description: outbox retry/dead-letter 흐름
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_outbox_retry_dead_letter.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_outbox_retry_dead_letter.pdf)
+
+### `commerce_orchestration_table_relation_overview`
+
+- Description: Flyway migration 기준 logical table relation overview
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_table_relation_overview.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_table_relation_overview.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_table_relation_overview.pdf)
 
 ## Reliability Hardening Diagrams
 
-| Diagram | Description | Source |
-|---|---|---|
-| `commerce_orchestration_reliability_hardening_overview` | idempotency, retry claim, publisher adapter 보강 개요 | [draw.io](/docs/diagrams/source/commerce_orchestration_reliability_hardening_overview.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_reliability_hardening_overview.pdf) |
-| `commerce_orchestration_payment_idempotency_flow` | `paymentRequestId` 기반 결제 멱등성 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_payment_idempotency_flow.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_payment_idempotency_flow.pdf) |
-| `commerce_orchestration_notification_outbox_processing_claim_flow` | notification/outbox `PROCESSING` claim 흐름 | [draw.io](/docs/diagrams/source/commerce_orchestration_notification_outbox_processing_claim_flow.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_notification_outbox_processing_claim_flow.pdf) |
-| `commerce_orchestration_outbox_publisher_adapter` | `OutboxPublisherService`와 `KafkaOutboxEventPublisher` 분리 구조 | [draw.io](/docs/diagrams/source/commerce_orchestration_outbox_publisher_adapter.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_outbox_publisher_adapter.pdf) |
+### `commerce_orchestration_reliability_hardening_overview`
+
+- Description: idempotency, retry claim, publisher adapter 보강 개요
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_reliability_hardening_overview.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_reliability_hardening_overview.pdf)
+
+### `commerce_orchestration_payment_idempotency_flow`
+
+- Description: `paymentRequestId` 기반 결제 멱등성 흐름
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_payment_idempotency_flow.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_payment_idempotency_flow.pdf)
+
+### `commerce_orchestration_notification_outbox_processing_claim_flow`
+
+- Description: notification/outbox `PROCESSING` claim 흐름
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_notification_outbox_processing_claim_flow.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_notification_outbox_processing_claim_flow.pdf)
+
+### `commerce_orchestration_outbox_publisher_adapter`
+
+- Description: `OutboxPublisherService`와 `KafkaOutboxEventPublisher` 분리 구조
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_outbox_publisher_adapter.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_outbox_publisher_adapter.pdf)
 
 ## Observability / Recovery Architecture
 
-| Diagram | Source | PNG | PDF | Purpose |
-|---|---|---|---|---|
-| Observability / Recovery Architecture | [source/commerce_orchestration_observability_recovery_architecture.drawio](/docs/diagrams/source/commerce_orchestration_observability_recovery_architecture.drawio) | [png/commerce_orchestration_observability_recovery_architecture.png](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png) | [pdf/commerce_orchestration_observability_recovery_architecture.pdf](/docs/diagrams/pdf/commerce_orchestration_observability_recovery_architecture.pdf) | metric/log/audit/runbook 기반 운영 복구 관측성 구조 |
+### `commerce_orchestration_observability_recovery_architecture`
 
-이 다이어그램은 Outbox publish, notification retry, admin recovery 흐름에서 발생하는 운영 이벤트가 Micrometer counter, key-value structured log, audit log, SQL inspection, admin recovery runbook으로 어떻게 연결되는지 설명합니다.
+- Description: metric/log/audit/runbook 기반 운영 복구 관측성 구조
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_observability_recovery_architecture.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_observability_recovery_architecture.pdf)
 
-현재 범위는 custom metric과 structured log 기반의 관측성 보강이며, Prometheus/Grafana dashboard, alert rule, stale `PROCESSING` automatic recovery job은 포함하지 않습니다.
+이 다이어그램은 Outbox publish, notification retry, admin recovery 흐름에서 발생하는 운영 이벤트가
+Micrometer counter, key-value structured log, audit log, SQL inspection,
+admin recovery runbook으로 어떻게 연결되는지 설명합니다.
+
+현재 범위는 custom metric과 structured log 기반의 관측성 보강입니다.
+Prometheus/Grafana dashboard, alert rule, stale `PROCESSING` automatic recovery job은 포함하지 않습니다.
 
 ## Reference Assets
 
-| Diagram | Description | Source |
-|---|---|---|
-| `commerce_orchestration_overall_architecture_reference` | overall architecture 작성 참고용 reference | [draw.io](/docs/diagrams/source/commerce_orchestration_overall_architecture_reference.drawio) / [PNG](/docs/diagrams/png/commerce_orchestration_overall_architecture_reference.png) / [PDF](/docs/diagrams/pdf/commerce_orchestration_overall_architecture_reference.pdf) |
+### `commerce_orchestration_overall_architecture_reference`
+
+- Description: overall architecture 작성 참고용 reference
+- Source: [draw.io](/docs/diagrams/source/commerce_orchestration_overall_architecture_reference.drawio)
+- PNG: [PNG](/docs/diagrams/png/commerce_orchestration_overall_architecture_reference.png)
+- PDF: [PDF](/docs/diagrams/pdf/commerce_orchestration_overall_architecture_reference.pdf)

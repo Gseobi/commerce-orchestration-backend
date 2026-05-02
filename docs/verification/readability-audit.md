@@ -41,7 +41,7 @@ docker-compose.yml
 - Readability Audit 단계: 완료
 - EditorConfig Normalization 단계: 완료
 - Config Final Newline Check 단계: 진행 필요
-- Markdown Long-line Recovery 단계: 진행 필요
+- Markdown Long-line Recovery 단계: 완료
 - Final Readability Baseline 단계: 진행 필요
 
 `src/main/resources/application.yaml`은 final newline 재검증 결과 마지막 byte가 `30`으로 확인되었습니다.
@@ -54,9 +54,9 @@ docker-compose.yml
 |---|---|---|---|
 | `.editorconfig` | Formatting policy | Verified | Multi-line INI 구조이며 UTF-8, LF, final newline, Java/Gradle 4 spaces, YAML 2 spaces, SQL 4 spaces 기준을 정의합니다. |
 | `src/main/resources/application.yaml` | YAML config | Pending | Final newline이 아직 없습니다. YAML key/value 변경 없이 Config Final Newline Check 단계에서 복구해야 합니다. |
-| `docs/diagrams/README.md` | Markdown docs | Pending | 긴 Markdown table line이 다수 있어 raw review가 어렵습니다. Binary diagram asset은 수정하지 않습니다. |
-| `docs/verification-matrix.md` | Markdown docs | Pending | 구현-검증 매핑 표가 길어 Markdown Long-line Recovery 단계에서 의미 변경 없이 정리해야 합니다. |
-| `docs/verification/claim-audit.md` | Markdown docs | Pending | Claim audit 표가 길어 Markdown Long-line Recovery 단계에서 status/evidence 의미 변경 없이 정리해야 합니다. |
+| `docs/diagrams/README.md` | Markdown docs | Recovered | 긴 table line을 diagram별 section으로 정리했습니다. Binary diagram asset은 수정하지 않았습니다. |
+| `docs/verification-matrix.md` | Markdown docs | Recovered | wide table을 capability별 block으로 정리했습니다. Status와 evidence 의미는 유지했습니다. |
+| `docs/verification/claim-audit.md` | Markdown docs | Recovered | wide claim table을 claim별 block으로 정리했습니다. Future Scope / Not Implemented 의미는 유지했습니다. |
 | `README.md` | Markdown docs | Acceptable | 수동 확인 기준 single-line/minified 문제는 없습니다. 외부 URL과 일부 table line은 필요 시 Markdown Long-line Recovery 단계에서 재검토할 수 있습니다. |
 | `src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
 | `src/main/java/io/github/gseobi/commerce/orchestration/payment/client/ExternalPaymentProviderClient.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
@@ -71,7 +71,7 @@ docker-compose.yml
 | Readability Audit 단계 | tracked text files 점검과 recovery 대상 식별 | Done | helper script와 manual spot check로 recovery scope를 behavior change와 분리했습니다. |
 | EditorConfig Normalization 단계 | `.editorconfig` 구조와 formatting policy 정리 | Done | `.editorconfig`를 readable INI 구조로 유지하고 Java/Gradle/YAML/properties/SQL/Markdown 기준을 명확히 했습니다. |
 | Config Final Newline Check 단계 | `src/main/resources/application.yaml` final newline 복구 | Pending | 마지막 byte가 `30`으로 확인되어 final newline 복구가 필요합니다. YAML 값은 변경하지 않아야 합니다. |
-| Markdown Long-line Recovery 단계 | `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md` long line 정리 | Pending | claim status나 evidence 의미를 바꾸지 않고 raw review 가능한 문서 구조로 정리합니다. |
+| Markdown Long-line Recovery 단계 | `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md` long line 정리 | Done | claim status나 evidence 의미를 바꾸지 않고 raw review 가능한 section 구조로 정리했습니다. |
 | Final Readability Baseline 단계 | helper script 재실행과 `git diff --check` 확인 | Pending | recovery 후 `single-line-candidate`, `many-long-lines`, `missing-final-newline` 후보가 남았는지 확인합니다. |
 
 ## Verification Evidence / 검증 근거
@@ -84,6 +84,14 @@ Readability Audit 단계에서 helper script를 `python3`로 실행해 복구 �
 ('docs/diagrams/README.md', 64, 5290, 558, 'many-long-lines', 'long_lines=11')
 ('docs/verification-matrix.md', 43, 10062, 502, 'many-long-lines', 'long_lines=25')
 ('docs/verification/claim-audit.md', 37, 7311, 403, 'many-long-lines', 'long_lines=20')
+```
+
+Markdown Long-line Recovery 이후 재검증:
+
+```text
+docs/diagrams/README.md: long_lines_over_220=0
+docs/verification-matrix.md: long_lines_over_220=0
+docs/verification/claim-audit.md: long_lines_over_220=0
 ```
 
 `application.yaml` final newline 재검증:
@@ -113,5 +121,4 @@ last_byte_hex= 30
 ## Remaining TODO / 남은 TODO
 
 - Config Final Newline Check 단계에서 `src/main/resources/application.yaml` final newline을 YAML 값 변경 없이 복구합니다.
-- Markdown Long-line Recovery 단계에서 긴 Markdown table line을 의미 변경 없이 정리합니다.
 - Final Readability Baseline 단계에서 helper script와 `git diff --check`를 다시 실행합니다.
