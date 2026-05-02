@@ -34,11 +34,13 @@
    주요 포트폴리오 claim이 코드, 테스트, 문서 어디에 근거하는지 확인합니다.
 12. [Agent Guides](/docs/agent-guides/README.md)
    Codex / AI Agent 작업 규칙, branch workflow, architecture boundary, documentation claim, testing verification 기준을 확인합니다.
-13. [OpenAPI / ApiDog](/docs/openapi/README.md)
+13. [Repository Readability Audit](/docs/verification/readability-audit.md)
+   tracked text file의 readability issue와 후속 formatting recovery 범위를 확인합니다.
+14. [OpenAPI / ApiDog](/docs/openapi/README.md)
    구현된 HTTP API만 포함한 ApiDog import-ready OpenAPI 파일을 확인합니다.
-14. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
+15. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
    notification retry, outbox dead-letter, `PROCESSING` 장기 체류를 metric/log/SQL/admin API 기준으로 확인하는 운영 복구 절차입니다. 관련 observability/recovery diagram은 [Diagram Guide](/docs/diagrams/README.md)에서 확인할 수 있습니다.
-15. [Troubleshooting](/docs/troubleshooting.md)
+16. [Troubleshooting](/docs/troubleshooting.md)
    로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
@@ -61,6 +63,8 @@
   README/docs의 주요 claim이 실제 코드, 테스트, 문서 어디에 근거하는지 정리합니다.
 - [Agent Guides](/docs/agent-guides/README.md)
   Codex / AI Agent가 따라야 하는 repository-level working rules와 상세 guide index를 정리합니다.
+- [Repository Readability Audit](/docs/verification/readability-audit.md)
+  tracked text file의 reviewability 점검 결과와 후속 formatting recovery 순서를 정리합니다.
 - [OpenAPI / ApiDog](/docs/openapi/README.md)
   `docs/openapi/openapi.yaml` import와 local server 사용 기준을 정리합니다.
 - [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)  
