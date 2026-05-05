@@ -44,11 +44,14 @@ docker-compose.yml
 - Markdown Long-line Recovery 단계: 완료
 - Final Readability Baseline 단계: 완료
 - Payment Provider Java Readability Check 단계: 완료
+- README Readability Recovery 단계: 완료
+- Final Readability Audit Re-run 단계: 완료
 
 `src/main/resources/application.yaml`은 final newline 복구 후 마지막 byte가 `0a`로 확인되었습니다.
 `0a`는 newline이므로 final newline 기준을 충족합니다.
 YAML key/value는 변경하지 않았습니다.
 Payment/provider Java 파일은 재점검 결과 추가 formatting recovery가 필요하지 않았습니다.
+README는 raw Markdown 기준 long line을 정리했고, claim 의미는 변경하지 않았습니다.
 
 ## Findings / 점검 결과
 
@@ -59,7 +62,7 @@ Payment/provider Java 파일은 재점검 결과 추가 formatting recovery가 �
 | `docs/diagrams/README.md` | Markdown docs | Recovered | 긴 table line을 diagram별 section으로 정리했습니다. Binary diagram asset은 수정하지 않았습니다. |
 | `docs/verification-matrix.md` | Markdown docs | Recovered | wide table을 capability별 block으로 정리했습니다. Status와 evidence 의미는 유지했습니다. |
 | `docs/verification/claim-audit.md` | Markdown docs | Recovered | wide claim table을 claim별 block으로 정리했습니다. Future Scope / Not Implemented 의미는 유지했습니다. |
-| `README.md` | Markdown docs | Acceptable | 수동 확인 기준 single-line/minified 문제는 없습니다. 외부 URL과 일부 table line은 필요 시 Markdown Long-line Recovery 단계에서 재검토할 수 있습니다. |
+| `README.md` | Markdown docs | Verified | raw Markdown 기준 long line을 정리했고 구현 claim 의미는 변경하지 않았습니다. |
 | `src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
 | `src/main/java/io/github/gseobi/commerce/orchestration/payment/client/ExternalPaymentProviderClient.java` | Java | Acceptable | 수동 확인 기준 indentation과 line structure가 리뷰 가능한 상태입니다. |
 | `build.gradle`, `settings.gradle` | Gradle | Acceptable | helper script 기준 복구 후보에 포함되지 않았습니다. |
@@ -76,6 +79,8 @@ Payment/provider Java 파일은 재점검 결과 추가 formatting recovery가 �
 | Markdown Long-line Recovery 단계 | `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md` long line 정리 | Done | claim status나 evidence 의미를 바꾸지 않고 raw review 가능한 section 구조로 정리했습니다. |
 | Final Readability Baseline 단계 | helper script 재실행과 `git diff --check` 확인 | Done | `READABILITY_BASELINE_OK`를 확인했습니다. |
 | Payment Provider Java Readability Check 단계 | `payment` package Java 파일 점검 | Done | long-line/single-line 후보가 없고 추가 Java formatting 변경은 필요하지 않았습니다. Behavior 변경은 없습니다. |
+| README Readability Recovery 단계 | `README.md` raw Markdown 가독성 정리 | Done | 긴 문장과 링크 묶음을 줄바꿈하고 Future Scope / Not Implemented 의미를 유지했습니다. |
+| Final Readability Audit Re-run 단계 | tracked text files 최종 재점검 | Done | Java와 README recovery 이후 `READABILITY_BASELINE_OK`를 다시 확인했습니다. |
 
 ## Verification Evidence / 검증 근거
 
@@ -110,6 +115,20 @@ Final readability audit:
 READABILITY_BASELINE_OK
 ```
 
+README Readability Recovery 이후 재검증:
+
+```text
+README.md line_count= 520 long_lines_over_180= 0
+```
+
+Final Readability Audit Re-run:
+
+```text
+READABILITY_BASELINE_OK
+application_yaml_has_final_newline= True
+last_byte_hex= 0a
+```
+
 검증 요약:
 
 - `git diff --check`: PASS
@@ -127,9 +146,10 @@ READABILITY_BASELINE_OK
 
 - Branch: `development`
 - Final readability audit: PASS
-- `application.yaml` final newline: Restored
+- Core payment Java readability: Verified
+- README readability: Verified
 - Markdown long-line recovery: Completed
-- Payment/provider Java readability check: Completed
+- `application.yaml` final newline: Verified
 - Remaining exceptions: None
 - Production behavior changes: None
 
