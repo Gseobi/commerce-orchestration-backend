@@ -39,16 +39,18 @@ Spring Boot 기반 commerce orchestration backend입니다.
 4. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
 5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
 6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
-7. **AI-assisted 검증 기준:** [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
-8. **Future Scope 설계:** [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) / [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
+7. **AI-assisted 검증 기준:**
+   [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
+8. **Future Scope 설계:**
+   [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) / [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
 9. **운영 관측성:** [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
 10. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
 11. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
-- [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/%EC%BB%A4%EB%A8%B8%EC%8A%A4-%EC%A3%BC%EB%AC%B8-%EC%9D%B4%ED%9B%84-%ED%9D%90%EB%A6%84%EC%9D%84-%EC%83%81%ED%83%9C-%EC%A0%84%EC%9D%B4%EC%99%80-Orchestration%EC%9C%BC%EB%A1%9C-%EC%84%A4%EA%B3%84%ED%95%98%EA%B8%B0)
-- [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)
+- [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/커머스-주문-이후-흐름을-상태-전이와-Orchestration으로-설계하기)
+- [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-재처리-구조에서-중복-처리와-멱등성을-어떻게-방어할까)
 
 draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리합니다.  
 현재 overall architecture는 README 대표 이미지로만 유지하고, 세부 흐름과 테이블 관계는 Architecture Notes / Flow Notes / Diagram Guide에서 이어서 확인할 수 있습니다.
@@ -133,9 +135,11 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 ### Observability & Recovery Notes
 
-- Outbox publish, notification retry, admin recovery 경계에 Micrometer counter와 key-value structured log를 추가했으며, 전체 관측/복구 흐름은 [Observability Recovery Architecture Diagram](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)에서 확인할 수 있습니다.
+- Outbox publish, notification retry, admin recovery 경계에 Micrometer counter와 key-value structured log를 추가했습니다.
+  전체 관측/복구 흐름은 [Observability Recovery Architecture Diagram](/docs/diagrams/png/commerce_orchestration_observability_recovery_architecture.png)에서 확인할 수 있습니다.
 - 이 지표와 로그는 retry/dead-letter 증가, claim skipped, admin recovery 결과를 확인하기 위한 운영 관측성 기준입니다.
-- alert 후보와 metric tag 기준은 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 정리했습니다. Prometheus/Grafana dashboard와 alert rule 구현은 Future Scope입니다.
+- alert 후보와 metric tag 기준은 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 정리했습니다.
+  Prometheus/Grafana dashboard와 alert rule 구현은 Future Scope입니다.
 - 자세한 복구 절차는 [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)에서 확인할 수 있습니다.
 
 ---
@@ -144,7 +148,12 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 커머스 주문 이후에는 결제 승인, 정산 요청, 알림 발송, 이벤트 발행, 실패 복구가 이어집니다.
 
-실제 운영 환경에서는 모든 후속 처리가 한 번에 성공하지 않습니다. 예를 들어 결제는 성공했지만 정산 요청이 실패하거나, 거래 자체는 완료됐지만 알림 발송 또는 후속 이벤트 발행만 실패할 수 있습니다. 이때 중요한 문제는 단순 rollback이 아니라, 어느 단계까지 성공했는지, 어디서 실패했는지, 어떤 단위로 재처리할 수 있는지를 명확히 남기는 것입니다.
+실제 운영 환경에서는 모든 후속 처리가 한 번에 성공하지 않습니다.
+예를 들어 결제는 성공했지만 정산 요청이 실패하거나,
+거래 자체는 완료됐지만 알림 발송 또는 후속 이벤트 발행만 실패할 수 있습니다.
+이때 중요한 문제는 단순 rollback이 아니라,
+어느 단계까지 성공했는지, 어디서 실패했는지,
+어떤 단위로 재처리할 수 있는지를 명확히 남기는 것입니다.
 
 이 레포는 주문 이후 후속 흐름을 여러 controller와 ad-hoc service 호출에 분산시키지 않고, 명시적 상태 전이와 운영 복구 경로가 보이는 orchestration backend로 정리하는 것을 목표로 합니다.
 
@@ -227,7 +236,12 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 현재 external 구현은 실제 연동을 붙일 수 있는 골격과 오류 매핑까지 포함하지만, provider별 상세 error mapping과 retry policy는 후속 과제입니다.
 
-결제 승인 흐름은 orchestration에서 생성한 deterministic key인 `"ORDER-" + orderId + "-PAYMENT-APPROVE"`를 `paymentRequestId`로 전달합니다. 같은 주문 orchestration replay에서는 동일 key가 유지되며, 이미 저장된 payment가 있으면 provider approve를 다시 호출하지 않습니다. `providerTransactionId` 컬럼과 조회 포트는 외부 callback 멱등성 확장을 위한 준비 지점이며, callback flow 자체는 아직 구현하지 않았습니다.
+결제 승인 흐름은 orchestration에서 생성한 deterministic key인
+`"ORDER-" + orderId + "-PAYMENT-APPROVE"`를 `paymentRequestId`로 전달합니다.
+같은 주문 orchestration replay에서는 동일 key가 유지되며,
+이미 저장된 payment가 있으면 provider approve를 다시 호출하지 않습니다.
+`providerTransactionId` 컬럼과 조회 포트는 외부 callback 멱등성 확장을 위한 준비 지점이며,
+callback flow 자체는 아직 구현하지 않았습니다.
 
 ---
 
@@ -267,18 +281,26 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 기본 설정에서는 `notification.retry.scheduler.enabled=false`로 비활성화되어 있습니다.  
 속성을 켜면 property-gated `NotificationRetryScheduler`가 `NotificationRetryProcessor`를 주기적으로 호출합니다.  
-운영자는 `POST /api/admin/notification-events/retry-due`로 due notification retry batch를 수동 실행할 수 있으며, 응답은 `status`, `processedCount`, `successCount`, `failedCount`, `skippedCount`, `processedEventIds`를 포함합니다.
+운영자는 `POST /api/admin/notification-events/retry-due`로 due notification retry batch를 수동 실행할 수 있습니다.
+응답은 `status`, `processedCount`, `successCount`, `failedCount`, `skippedCount`, `processedEventIds`를 포함합니다.
 
 ### Admin Reprocessing
 
 - `POST /api/admin/notification-events/{id}/retry`  
-  notification 실패 건을 재전송 성공으로 처리하고 주문을 `COMPLETED`로 복구합니다. 응답은 `eventId`, `orderId`, `action=RETRY`, `result=SUCCESS`, `previousStatus`, `currentStatus`, `message`를 포함합니다.
+  notification 실패 건을 재전송 성공으로 처리하고 주문을 `COMPLETED`로 복구합니다.
+  응답은 `eventId`, `orderId`, `action=RETRY`, `result=SUCCESS`, `previousStatus`, `currentStatus`, `message`를 포함합니다.
 - `POST /api/admin/notification-events/{id}/ignore`  
-  무시 가능한 notification 실패 건을 `IGNORED`로 정리하고 주문을 `COMPLETED`로 복구합니다. 응답은 `eventId`, `orderId`, `action=IGNORE`, `result=IGNORED`, `previousStatus`, `currentStatus`, `message`를 포함합니다.
+  무시 가능한 notification 실패 건을 `IGNORED`로 정리하고 주문을 `COMPLETED`로 복구합니다.
+  응답은 `eventId`, `orderId`, `action=IGNORE`, `result=IGNORED`, `previousStatus`, `currentStatus`, `message`를 포함합니다.
 - `POST /api/admin/outbox-events/{id}/retry`  
-  `DEAD_LETTER` outbox event만 대상으로 즉시 재발행을 시도합니다. 응답은 `eventId`, `aggregateId`, `eventType`, `action=RETRY_DEAD_LETTER`, `result`, `previousStatus`, `currentStatus`, `retryCount`, `failureCode`, `failureReason`, `message`를 포함합니다.
+  `DEAD_LETTER` outbox event만 대상으로 즉시 재발행을 시도합니다.
+  응답은 `eventId`, `aggregateId`, `eventType`, `action=RETRY_DEAD_LETTER`, `result`,
+  `previousStatus`, `currentStatus`, `retryCount`, `failureCode`, `failureReason`, `message`를 포함합니다.
 
-세 admin 재처리 API는 선택적 request body로 `operatorId`, `reason`을 받을 수 있습니다. 기존처럼 body 없이 호출해도 동작하며, body가 없거나 값이 비어 있으면 audit detail에는 `operatorId=unknown`, `reason=not-provided`가 기록됩니다. `operatorId`와 `reason`은 trim/truncate 후 audit detail에만 반영하고 metric tag나 log field에는 넣지 않습니다.
+세 admin 재처리 API는 선택적 request body로 `operatorId`, `reason`을 받을 수 있습니다.
+기존처럼 body 없이 호출해도 동작하며,
+body가 없거나 값이 비어 있으면 audit detail에는 `operatorId=unknown`, `reason=not-provided`가 기록됩니다.
+`operatorId`와 `reason`은 trim/truncate 후 audit detail에만 반영하고 metric tag나 log field에는 넣지 않습니다.
 
 현재 admin 재처리는 전체 orchestration 재실행이 아니라, 실패한 하위 처리 단위를 명시적으로 복구하는 방식입니다.
 
@@ -473,11 +495,11 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 
 ## 15. Blog / Notes
 
-- Velog: [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/%EC%BB%A4%EB%A8%B8%EC%8A%A4-%EC%A3%BC%EB%AC%B8-%EC%9D%B4%ED%9B%84-%ED%9D%90%EB%A6%84%EC%9D%84-%EC%83%81%ED%83%9C-%EC%A0%84%EC%9D%B4%EC%99%80-Orchestration%EC%9C%BC%EB%A1%9C-%EC%84%A4%EA%B3%84%ED%95%98%EA%B8%B0)
+- Velog: [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/커머스-주문-이후-흐름을-상태-전이와-Orchestration으로-설계하기)
   - 주문 이후 결제, 정산, 알림, Outbox 흐름을 상태 전이와 Orchestration 관점에서 정리한 대표 설계 글입니다.
-- Velog: [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)  
+- Velog: [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-재처리-구조에서-중복-처리와-멱등성을-어떻게-방어할까)
   - Outbox와 Retry 구조에서 발생할 수 있는 중복 요청, 동시 재처리, 중복 publish 가능성을 `paymentRequestId`와 `PROCESSING` claim으로 방어한 과정을 정리한 심화 글입니다.
-- Portfolio Index: [Backend Portfolio / Notes Index](https://velog.io/@wsx2386/%EB%B0%B1%EC%97%94%EB%93%9C-%ED%8F%AC%ED%8A%B8%ED%8F%B4%EB%A6%AC%EC%98%A4-%EA%B8%80-%EB%AA%A8%EC%9D%8C-%EC%9A%B4%EC%98%81%ED%98%95-Backend-%EB%AC%B8%EC%A0%9C%EB%A5%BC-%EA%B5%AC%EC%A1%B0%EB%A1%9C-%ED%92%80%EC%96%B4%EB%82%B8-%EA%B8%B0%EB%A1%9D)
+- Portfolio Index: [Backend Portfolio / Notes Index](https://velog.io/@wsx2386/백엔드-포트폴리오-글-모음-운영형-Backend-문제를-구조로-풀어낸-기록)
 
 ---
 
