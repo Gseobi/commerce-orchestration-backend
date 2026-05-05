@@ -43,10 +43,12 @@ docker-compose.yml
 - Config Final Newline Check 단계: 완료
 - Markdown Long-line Recovery 단계: 완료
 - Final Readability Baseline 단계: 완료
+- Payment Provider Java Readability Check 단계: 완료
 
 `src/main/resources/application.yaml`은 final newline 복구 후 마지막 byte가 `0a`로 확인되었습니다.
 `0a`는 newline이므로 final newline 기준을 충족합니다.
 YAML key/value는 변경하지 않았습니다.
+Payment/provider Java 파일은 재점검 결과 추가 formatting recovery가 필요하지 않았습니다.
 
 ## Findings / 점검 결과
 
@@ -73,6 +75,7 @@ YAML key/value는 변경하지 않았습니다.
 | Config Final Newline Check 단계 | `src/main/resources/application.yaml` final newline 복구 | Done | 마지막 byte가 `0a`로 확인되며 YAML 값은 변경하지 않았습니다. |
 | Markdown Long-line Recovery 단계 | `docs/diagrams/README.md`, `docs/verification-matrix.md`, `docs/verification/claim-audit.md` long line 정리 | Done | claim status나 evidence 의미를 바꾸지 않고 raw review 가능한 section 구조로 정리했습니다. |
 | Final Readability Baseline 단계 | helper script 재실행과 `git diff --check` 확인 | Done | `READABILITY_BASELINE_OK`를 확인했습니다. |
+| Payment Provider Java Readability Check 단계 | `payment` package Java 파일 점검 | Done | long-line/single-line 후보가 없고 추가 Java formatting 변경은 필요하지 않았습니다. Behavior 변경은 없습니다. |
 
 ## Verification Evidence / 검증 근거
 
@@ -126,6 +129,7 @@ READABILITY_BASELINE_OK
 - Final readability audit: PASS
 - `application.yaml` final newline: Restored
 - Markdown long-line recovery: Completed
+- Payment/provider Java readability check: Completed
 - Remaining exceptions: None
 - Production behavior changes: None
 
