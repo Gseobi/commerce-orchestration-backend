@@ -153,8 +153,10 @@ Status values:
 - Status: Future Scope
 - Evidence: `ExternalPaymentProviderClient`
 - Evidence: `docs/flows/payment-timeout-confirmation-flow.md`
+- Evidence: `docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md`
 - Evidence: `docs/design-notes.md`, `docs/test-report.md`
 - Notes: Timeout settings exist and the design note documents confirmation handling.
+- Notes: Implementation review recommends a mock/dummy provider based minimal confirmation flow as the next candidate.
 - Notes: There is no production code, OpenAPI path, or automated test yet.
 
 ## Not Implemented Claims

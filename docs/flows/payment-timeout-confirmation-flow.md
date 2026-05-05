@@ -194,6 +194,8 @@ Status: Design Note / Future Scope
 - OpenAPI paths에는 confirmation API가 없습니다.
 - 자동 테스트로 검증된 상태가 아닙니다.
 - 다음 구현 후보를 설명하기 위한 설계 문서입니다.
+- 구현 범위 검토는 [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)에 정리했습니다.
+- 현재 권장 후보는 실제 PG 계약이 아닌 mock/dummy provider 기반 minimal confirmation flow입니다.
 
 ## Future Implementation Scope / 후속 구현 범위
 

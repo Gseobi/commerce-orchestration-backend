@@ -265,7 +265,9 @@ Status 값은 다음 의미로 사용합니다.
 - Implementation: 없음
 - Tests: 없음
 - Docs: `docs/flows/payment-timeout-confirmation-flow.md`, `docs/design-notes.md`, `docs/test-report.md`
+- Docs: `docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md`
 - Notes: Design document를 추가했습니다.
+- Notes: Implementation review는 실제 PG 계약 없이 mock/dummy provider 기반 minimal confirmation flow를 다음 구현 후보로 권장합니다.
 - Notes: production code에는 구현하지 않았고 OpenAPI paths에도 포함하지 않았습니다.
 
 ### Kafka consumer-based state transition
