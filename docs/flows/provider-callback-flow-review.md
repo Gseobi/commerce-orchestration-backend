@@ -109,9 +109,15 @@ callback while confirmation is required
   -> APPROVED 또는 FAILED로 확정
 ```
 
-`CONFIRMATION_REQUIRED`, `CONFIRMATION_IN_PROGRESS` 같은 상태는 [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)의 proposed future state이며 현재 enum에 존재하지 않습니다. callback flow는 이 timeout confirmation state model이 확정된 뒤 연결하는 것이 자연스럽습니다.
+`CONFIRMATION_REQUIRED`는 mock/dummy timeout unknown scenario를 남기기 위해 현재 enum에 존재합니다.
+`CONFIRMATION_IN_PROGRESS` 같은 full confirmation workflow 상태는 아직 존재하지 않습니다.
+callback flow는 timeout confirmation state model이 더 확정된 뒤 연결하는 것이 자연스럽습니다.
 
-Callback이 settlement를 직접 시작할지 여부는 특히 중요합니다. 직접 settlement를 시작하면 provider callback이 orchestration의 새 진입점이 되므로 중복 settlement, outbox 중복 발행, admin recovery와의 충돌을 막는 conditional state transition이 필요합니다. 반대로 payment 상태만 갱신하면 구현은 단순하지만, 이후 settlement 재개를 담당할 recovery trigger가 별도로 필요합니다.
+Callback이 settlement를 직접 시작할지 여부는 특히 중요합니다.
+직접 settlement를 시작하면 provider callback이 orchestration의 새 진입점이 되므로
+중복 settlement, outbox 중복 발행, admin recovery와의 충돌을 막는 conditional state transition이 필요합니다.
+반대로 payment 상태만 갱신하면 구현은 단순하지만,
+이후 settlement 재개를 담당할 recovery trigger가 별도로 필요합니다.
 
 ## Idempotency Policy / 멱등성 정책
 

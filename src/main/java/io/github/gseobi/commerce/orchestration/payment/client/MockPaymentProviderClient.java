@@ -12,10 +12,20 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(prefix = "app.payment.provider", name = "mode", havingValue = "mock", matchIfMissing = true)
 public class MockPaymentProviderClient implements PaymentProviderClient {
 
+    public static final String MOCK_TIMEOUT_UNKNOWN_TOKEN = "PAYMENT_TIMEOUT_UNKNOWN";
+
     private final PaymentProviderProperties paymentProviderProperties;
 
     @Override
     public PaymentProviderResult approve(Long orderId, BigDecimal amount, String description) {
+        if (description != null && description.contains(MOCK_TIMEOUT_UNKNOWN_TOKEN)) {
+            return new PaymentProviderResult(
+                    PaymentStatus.CONFIRMATION_REQUIRED,
+                    "MOCK-PAYMENT-UNKNOWN",
+                    "Mock payment result unknown after timeout"
+            );
+        }
+
         String failureToken = paymentProviderProperties.mockFailureToken();
         if (description != null && failureToken != null && description.contains(failureToken)) {
             return new PaymentProviderResult(PaymentStatus.FAILED, "MOCK-PAYMENT-FAILED", "Simulated payment failure");

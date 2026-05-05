@@ -162,8 +162,9 @@ Payment는 `paymentRequestId`를 기준으로 provider 중복 호출을 방지�
 - notification 운영 정책 세부화
 - dead-letter 운영 자동화
 - Kafka consumer 기반 상태 전이
-- WebClient timeout confirmation flow 구현
+- WebClient timeout full confirmation flow 구현
   - 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+  - 현재는 mock/dummy provider 기반 `CONFIRMATION_REQUIRED` 상태 기록까지만 구현되어 있습니다.
 - provider callback API와 `providerTransactionId` 기반 callback idempotency
   - 검토 문서: [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
 - refresh token / key rotation / user store

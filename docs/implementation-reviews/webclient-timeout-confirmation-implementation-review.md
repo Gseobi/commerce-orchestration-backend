@@ -22,15 +22,13 @@ scope, risk, test 기준을 분리합니다.
 - WebClient response error와 timeout은 `BusinessException(ErrorCode.PAYMENT_FAILED, ...)`로 매핑됩니다.
 - `PaymentService#approve`는 `paymentRequestId`로 기존 payment를 먼저 조회합니다.
 - 기존 payment가 있으면 provider approve를 다시 호출하지 않고 기존 payment 기준 응답을 반환합니다.
-- `PaymentStatus`는 현재 `READY`, `APPROVED`, `FAILED`, `CANCELLED`만 갖습니다.
+- `PaymentStatus`는 현재 `READY`, `APPROVED`, `FAILED`, `CONFIRMATION_REQUIRED`, `CANCELLED`를 갖습니다.
 - `Payment`에는 `paymentRequestId`, `providerReference`, `providerTransactionId`, `version` 필드가 있습니다.
 - `PaymentRepository#findByProviderTransactionId`는 callback/idempotency 확장 지점입니다.
 
 현재 구현하지 않은 범위는 아래와 같습니다.
 
-- timeout 전용 result category
 - confirmation provider 계약
-- `CONFIRMATION_REQUIRED` 같은 payment 상태
 - confirmation retry worker 또는 admin API
 - provider callback endpoint
 - 실제 PG 계약 기반 confirmation integration
@@ -112,7 +110,7 @@ mock/dummy provider로 timeout 이후 unknown 상태를 작게 모델링하고 �
 가능한 scope:
 
 - provider approve 결과에 timeout/unknown category를 추가합니다.
-- `PaymentStatus.CONFIRMATION_REQUIRED` 추가를 검토합니다.
+- `PaymentStatus.CONFIRMATION_REQUIRED`를 사용합니다.
 - `PaymentProviderClient`에 minimal confirmation 계약을 추가합니다.
 - mock/dummy provider가 deterministic token으로 timeout/unknown/approved/failed confirmation을 반환하게 합니다.
 - `PaymentService#approve`는 timeout/unknown 결과를 `FAILED`로 단정하지 않고 payment row에 남깁니다.
@@ -137,7 +135,7 @@ mock/dummy provider로 timeout 이후 unknown 상태를 작게 모델링하고 �
 
 단점:
 
-- `PaymentStatus` enum 추가와 DB 저장 값 확장이 필요합니다.
+- `PaymentStatus` enum 값과 DB 저장 값 의미가 확장됩니다.
 - `PaymentProviderResult` 또는 별도 result type 변경이 필요할 수 있습니다.
 - orchestration이 confirmation-required payment를 어떻게 종료할지 결정해야 합니다.
 - 구현 후 verification matrix, claim audit, test-report 갱신이 필요합니다.
@@ -203,7 +201,7 @@ payment/settlement observability 또는 admin recovery 문서 보강을 먼저 �
 
 Option B를 구현한다면 최소 후보는 아래입니다.
 
-- `PaymentStatus`에 `CONFIRMATION_REQUIRED` 추가 검토
+- `PaymentStatus.CONFIRMATION_REQUIRED` 사용
 - `PaymentProviderResult`에 provider result category 또는 timeout/unknown indicator 추가
 - `PaymentProviderClient`에 confirmation 계약 추가 검토
 - `MockPaymentProviderClient`에 deterministic timeout/unknown simulation 추가
@@ -269,7 +267,7 @@ Decision: 다음 partition에서는 Option B를 구현 후보로 검토합니다
 
 구현을 시작하기 전 최종 gate는 아래입니다.
 
-- 상태 추가가 `PaymentStatus`와 `PaymentService` 수준의 작은 변경으로 끝나는지 확인합니다.
+- 상태 처리가 `PaymentStatus`와 `PaymentService` 수준의 작은 변경으로 끝나는지 확인합니다.
 - orchestration flow가 confirmation-required payment를 어떻게 다룰지 test-first로 고정합니다.
 - provider callback endpoint는 제외합니다.
 - real PG integration claim은 금지합니다.

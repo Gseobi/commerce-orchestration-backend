@@ -41,6 +41,7 @@
 | Notification future retry skip | Implemented | `nextAttemptAt`이 미래인 이벤트는 처리 대상에서 제외 |
 | Notification max retry exceeded | Implemented | 반복 실패 시 `MANUAL_INTERVENTION_REQUIRED` 전환 |
 | Payment idempotency | Implemented | 같은 `paymentRequestId` replay 시 provider approve/save 1회 검증 |
+| Mock payment timeout unknown state | Implemented | `PAYMENT_TIMEOUT_UNKNOWN` token으로 `CONFIRMATION_REQUIRED` payment 저장 검증 |
 | Outbox publisher adapter | Implemented | `KafkaTemplate` 없이 `OutboxEventPublisher` mock 기반 publish/retry/dead-letter 검증 |
 | Outbox publish claim | Implemented | claim 성공 시에만 publish, `PROCESSING` event 중복 publish 방지 검증 |
 | Operational observability metrics | Implemented | outbox publish, notification retry, admin recovery counter와 tag normalization 검증 |
@@ -54,11 +55,17 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 
 - Payment idempotency: [commerce_orchestration_payment_idempotency_flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png)
 - Notification retry claim: [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png)
-- Outbox publish claim / adapter: [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png), [commerce_orchestration_outbox_publisher_adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
+- Outbox publish claim / adapter:
+  [commerce_orchestration_notification_outbox_processing_claim_flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png),
+  [commerce_orchestration_outbox_publisher_adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png)
 
 | Test / Command | Coverage | Result |
 |---|---|---|
 | `PaymentServiceTest` | 같은 `paymentRequestId` replay 시 `PaymentProviderClient.approve` 중복 호출 방지, `paymentRepository.save` 1회 검증 | PASS |
+| `PaymentServiceTest.approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess` | mock/dummy timeout unknown result가 `CONFIRMATION_REQUIRED` payment로 저장되고 정상 승인으로 처리되지 않는지 검증 | PASS |
+| `PaymentServiceTest.approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call` | `CONFIRMATION_REQUIRED` payment replay가 provider approve를 재호출하지 않는지 검증 | PASS |
+| `MockPaymentProviderClientTest` | `PAYMENT_TIMEOUT_UNKNOWN` description token이 `CONFIRMATION_REQUIRED` result로 매핑되는지 검증 | PASS |
+| `OrderFlowIntegrationTest.orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment` | timeout unknown payment가 order success로 진행되지 않고 payment status로 남는지 검증 | PASS |
 | `NotificationRetryProcessorIntegrationTest` | due retry event 처리, retry success/reschedule/manual 전환, skippedCount 필드 유지 검증 | PASS |
 | `NotificationRetryProcessorIntegrationTest.retryDueNotificationEvents_returnsBatchResultSummary` | `POST /api/admin/notification-events/retry-due`가 due event만 처리하고 batch summary를 반환하는지 검증 | PASS |
 | `AdminNotificationRetryControllerTest` | ADMIN role로 retry-due endpoint 호출 시 trigger port 위임과 응답 필드 검증 | PASS |
@@ -79,7 +86,9 @@ Reliability hardening 관련 테스트는 아래 설계 흐름을 기준으로 �
 | `AdminReprocessingServiceTest` | admin recovery request/success/failure metric, optional context default, blank/long context normalization, audit detail truncation 검증 | PASS |
 | `AdminReprocessingIntegrationTest` | admin notification/outbox recovery body의 `operatorId`, `reason`이 audit detail에 반영되는지 검증 | PASS |
 
-운영 alert 후보와 dashboard 후보는 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 문서화했습니다. 이는 현재 metric/log 신호의 운영 해석이며, Prometheus/Grafana dashboard나 alert rule 구현 검증은 아닙니다.
+운영 alert 후보와 dashboard 후보는 [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)에 문서화했습니다.
+이는 현재 metric/log 신호의 운영 해석이며,
+Prometheus/Grafana dashboard나 alert rule 구현 검증은 아닙니다.
 
 실행 명령:
 
@@ -150,8 +159,10 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - notification 채널별 retry policy / 운영자 승인 절차
 - dead-letter 운영 자동화
 - Kafka consumer 기반 상태 전이
-- WebClient timeout 이후 confirmation flow 구현
+- WebClient timeout 이후 full confirmation flow 구현
   - 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+  - 현재 구현 범위는 mock/dummy provider 기반 `CONFIRMATION_REQUIRED` 상태 기록까지입니다.
+  - 실제 external provider confirmation 요청, admin confirmation API, OpenAPI path는 아직 없습니다.
 - provider callback API와 `providerTransactionId` 기반 callback idempotency
 - admin 레벨 재처리 / 재검증 API 고도화
 - Prometheus/Grafana dashboard와 alert rule

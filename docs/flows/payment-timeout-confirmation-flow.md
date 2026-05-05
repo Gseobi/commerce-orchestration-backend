@@ -4,7 +4,9 @@
 
 이 문서는 `ExternalPaymentProviderClient`의 WebClient 요청이 timeout 되었을 때 외부 결제 provider의 실제 승인 상태가 불명확해지는 문제를 다루기 위한 설계 노트입니다.
 
-현재 production code에는 WebClient timeout 이후 provider confirmation flow가 구현되어 있지 않습니다. 이 문서는 후속 구현 후보를 명확히 하기 위한 Future Scope 문서이며, 실제 외부 provider 연동에서 발생할 수 있는 uncertain payment state를 어떻게 확인하고 감사 가능하게 처리할지 정리합니다.
+현재 production code에는 실제 external provider confirmation 요청이나 admin confirmation API가 구현되어 있지 않습니다.
+다만 mock/dummy provider 기반 timeout/unknown scenario는 `CONFIRMATION_REQUIRED` payment 상태로 남기는 최소 범위까지 구현되어 있습니다.
+이 문서는 후속 구현 후보를 명확히 하기 위한 설계 문서이며, 실제 외부 provider 연동에서 발생할 수 있는 uncertain payment state를 어떻게 확인하고 감사 가능하게 처리할지 정리합니다.
 
 목표는 timeout 이후 결제가 승인되었을 수도, 거절되었을 수도, provider에 도달하지 않았을 수도 있는 상황에서 중복 승인, 잘못된 취소, order/payment 상태 불일치를 피하는 기준을 세우는 것입니다.
 
@@ -19,18 +21,20 @@
 - `ExternalPaymentProviderClient`는 provider 응답 status를 `PaymentStatus.APPROVED`, `PaymentStatus.CANCELLED`, `PaymentStatus.FAILED`로 매핑합니다.
 - `PaymentService#approve`는 `paymentRequestId`로 기존 payment를 먼저 조회하고, 기존 row가 있으면 provider approve를 다시 호출하지 않습니다.
 - `PaymentRepository#findByProviderTransactionId`와 `payments.provider_transaction_id` 컬럼은 callback/idempotency 확장을 위한 준비 지점입니다.
+- `MockPaymentProviderClient`는 description에 `PAYMENT_TIMEOUT_UNKNOWN`이 포함되면 `PaymentStatus.CONFIRMATION_REQUIRED`를 반환합니다.
+- `PaymentService#approve`는 `CONFIRMATION_REQUIRED` payment를 저장하지만 정상 승인으로 처리하지 않고 `PAYMENT_FAILED` branch로 넘깁니다.
 
 현재 구현하지 않은 범위는 아래와 같습니다.
 
 - WebClient timeout 이후 provider confirmation 요청
 - `PaymentProviderClient`의 confirmation 계약
-- `PaymentStatus.CONFIRMATION_REQUIRED` 같은 timeout 전용 상태
+- `CONFIRMATION_IN_PROGRESS`, `CONFIRMATION_FAILED` 같은 confirmation workflow 전용 상태
 - provider callback API
 - provider confirmation endpoint의 OpenAPI path
 - confirmation 결과 기반 settlement 재개 또는 admin recovery API
-- confirmation flow 자동 테스트
+- external provider confirmation flow 자동 테스트
 
-따라서 이 문서의 `CONFIRMATION_REQUIRED`, `CONFIRMATION_FAILED`, confirmation result category는 모두 proposed future state/category이며, 현재 enum이나 API에 존재하는 값이 아닙니다.
+따라서 이 문서의 `CONFIRMATION_IN_PROGRESS`, `CONFIRMATION_FAILED`, confirmation result category는 proposed future state/category이며, 현재 enum이나 API에 존재하는 값이 아닙니다.
 
 ## Problem Scenario / 문제 상황
 
@@ -69,7 +73,7 @@ timeout을 단순 실패로 보고 무조건 재시도하면 중복 승인 위�
 3. 기존 payment가 없으면 PaymentProviderClient.approve를 호출합니다.
 4. provider가 success를 반환하면 payment를 APPROVED로 저장하고 settlement 흐름을 계속 진행합니다.
 5. provider가 business failure를 반환하면 payment를 FAILED로 저장하고 payment failure branch로 종료합니다.
-6. WebClient timeout이 발생하면 payment를 CONFIRMATION_REQUIRED 같은 future state로 저장합니다.
+6. Mock/dummy timeout unknown scenario에서는 payment를 CONFIRMATION_REQUIRED 상태로 저장합니다.
 7. provider confirmation을 paymentRequestId 또는 providerTransactionId 기준으로 요청합니다.
 8. confirmation 결과가 APPROVED이면 기존 payment를 APPROVED로 확정하고 settlement를 진행합니다.
 9. confirmation 결과가 REJECTED/FAILED 또는 NOT_FOUND이면 failure branch로 처리합니다.
@@ -77,7 +81,8 @@ timeout을 단순 실패로 보고 무조건 재시도하면 중복 승인 위�
 11. confirmation 자체가 반복 timeout 또는 provider error를 반환하면 bounded retry 후 manual intervention으로 전환합니다.
 ```
 
-이 흐름은 현재 구현이 아니라 설계안입니다. 특히 6번 이후의 상태, confirmation client, retry scheduler, admin API, OpenAPI path는 후속 구현 범위입니다.
+이 흐름 중 mock/dummy unknown scenario를 `CONFIRMATION_REQUIRED`로 저장하는 범위만 현재 구현입니다.
+confirmation client, retry scheduler, admin API, OpenAPI path는 후속 구현 범위입니다.
 
 ## State Transition Policy / 상태 전이 정책
 
@@ -86,13 +91,14 @@ timeout을 단순 실패로 보고 무조건 재시도하면 중복 승인 위�
 - `READY`
 - `APPROVED`
 - `FAILED`
+- `CONFIRMATION_REQUIRED`
 - `CANCELLED`
 
-현재 payment approve 구현은 provider 결과를 기준으로 `APPROVED` 또는 `FAILED` payment를 저장하고, cancel compensation 시 `CANCELLED`로 변경합니다.
+현재 payment approve 구현은 provider 결과를 기준으로 `APPROVED`, `FAILED`, `CONFIRMATION_REQUIRED` payment를 저장하고, cancel compensation 시 `CANCELLED`로 변경합니다.
+`CONFIRMATION_REQUIRED`는 mock/dummy timeout unknown scenario를 명시적으로 남기기 위한 상태입니다.
 
-후속 구현에서 고려할 proposed future state는 아래와 같습니다.
+후속 구현에서 추가로 고려할 proposed future state는 아래와 같습니다.
 
-- `CONFIRMATION_REQUIRED`: approve 요청 timeout 이후 provider 상태 확인이 필요한 상태
 - `CONFIRMATION_IN_PROGRESS`: confirmation worker 또는 admin action이 확인 중인 상태
 - `CONFIRMATION_FAILED`: confirmation 자체가 retry 한도를 넘었거나 수동 개입이 필요한 상태
 
@@ -102,7 +108,7 @@ timeout을 단순 실패로 보고 무조건 재시도하면 중복 승인 위�
 READY
   -> APPROVED
   -> FAILED
-  -> CONFIRMATION_REQUIRED (future)
+  -> CONFIRMATION_REQUIRED
 
 CONFIRMATION_REQUIRED
   -> CONFIRMATION_IN_PROGRESS (future)
@@ -114,7 +120,9 @@ APPROVED
   -> CANCELLED (compensation)
 ```
 
-`CONFIRMATION_REQUIRED` 상태의 payment는 order를 성공 또는 실패로 확정하지 않습니다. settlement 시작 여부도 confirmation 결과가 `APPROVED`로 확정된 뒤 결정합니다.
+현재 최소 구현에서는 `CONFIRMATION_REQUIRED` payment를 정상 성공으로 처리하지 않습니다.
+orchestration은 settlement를 시작하지 않고 payment failure branch로 order를 `FAILED`로 닫습니다.
+후속 full confirmation flow에서는 order를 pending 상태로 유지할지, admin recovery 대상으로 남길지 별도 결정이 필요합니다.
 
 ## Idempotency Policy / 멱등성 정책
 
@@ -188,14 +196,15 @@ confirmation flow는 payment state를 확정하는 운영상 중요한 분기이
 
 Status: Design Note / Future Scope
 
-- production code에는 아직 구현되어 있지 않습니다.
+- mock/dummy provider 기반 timeout unknown state 기록은 구현되어 있습니다.
+- 실제 external provider confirmation 요청은 아직 구현되어 있지 않습니다.
 - `PaymentProviderClient`에는 confirmation method가 없습니다.
-- `PaymentStatus`에는 confirmation 전용 상태가 없습니다.
+- `PaymentStatus.CONFIRMATION_REQUIRED`는 존재하지만 full confirmation workflow 전용 상태는 없습니다.
 - OpenAPI paths에는 confirmation API가 없습니다.
-- 자동 테스트로 검증된 상태가 아닙니다.
+- mock/dummy timeout unknown scenario는 자동 테스트로 검증합니다.
 - 다음 구현 후보를 설명하기 위한 설계 문서입니다.
 - 구현 범위 검토는 [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)에 정리했습니다.
-- 현재 권장 후보는 실제 PG 계약이 아닌 mock/dummy provider 기반 minimal confirmation flow입니다.
+- 실제 PG 계약 기반 confirmation flow는 Future Scope입니다.
 
 ## Future Implementation Scope / 후속 구현 범위
 

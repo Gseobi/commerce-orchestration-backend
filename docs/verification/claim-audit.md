@@ -33,7 +33,18 @@ Status values:
 - Status: Verified
 - Evidence: `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`
 - Evidence: `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
+- Evidence: `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
 - Notes: Replayed `paymentRequestId` does not call the provider again.
+
+### Mock provider timeout unknown state is implemented
+
+- Status: Verified
+- Evidence: `MockPaymentProviderClient`, `PaymentStatus.CONFIRMATION_REQUIRED`
+- Evidence: `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`
+- Evidence: `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`
+- Evidence: `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
+- Notes: This is a mock/dummy scenario, not real payment provider contract integration.
+- Notes: The order is not treated as successful; settlement does not start.
 
 ### Settlement failure compensation is implemented
 
@@ -148,16 +159,16 @@ Status values:
 - Notes: `providerTransactionId` is an extension point.
 - Notes: There is no production code, OpenAPI path, or automated test yet.
 
-### WebClient timeout confirmation flow is designed but not implemented
+### Full WebClient timeout confirmation flow is partially implemented
 
-- Status: Future Scope
+- Status: Partial
 - Evidence: `ExternalPaymentProviderClient`
+- Evidence: `MockPaymentProviderClient`, `PaymentStatus.CONFIRMATION_REQUIRED`
 - Evidence: `docs/flows/payment-timeout-confirmation-flow.md`
 - Evidence: `docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md`
 - Evidence: `docs/design-notes.md`, `docs/test-report.md`
-- Notes: Timeout settings exist and the design note documents confirmation handling.
-- Notes: Implementation review recommends a mock/dummy provider based minimal confirmation flow as the next candidate.
-- Notes: There is no production code, OpenAPI path, or automated test yet.
+- Notes: Mock/dummy timeout unknown state recording is implemented and tested.
+- Notes: Real external provider confirmation request, admin confirmation API, OpenAPI path, and callback flow are not implemented.
 
 ## Not Implemented Claims
 

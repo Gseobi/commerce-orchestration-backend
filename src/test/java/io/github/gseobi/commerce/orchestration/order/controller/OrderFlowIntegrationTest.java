@@ -128,6 +128,26 @@ class OrderFlowIntegrationTest {
     }
 
     @Test
+    void orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment() throws Exception {
+        Long orderId = createOrder("PAYMENT_TIMEOUT_UNKNOWN");
+
+        mockMvc.perform(post("/api/orders/{orderId}/orchestrate", orderId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus", is("FAILED")))
+                .andExpect(jsonPath("$.data.steps[1].stepType", is("PAYMENT")))
+                .andExpect(jsonPath("$.data.steps[1].status", is("READY")))
+                .andExpect(jsonPath("$.data.steps[2].stepType", is("PAYMENT")))
+                .andExpect(jsonPath("$.data.steps[2].status", is("FAILED")));
+
+        mockMvc.perform(get("/api/orders/{orderId}", orderId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus", is("FAILED")))
+                .andExpect(jsonPath("$.data.paymentStatuses[0]", is("CONFIRMATION_REQUIRED")));
+    }
+
+    @Test
     void orchestrate_notificationFailure_recordsCompensationTodo() throws Exception {
         Long orderId = createOrder("FAIL_NOTIFICATION");
 

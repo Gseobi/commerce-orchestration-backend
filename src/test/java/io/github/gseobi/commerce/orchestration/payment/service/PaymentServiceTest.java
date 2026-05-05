@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -81,6 +82,47 @@ class PaymentServiceTest {
     }
 
     @Test
+    void approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess() {
+        Order order = new Order(
+                "customer-1",
+                BigDecimal.valueOf(10000),
+                "KRW",
+                "PAYMENT_TIMEOUT_UNKNOWN",
+                OrderStatus.PAYMENT_PENDING
+        );
+        Payment payment = new Payment(
+                PAYMENT_REQUEST_ID,
+                1L,
+                PaymentStatus.CONFIRMATION_REQUIRED,
+                order.getTotalAmount(),
+                "MOCK-PAYMENT-UNKNOWN",
+                null
+        );
+        ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
+
+        when(paymentRepository.findByPaymentRequestId(PAYMENT_REQUEST_ID)).thenReturn(Optional.empty());
+        when(paymentProviderClient.approve(order.getId(), order.getTotalAmount(), order.getDescription()))
+                .thenReturn(new PaymentProviderResult(
+                        PaymentStatus.CONFIRMATION_REQUIRED,
+                        "MOCK-PAYMENT-UNKNOWN",
+                        "Mock payment result unknown after timeout"
+                ));
+        when(paymentRepository.save(ArgumentMatchers.any(Payment.class))).thenReturn(payment);
+
+        assertThatThrownBy(() -> paymentService.approve(
+                PAYMENT_REQUEST_ID,
+                order.getId(),
+                order.getTotalAmount(),
+                order.getDescription()
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Mock payment result unknown after timeout");
+
+        verify(paymentRepository).save(paymentCaptor.capture());
+        assertThat(paymentCaptor.getValue().getStatus()).isEqualTo(PaymentStatus.CONFIRMATION_REQUIRED);
+    }
+
+    @Test
     void approve_idempotent_replay_reuses_existing_payment_without_provider_call() {
         Order order = new Order("customer-1", BigDecimal.valueOf(10000), "KRW", "normal", OrderStatus.PAYMENT_PENDING);
         Payment payment = new Payment(
@@ -116,6 +158,37 @@ class PaymentServiceTest {
         assertThat(secondResponse.status()).isEqualTo("APPROVED");
         verify(paymentRepository, times(1)).save(ArgumentMatchers.any(Payment.class));
         verify(paymentProviderClient, times(1)).approve(1L, order.getTotalAmount(), order.getDescription());
+    }
+
+    @Test
+    void approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call() {
+        Order order = new Order(
+                "customer-1",
+                BigDecimal.valueOf(10000),
+                "KRW",
+                "PAYMENT_TIMEOUT_UNKNOWN",
+                OrderStatus.PAYMENT_PENDING
+        );
+        Payment payment = new Payment(
+                PAYMENT_REQUEST_ID,
+                1L,
+                PaymentStatus.CONFIRMATION_REQUIRED,
+                order.getTotalAmount(),
+                "MOCK-PAYMENT-UNKNOWN",
+                null
+        );
+
+        when(paymentRepository.findByPaymentRequestId(PAYMENT_REQUEST_ID)).thenReturn(Optional.of(payment));
+
+        PaymentResponse response = paymentService.approve(
+                PAYMENT_REQUEST_ID,
+                1L,
+                order.getTotalAmount(),
+                order.getDescription()
+        );
+
+        assertThat(response.status()).isEqualTo("CONFIRMATION_REQUIRED");
+        verify(paymentProviderClient, times(0)).approve(1L, order.getTotalAmount(), order.getDescription());
     }
 
     @Test

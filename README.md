@@ -230,6 +230,8 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 - `mock`  
   `MockPaymentProviderClient`  
   기본 모드입니다. `PAYMENT_PROVIDER_MOCK_FAILURE_TOKEN`이 description에 포함되면 실패를 시뮬레이션합니다.
+  `PAYMENT_TIMEOUT_UNKNOWN`이 description에 포함되면 실제 PG 연동이 아닌 mock unknown scenario로
+  payment를 `CONFIRMATION_REQUIRED` 상태로 남깁니다.
 - `external`  
   `ExternalPaymentProviderClient`  
   `baseUrl`, `apiKey`, `approvePath`, `cancelPath`, `connectTimeout`, `readTimeout`를 사용합니다.
@@ -371,14 +373,15 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
 
 - 실제 payment provider별 timeout / retry / error mapping 고도화
 - WebClient timeout 이후 provider confirmation flow 설계 문서: [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
-  현재는 Future Scope / Design Note이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
+  현재는 mock/dummy provider 기반 `CONFIRMATION_REQUIRED` 상태 기록까지만 구현되어 있습니다.
+  실제 external provider confirmation 요청, admin confirmation API, OpenAPI path는 Future Scope입니다.
 - provider callback flow 구현 판단 문서: [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
   현재는 Future Scope / Design Review이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
 - notification 채널별 retry policy 세분화
 - dead-letter 이벤트의 운영 자동화
 - refresh token / key rotation / user store 연동
 - admin 레벨 재처리 / 재검증 API 고도화
-- provider callback API와 WebClient timeout confirmation flow 구현
+- provider callback API와 full WebClient timeout confirmation flow 구현
 
 짧게 말해 이 프로젝트는 CRUD showcase보다는 커머스 거래 흐름의 orchestration, explicit state transition, failure handling, compensation, retry/dead-letter, 운영 복구 지점을 보여주는 포트폴리오 성격이 강합니다.
 

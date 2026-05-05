@@ -70,8 +70,9 @@ notification 실패 시 `handling_policy` 기준으로 `AUTO_RETRY`, `MANUAL_INT
 
 ### Payment Timeout Confirmation Flow
 
-- [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md): WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 정리한 Future Scope / Design Note 문서입니다.
-- 현재 production code, OpenAPI path, automated test에는 구현되어 있지 않습니다.
+- [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md): WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 정리한 문서입니다.
+- 현재 production code에는 mock/dummy provider 기반 `CONFIRMATION_REQUIRED` 상태 기록만 구현되어 있습니다.
+- 실제 external provider confirmation 요청, OpenAPI path, admin confirmation API는 Future Scope입니다.
 
 ### Provider Callback Flow Review
 

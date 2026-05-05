@@ -55,8 +55,22 @@ Status 값은 다음 의미로 사용합니다.
 - Status: Verified
 - Implementation: `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`
 - Tests: `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
+- Tests: `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/design-notes.md`
 - Notes: 같은 `paymentRequestId` replay는 provider approve를 다시 호출하지 않습니다.
+
+### Mock provider timeout/unknown state handling
+
+- Status: Verified
+- Implementation: `MockPaymentProviderClient`, `PaymentService#approve`
+- Implementation: `PaymentStatus.CONFIRMATION_REQUIRED`
+- Tests: `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`
+- Tests: `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`
+- Tests: `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
+- Docs: `README.md`, `docs/flows/payment-timeout-confirmation-flow.md`, `docs/test-report.md`
+- Notes: `PAYMENT_TIMEOUT_UNKNOWN` description token은 실제 PG 연동이 아닌 mock/dummy scenario입니다.
+- Notes: payment는 `CONFIRMATION_REQUIRED`로 남기지만 order는 성공 처리하지 않고 payment failure branch로 통제합니다.
+- Notes: external provider confirmation request, admin confirmation API, OpenAPI path는 구현하지 않았습니다.
 
 ### Settlement failure compensation
 
@@ -261,14 +275,14 @@ Status 값은 다음 의미로 사용합니다.
 
 ### WebClient timeout confirmation flow
 
-- Status: Future Scope
-- Implementation: 없음
-- Tests: 없음
+- Status: Partial
+- Implementation: `MockPaymentProviderClient`, `PaymentStatus.CONFIRMATION_REQUIRED`
+- Tests: `MockPaymentProviderClientTest`, `PaymentServiceTest`, `OrderFlowIntegrationTest`
 - Docs: `docs/flows/payment-timeout-confirmation-flow.md`, `docs/design-notes.md`, `docs/test-report.md`
 - Docs: `docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md`
 - Notes: Design document를 추가했습니다.
-- Notes: Implementation review는 실제 PG 계약 없이 mock/dummy provider 기반 minimal confirmation flow를 다음 구현 후보로 권장합니다.
-- Notes: production code에는 구현하지 않았고 OpenAPI paths에도 포함하지 않았습니다.
+- Notes: mock/dummy provider 기반 timeout unknown state 기록은 구현했습니다.
+- Notes: 실제 external provider confirmation 요청, admin confirmation API, OpenAPI paths는 구현하지 않았습니다.
 
 ### Kafka consumer-based state transition
 

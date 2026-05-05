@@ -19,7 +19,7 @@ notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추�
 3. [Design Notes](/docs/design-notes.md)
    compensation, notification policy, outbox reliability, DB 상태 기반 claim을 선택한 이유를 확인합니다.
 4. [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
-   WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 확인합니다. 현재는 Future Scope / Design Note이며 구현된 API가 아닙니다.
+   WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 확인합니다. 현재는 mock/dummy provider 기반 unknown state 기록만 구현되어 있습니다.
 5. [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)
    실제 PG 계약 없이 mock/dummy provider 기반으로 timeout confirmation을 최소 구현할 수 있는지 검토한 implementation review입니다.
 6. [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
@@ -52,7 +52,7 @@ notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추�
 - [Design Notes](/docs/design-notes.md)  
   현재 구조를 왜 이렇게 나눴는지, compensation / notification policy / outbox reliability / DB claim 기준을 정리합니다.
 - [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
-  WebClient timeout 이후 provider approval state가 불명확한 경우의 confirmation, retry, compensation 판단 기준을 정리한 Future Scope / Design Note입니다.
+  WebClient timeout 이후 provider approval state가 불명확한 경우의 confirmation, retry, compensation 판단 기준을 정리합니다. 현재 구현은 mock/dummy provider 기반 unknown state 기록으로 제한됩니다.
 - [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)
   실제 PG 계약 없이 mock/dummy provider 기반 minimal confirmation flow를 구현할 수 있는지 검토합니다.
 - [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)

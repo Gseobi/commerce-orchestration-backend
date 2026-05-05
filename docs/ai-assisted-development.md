@@ -50,7 +50,7 @@
 - OpenAPI and Controller consistency: OpenAPI paths는 구현된 Controller endpoint와 맞는 범위만 포함하도록 관리합니다.
 - Kafka consumer-based state transition: 현재 구현은 Outbox publisher adapter를 통해 publish result 기반 상태 전이를 수행하며, Kafka consumer 기반 상태 전이는 Future Scope / Not Implemented로 남깁니다.
 - Prometheus/Grafana dashboard: Micrometer counters와 structured logs는 존재하지만, dashboard와 alert rules는 Not Implemented로 남깁니다.
-- Provider callback과 WebClient timeout confirmation: 현재 구현 범위에서 provider callback flow와 post-timeout confirmation flow는 Future Scope / Not Implemented로 유지합니다.
+- Provider callback과 WebClient timeout confirmation: provider callback flow와 full post-timeout confirmation flow는 Future Scope / Not Implemented로 유지합니다. Mock/dummy provider 기반 timeout unknown state 기록은 구현 범위에 포함합니다.
 
 ## What This Document Does Not Claim / 이 문서가 주장하지 않는 것
 
@@ -58,4 +58,4 @@
 - 모든 코드가 AI로 자동 생성되었다는 뜻이 아닙니다.
 - 실행하지 않은 tests를 통과했다고 주장하지 않습니다.
 - Prometheus/Grafana dashboard, alert rules, Kafka consumer-based state transition, stale `PROCESSING` automatic recovery job을 implemented로 주장하지 않습니다.
-- Refresh token, key rotation, real user store, provider callback flow, WebClient timeout confirmation flow가 구현되었다고 주장하지 않습니다.
+- Refresh token, key rotation, real user store, provider callback flow, full WebClient timeout confirmation flow가 구현되었다고 주장하지 않습니다.
