@@ -33,8 +33,8 @@ Status 값은 다음 의미로 사용합니다.
 ### Order orchestration flow
 
 - Status: Verified
-- Implementation: `OrderController#orchestrate`, `CommerceOrchestrationService`
-- Tests: `OrderFlowIntegrationTest#orchestrate_happyPath_and_duplicateCall_isIdempotent`
+- Implementation: `OrderController#orchestrate`, [CommerceOrchestrationService](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/CommerceOrchestrationService.java)
+- Tests: [OrderFlowIntegrationTest#orchestrate_happyPath_and_duplicateCall_isIdempotent](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 - Tests: `OrderOutboxHappyPathIntegrationTest`
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/flows/README.md`
 - Notes: `POST /api/orders/{orderId}/orchestrate`가 payment, settlement, notification, outbox append를 조율합니다.
@@ -53,20 +53,20 @@ Status 값은 다음 의미로 사용합니다.
 ### Payment approval idempotency
 
 - Status: Verified
-- Implementation: `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`
-- Tests: `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
-- Tests: `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
+- Implementation: [PaymentService#approve](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java), `PaymentRepository#findByPaymentRequestId`
+- Tests: [PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- Tests: [PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/design-notes.md`
 - Notes: 같은 `paymentRequestId` replay는 provider approve를 다시 호출하지 않습니다.
 
 ### Mock provider timeout/unknown state handling
 
 - Status: Verified
-- Implementation: `MockPaymentProviderClient`, `PaymentService#approve`
+- Implementation: `MockPaymentProviderClient`, [PaymentService#approve](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
 - Implementation: `PaymentStatus.CONFIRMATION_REQUIRED`
 - Tests: `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`
-- Tests: `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`
-- Tests: `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
+- Tests: [PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- Tests: [OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 - Docs: `README.md`, `docs/flows/payment-timeout-confirmation-flow.md`, `docs/test-report.md`
 - Notes: `PAYMENT_TIMEOUT_UNKNOWN` description token은 실제 PG 연동이 아닌 mock/dummy scenario입니다.
 - Notes: payment는 `CONFIRMATION_REQUIRED`로 남기지만 order는 성공 처리하지 않고 payment failure branch로 통제합니다.
@@ -75,9 +75,9 @@ Status 값은 다음 의미로 사용합니다.
 ### Settlement failure compensation
 
 - Status: Verified
-- Implementation: `CommerceOrchestrationService#handleSettlementFailure`
-- Implementation: `PaymentService#cancelLatestApprovedPayment`
-- Tests: `OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation`
+- Implementation: [CommerceOrchestrationService#handleSettlementFailure](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/CommerceOrchestrationService.java)
+- Implementation: [PaymentService#cancelLatestApprovedPayment](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
+- Tests: [OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 - Docs: `README.md`, `docs/flows/README.md`, `docs/design-notes.md`
 - Notes: settlement 실패 시 payment cancel compensation 후 주문을 `CANCELLED`로 닫습니다.
 
@@ -94,9 +94,9 @@ Status 값은 다음 의미로 사용합니다.
 ### Notification retry due processor
 
 - Status: Verified
-- Implementation: `NotificationRetryProcessor#processDueRetryEvents`
+- Implementation: [NotificationRetryProcessor#processDueRetryEvents](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/NotificationRetryProcessor.java)
 - Implementation: `NotificationRetryOperations`
-- Tests: `NotificationRetryProcessorTest`, `NotificationRetryProcessorIntegrationTest`
+- Tests: `NotificationRetryProcessorTest`, [NotificationRetryProcessorIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/NotificationRetryProcessorIntegrationTest.java)
 - Docs: `README.md`, `docs/design-notes.md`, `docs/troubleshooting.md`
 - Notes: due `RETRY_SCHEDULED` event만 claim 후 처리합니다.
 
@@ -112,9 +112,9 @@ Status 값은 다음 의미로 사용합니다.
 ### Admin notification retry
 
 - Status: Verified
-- Implementation: `AdminController#retryNotification`, `AdminReprocessingService#retryNotification`
+- Implementation: `AdminController#retryNotification`, [AdminReprocessingService#retryNotification](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
 - Implementation: `AdminRecoveryContext`
-- Tests: `AdminReprocessingIntegrationTest#adminRetryNotification_completesFailedOrder`
+- Tests: [AdminReprocessingIntegrationTest#adminRetryNotification_completesFailedOrder](/src/test/java/io/github/gseobi/commerce/orchestration/admin/controller/AdminReprocessingIntegrationTest.java)
 - Tests: `NotificationRecoveryIntegrationTest`, `AdminReprocessingServiceTest`
 - Docs: `README.md`, `docs/runbooks/admin-recovery-runbook.md`
 - Notes: 실패 notification 단위만 `SENT`로 복구하고 order를 `COMPLETED`로 복구합니다.
@@ -146,9 +146,9 @@ Status 값은 다음 의미로 사용합니다.
 
 - Status: Verified
 - Implementation: `AdminController#retryOutboxDeadLetter`
-- Implementation: `AdminReprocessingService#retryOutboxDeadLetter`
+- Implementation: [AdminReprocessingService#retryOutboxDeadLetter](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
 - Implementation: `OutboxAdminApplication`, `AdminRecoveryContext`
-- Tests: `AdminReprocessingIntegrationTest`, `OutboxRetryDeadLetterIntegrationTest`
+- Tests: [AdminReprocessingIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/admin/controller/AdminReprocessingIntegrationTest.java), [OutboxRetryDeadLetterIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/OutboxRetryDeadLetterIntegrationTest.java)
 - Tests: `AdminReprocessingServiceTest`
 - Docs: `README.md`, `docs/runbooks/admin-recovery-runbook.md`, `docs/sql/outbox-operations.sql`
 - Notes: `DEAD_LETTER` outbox event만 admin retry 대상입니다.
@@ -159,8 +159,8 @@ Status 값은 다음 의미로 사용합니다.
 ### Outbox publish adapter
 
 - Status: Verified
-- Implementation: `OutboxEventPublisher`, `KafkaOutboxEventPublisher`, `OutboxPublisherService`
-- Tests: `OutboxPublisherServiceTest`, `OrderOutboxHappyPathIntegrationTest`
+- Implementation: `OutboxEventPublisher`, [KafkaOutboxEventPublisher](/src/main/java/io/github/gseobi/commerce/orchestration/infrastructure/kafka/KafkaOutboxEventPublisher.java), [OutboxPublisherService](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
+- Tests: [OutboxPublisherServiceTest](/src/test/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherServiceTest.java), `OrderOutboxHappyPathIntegrationTest`
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/flows/README.md`
 - Notes: 상태 전이는 service가, Kafka send는 infrastructure adapter가 담당합니다.
 
@@ -168,8 +168,8 @@ Status 값은 다음 의미로 사용합니다.
 
 - Status: Verified
 - Implementation: `OutboxEventRepository#claimPublishableEvent`
-- Implementation: `OutboxPublisherService#publishReadyEvents`
-- Tests: `OutboxPublisherServiceTest#publishReadyEvents_skipsAlreadyProcessingEventWhenClaimFails`
+- Implementation: [OutboxPublisherService#publishReadyEvents](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
+- Tests: [OutboxPublisherServiceTest#publishReadyEvents_skipsAlreadyProcessingEventWhenClaimFails](/src/test/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherServiceTest.java)
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/flows/README.md`
 - Notes: `READY` / `RETRY_WAIT` event를 `PROCESSING`으로 선점한 실행자만 publish합니다.
 
@@ -178,9 +178,9 @@ Status 값은 다음 의미로 사용합니다.
 ### Metrics and structured logging
 
 - Status: Verified
-- Implementation: `CommerceRecoveryMetrics`, `OutboxPublisherService`
-- Implementation: `NotificationRetryProcessor`, `AdminReprocessingService`
-- Tests: `CommerceRecoveryMetricsTest`, `OutboxPublisherServiceTest`
+- Implementation: [CommerceRecoveryMetrics](/src/main/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetrics.java), [OutboxPublisherService](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
+- Implementation: [NotificationRetryProcessor](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/NotificationRetryProcessor.java), [AdminReprocessingService](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
+- Tests: [CommerceRecoveryMetricsTest](/src/test/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetricsTest.java), [OutboxPublisherServiceTest](/src/test/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherServiceTest.java)
 - Tests: `NotificationRetryProcessorTest`, `AdminReprocessingServiceTest`
 - Docs: `README.md`, `docs/architecture/README.md`
 - Docs: `docs/runbooks/admin-recovery-runbook.md`
@@ -202,7 +202,7 @@ Status 값은 다음 의미로 사용합니다.
 
 - Status: Verified
 - Implementation: `package-info.java` module rules, `*.api` named interfaces
-- Tests: `ModulithArchitectureTest#verifiesModularStructure`
+- Tests: [ModulithArchitectureTest#verifiesModularStructure](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/implementation-review-notes.md`
 - Notes: `ApplicationModules.verify()`로 module boundary를 검증합니다.
 

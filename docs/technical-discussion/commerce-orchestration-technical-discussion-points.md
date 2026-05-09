@@ -12,15 +12,15 @@
 
 ### Implementation Evidence
 
-- `CommerceOrchestrationService`
+- [CommerceOrchestrationService](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/CommerceOrchestrationService.java)
 - `OrderController#orchestrate`
 - `PaymentApplication`, `SettlementApplication`, `NotificationApplication`, `OutboxApplication`
 
 ### Test / Verification Evidence
 
-- `OrderFlowIntegrationTest`
+- [OrderFlowIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 - `OrderOutboxHappyPathIntegrationTest`
-- `ModulithArchitectureTest#verifiesModularStructure`
+- [ModulithArchitectureTest#verifiesModularStructure](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 
 ### Known Limitation / Boundary
 
@@ -68,7 +68,7 @@ settlement 실패는 결제 승인 이후 거래 정합성에 영향을 주므�
 ### Implementation Evidence
 
 - `CommerceOrchestrationService#handleSettlementFailure`
-- `PaymentService#cancelLatestApprovedPayment`
+- [PaymentService#cancelLatestApprovedPayment](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
 - `CommerceOrchestrationService#handleNotificationFailure`
 - `NotificationHandlingPolicy`
 
@@ -94,13 +94,13 @@ settlement 실패는 결제 승인 이후 거래 정합성에 영향을 주므�
 ### Implementation Evidence
 
 - `CommerceOrchestrationService#paymentRequestId`
-- `PaymentService#approve`
+- [PaymentService#approve](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
 - `PaymentRepository#findByPaymentRequestId`
 
 ### Test / Verification Evidence
 
-- `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
-- `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
+- [PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- [PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
 
 ### Known Limitation / Boundary
 
@@ -122,13 +122,13 @@ settlement 실패는 결제 승인 이후 거래 정합성에 영향을 주므�
 
 - `MockPaymentProviderClient`
 - `PaymentStatus.CONFIRMATION_REQUIRED`
-- `PaymentService#approve`
+- [PaymentService#approve](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
 
 ### Test / Verification Evidence
 
 - `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`
-- `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`
-- `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
+- [PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- [OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 
 ### Known Limitation / Boundary
 
@@ -175,14 +175,14 @@ full WebClient confirmation flow, confirmation client 계약, admin confirmation
 ### Implementation Evidence
 
 - `OutboxService`
-- `OutboxPublisherService`
+- [OutboxPublisherService](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
 - `OutboxEvent`
 - `OutboxStatus`
 
 ### Test / Verification Evidence
 
 - `OrderOutboxHappyPathIntegrationTest`
-- `OutboxRetryDeadLetterIntegrationTest`
+- [OutboxRetryDeadLetterIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/OutboxRetryDeadLetterIntegrationTest.java)
 - `OutboxPublisherServiceTest`
 
 ### Known Limitation / Boundary
@@ -201,13 +201,13 @@ outbox reliability 정책과 Kafka send 구현을 한 class에 두면 상태 전
 
 ### Implementation Evidence
 
-- `OutboxPublisherService`
+- [OutboxPublisherService](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
 - `OutboxEventPublisher`
-- `KafkaOutboxEventPublisher`
+- [KafkaOutboxEventPublisher](/src/main/java/io/github/gseobi/commerce/orchestration/infrastructure/kafka/KafkaOutboxEventPublisher.java)
 
 ### Test / Verification Evidence
 
-- `OutboxPublisherServiceTest`
+- [OutboxPublisherServiceTest](/src/test/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherServiceTest.java)
 - `OrderOutboxHappyPathIntegrationTest`
 
 ### Known Limitation / Boundary
@@ -228,13 +228,13 @@ scheduler, admin trigger, 여러 worker가 같은 notification retry event나 ou
 
 - `NotificationEventRepository#claimRetryScheduledEvent`
 - `OutboxEventRepository#claimPublishableEvent`
-- `NotificationRetryProcessor#processDueRetryEvents`
-- `OutboxPublisherService#publishReadyEvents`
+- [NotificationRetryProcessor#processDueRetryEvents](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/NotificationRetryProcessor.java)
+- [OutboxPublisherService#publishReadyEvents](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
 
 ### Test / Verification Evidence
 
 - `NotificationRetryProcessorTest`
-- `NotificationRetryProcessorIntegrationTest`
+- [NotificationRetryProcessorIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/NotificationRetryProcessorIntegrationTest.java)
 - `OutboxPublisherServiceTest#publishReadyEvents_skipsAlreadyProcessingEventWhenClaimFails`
 
 ### Known Limitation / Boundary
@@ -256,14 +256,14 @@ scheduler, admin trigger, 여러 worker가 같은 notification retry event나 ou
 ### Implementation Evidence
 
 - `AdminController`
-- `AdminReprocessingService`
+- [AdminReprocessingService](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
 - `NotificationAdminApplication`
 - `OutboxAdminApplication`
 
 ### Test / Verification Evidence
 
 - `AdminReprocessingServiceTest`
-- `AdminReprocessingIntegrationTest`
+- [AdminReprocessingIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/admin/controller/AdminReprocessingIntegrationTest.java)
 - `AdminNotificationRetryControllerTest`
 
 ### Known Limitation / Boundary
@@ -282,10 +282,10 @@ scheduler, admin trigger, 여러 worker가 같은 notification retry event나 ou
 
 ### Implementation Evidence
 
-- `CommerceRecoveryMetrics`
-- `OutboxPublisherService`
-- `NotificationRetryProcessor`
-- `AdminReprocessingService`
+- [CommerceRecoveryMetrics](/src/main/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetrics.java)
+- [OutboxPublisherService](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
+- [NotificationRetryProcessor](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/NotificationRetryProcessor.java)
+- [AdminReprocessingService](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
 - `docs/runbooks/admin-recovery-runbook.md`
 
 ### Test / Verification Evidence
@@ -311,13 +311,13 @@ dashboard는 Future Scope로 분리하고, 현재는 관측 신호를 구현했�
 
 ### Implementation Evidence
 
-- `CommerceRecoveryMetrics`
+- [CommerceRecoveryMetrics](/src/main/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetrics.java)
 - `docs/operations/observability-alert-candidates.md`
 - `docs/runbooks/admin-recovery-runbook.md`
 
 ### Test / Verification Evidence
 
-- `CommerceRecoveryMetricsTest`
+- [CommerceRecoveryMetricsTest](/src/test/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetricsTest.java)
 - `docs/verification-matrix.md`
 - `docs/test-report.md`
 
@@ -339,11 +339,11 @@ Spring Modulith 검증은 module 간 의존 방향과 공개 API 경계를 지�
 
 - `package-info.java`
 - `*.api` named interfaces
-- `ModulithArchitectureTest`
+- [ModulithArchitectureTest](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 
 ### Test / Verification Evidence
 
-- `ModulithArchitectureTest#verifiesModularStructure`
+- [ModulithArchitectureTest#verifiesModularStructure](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 
 ### Known Limitation / Boundary
 
@@ -369,7 +369,7 @@ Testcontainers integration test는 PostgreSQL, Kafka, Flyway migration, JPA vali
 
 - `OrderOutboxHappyPathIntegrationTest`
 - `OutboxRetryDeadLetterIntegrationTest`
-- `NotificationRetryProcessorIntegrationTest`
+- [NotificationRetryProcessorIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/NotificationRetryProcessorIntegrationTest.java)
 - `IntegrationSchemaValidationSmokeTest`
 
 ### Known Limitation / Boundary

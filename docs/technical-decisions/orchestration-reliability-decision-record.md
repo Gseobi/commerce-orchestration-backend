@@ -86,40 +86,40 @@ outbox service가 KafkaTemplate 세부 구현까지 직접 알면 상태 전이 
 
 ## 12. Implementation Evidence
 
-- `CommerceOrchestrationService`
-- `PaymentService#approve`
+- [CommerceOrchestrationService](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/CommerceOrchestrationService.java)
+- [PaymentService#approve](/src/main/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentService.java)
 - `PaymentRepository#findByPaymentRequestId`
 - `PaymentStatus.CONFIRMATION_REQUIRED`
 - `CommerceOrchestrationService#handleSettlementFailure`
 - `NotificationService`
-- `NotificationRetryProcessor#processDueRetryEvents`
+- [NotificationRetryProcessor#processDueRetryEvents](/src/main/java/io/github/gseobi/commerce/orchestration/orchestration/service/NotificationRetryProcessor.java)
 - `NotificationEventRepository#claimRetryScheduledEvent`
-- `OutboxPublisherService#publishReadyEvents`
+- [OutboxPublisherService#publishReadyEvents](/src/main/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherService.java)
 - `OutboxEventRepository#claimPublishableEvent`
 - `OutboxEventPublisher`
-- `KafkaOutboxEventPublisher`
-- `AdminReprocessingService`
-- `CommerceRecoveryMetrics`
-- `ModulithArchitectureTest#verifiesModularStructure`
+- [KafkaOutboxEventPublisher](/src/main/java/io/github/gseobi/commerce/orchestration/infrastructure/kafka/KafkaOutboxEventPublisher.java)
+- [AdminReprocessingService](/src/main/java/io/github/gseobi/commerce/orchestration/admin/service/AdminReprocessingService.java)
+- [CommerceRecoveryMetrics](/src/main/java/io/github/gseobi/commerce/orchestration/common/metrics/CommerceRecoveryMetrics.java)
+- [ModulithArchitectureTest#verifiesModularStructure](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 
 ## 13. Test Evidence
 
-- `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`
-- `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
-- `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`
+- [PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- [PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
+- [PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess](/src/test/java/io/github/gseobi/commerce/orchestration/payment/service/PaymentServiceTest.java)
 - `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`
-- `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
-- `OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation`
+- [OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
+- [OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation](/src/test/java/io/github/gseobi/commerce/orchestration/order/controller/OrderFlowIntegrationTest.java)
 - `NotificationRecoveryIntegrationTest`
 - `NotificationRetryProcessorTest`
-- `NotificationRetryProcessorIntegrationTest`
+- [NotificationRetryProcessorIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/NotificationRetryProcessorIntegrationTest.java)
 - `OutboxPublisherServiceTest#publishReadyEvents_skipsAlreadyProcessingEventWhenClaimFails`
 - `OrderOutboxHappyPathIntegrationTest`
-- `OutboxRetryDeadLetterIntegrationTest`
+- [OutboxRetryDeadLetterIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/integration/OutboxRetryDeadLetterIntegrationTest.java)
 - `AdminReprocessingServiceTest`
-- `AdminReprocessingIntegrationTest`
+- [AdminReprocessingIntegrationTest](/src/test/java/io/github/gseobi/commerce/orchestration/admin/controller/AdminReprocessingIntegrationTest.java)
 - `CommerceRecoveryMetricsTest`
-- `ModulithArchitectureTest#verifiesModularStructure`
+- [ModulithArchitectureTest#verifiesModularStructure](/src/test/java/io/github/gseobi/commerce/orchestration/architecture/ModulithArchitectureTest.java)
 
 ## 14. Current Boundaries / Future Scope
 
