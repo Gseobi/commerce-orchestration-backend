@@ -126,7 +126,7 @@ orchestration은 settlement를 시작하지 않고 payment failure branch로 ord
 
 ## Idempotency Policy / 멱등성 정책
 
-`paymentRequestId`는 현재 구현에서도 approve replay 방어의 primary key입니다. timeout confirmation flow에서도 같은 기준을 유지합니다.
+`paymentRequestId`는 현재 구현에서도 approve replay 제어의 primary key입니다. timeout confirmation flow에서도 같은 기준을 유지합니다.
 
 - approve 요청과 confirmation 요청은 같은 `paymentRequestId`를 기준으로 연결합니다.
 - provider가 `providerTransactionId`를 반환한 경우 confirmation은 `paymentRequestId`와 `providerTransactionId`를 함께 검증합니다.

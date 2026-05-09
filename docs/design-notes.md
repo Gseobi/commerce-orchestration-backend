@@ -114,7 +114,7 @@ scheduler와 admin API는 같은 notification event 또는 outbox event를 비�
 - update count가 `0`이면 다른 실행자가 선점했거나 더 이상 대상 상태가 아니므로 skipped로 봅니다.
 - 이 기준은 notification retry와 outbox publish에 동일하게 적용됩니다.
 
-Outbox는 이벤트 유실을 줄이는 구조지만, 중복 발행 방어는 별도 claim/idempotency 전략이 필요합니다. 현재 구현은 publish 직전 `PROCESSING` claim으로 중복 publish 가능성을 줄이고, retry/dead-letter 전이는 `OutboxPublisherService`가 담당합니다.
+Outbox는 이벤트 유실을 줄이는 구조지만, 중복 발행 제어는 별도 claim/idempotency 전략이 필요합니다. 현재 구현은 publish 직전 `PROCESSING` claim으로 중복 publish 가능성을 줄이고, retry/dead-letter 전이는 `OutboxPublisherService`가 담당합니다.
 
 Payment는 `paymentRequestId`를 기준으로 provider 중복 호출을 방지합니다. 외부 provider callback 멱등성은 `providerTransactionId` 컬럼과 repository 조회 메서드까지만 준비되어 있으며, callback API가 구체화될 때 후속 확장할 수 있습니다.
 

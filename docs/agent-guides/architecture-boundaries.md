@@ -68,7 +68,7 @@ READY / RETRY_WAIT -> PROCESSING
 
 - update count가 `1`이면 claim 성공입니다.
 - update count가 `0`이면 이미 다른 worker가 처리 중이므로 skip합니다.
-- skip은 실패가 아니라 경쟁 상황에서의 정상 방어 결과입니다.
+- skip은 실패가 아니라 경쟁 상황에서의 정상 제어 결과입니다.
 - 이 규칙은 notification retry, outbox publish, admin recovery에서 유지되어야 합니다.
 
 ## Docker Compose / 실행 환경

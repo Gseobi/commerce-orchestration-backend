@@ -134,7 +134,7 @@
 
 - due candidate 조회 후 claim update가 `0`을 반환한 이벤트가 있다는 뜻입니다.
 - 보통 scheduler와 admin/manual trigger가 비슷한 시점에 같은 event를 잡았거나, 다른 instance가 먼저 `PROCESSING`으로 선점한 경우입니다.
-- skipped 자체는 중복 실행 방어가 동작했다는 신호일 수 있습니다. 다만 특정 이벤트가 장시간 `PROCESSING`에 머무는지 같이 확인해야 합니다.
+- skipped 자체는 중복 실행 제어가 동작했다는 신호일 수 있습니다. 다만 특정 이벤트가 장시간 `PROCESSING`에 머무는지 같이 확인해야 합니다.
 - notification은 `commerce.notification.retry.skipped`, outbox는 `commerce.outbox.publish.skipped` metric을 확인합니다.
 
 ### 2.11 Kafka publish 실패로 `RETRY_WAIT` 또는 `DEAD_LETTER`가 되는 경우

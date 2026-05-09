@@ -19,7 +19,7 @@
 - `PaymentProviderClient`는 현재 `approve`, `cancel` 계약만 제공합니다.
 - `MockPaymentProviderClient`와 `ExternalPaymentProviderClient`가 `PaymentProviderClient`를 구현합니다.
 - `ExternalPaymentProviderClient`는 WebClient 기반 approve/cancel adapter이며, provider 응답 status를 `PaymentStatus`로 매핑합니다.
-- `PaymentStatus`의 현재 값은 `READY`, `APPROVED`, `FAILED`, `CANCELLED`입니다.
+- `PaymentStatus`의 현재 값은 `READY`, `APPROVED`, `FAILED`, `CONFIRMATION_REQUIRED`, `CANCELLED`입니다.
 - `Payment`에는 `paymentRequestId`, `providerReference`, `providerTransactionId`, `version` 필드가 있습니다.
 - `PaymentRepository#findByProviderTransactionId`는 provider callback/idempotency 확장을 위한 조회 포트입니다.
 - payment 실패는 `CommerceOrchestrationService#handlePaymentFailure`에서 order 실패, orchestration step, audit 기록으로 이어집니다.
@@ -77,11 +77,12 @@ Provider callback은 동기 approve 응답만으로는 다루기 어려운 외�
 
 ## State Transition Impact / 상태 전이 영향
 
-현재 `PaymentStatus` 값은 아래 네 가지입니다.
+현재 `PaymentStatus` 값은 아래 다섯 가지입니다.
 
 - `READY`
 - `APPROVED`
 - `FAILED`
+- `CONFIRMATION_REQUIRED`
 - `CANCELLED`
 
 Provider callback을 구현하면 callback event가 payment 상태 전이의 입력이 됩니다. 가능한 proposed flow는 아래와 같습니다.
@@ -229,7 +230,7 @@ Provider별 callback은 일반 사용자 API와 성격이 다르므로, OpenAPI�
 - unit/integration/security tests
 - docs/test-report/verification matrix 갱신
 
-특히 callback이 settlement를 직접 trigger한다면 orchestration의 두 번째 외부 진입점이 생기므로, Modulith boundary와 중복 후속 처리 방어를 더 엄격히 검증해야 합니다.
+특히 callback이 settlement를 직접 trigger한다면 orchestration의 두 번째 외부 진입점이 생기므로, Modulith boundary와 중복 후속 처리 제어를 더 엄격히 검증해야 합니다.
 
 ## Recommendation / 권장 판단
 

@@ -16,41 +16,49 @@ notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추�
    모듈 경계, 의존 방향, 테이블 관계와 publisher adapter / DB claim 설계를 먼저 확인합니다.
 2. [Flow Notes](/docs/flows/README.md)  
    주문 이후 payment / settlement / notification / outbox 흐름, 멱등성 replay, retry/publish claim 상태 전이를 확인합니다.
-3. [Design Notes](/docs/design-notes.md)
+3. [Technical Decisions](/docs/technical-decisions/README.md)
+   orchestration reliability 관련 기술 선택 이유, trade-off, 구현/테스트 근거, Future Scope 경계를 확인합니다.
+4. [Technical Discussion Points](/docs/technical-discussion/commerce-orchestration-technical-discussion-points.md)
+   기술 검토 Q&A 형태로 orchestration, idempotency, compensation, outbox, observability 설계 근거를 확인합니다.
+5. [Design Notes](/docs/design-notes.md)
    compensation, notification policy, outbox reliability, DB 상태 기반 claim을 선택한 이유를 확인합니다.
-4. [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
+6. [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
    WebClient timeout 이후 외부 결제 상태가 불명확한 경우의 confirmation 설계를 확인합니다. 현재는 mock/dummy provider 기반 unknown state 기록만 구현되어 있습니다.
-5. [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)
+7. [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)
    실제 PG 계약 없이 mock/dummy provider 기반으로 timeout confirmation을 최소 구현할 수 있는지 검토한 implementation review입니다.
-6. [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
+8. [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
    외부 payment provider callback을 지금 구현할지 검토하고, 상태 전이·멱등성·보안·테스트 영향을 Future Scope / Design Review로 확인합니다.
-7. [Reliability Hardening Diagrams](/docs/diagrams/README.md#reliability-hardening-diagrams)
+9. [Reliability Hardening Diagrams](/docs/diagrams/README.md#reliability-hardening-diagrams)
    paymentRequestId 기반 결제 멱등성, notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리 흐름과 draw.io 원본, PNG, PDF 자산을 확인합니다.
-8. [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
+10. [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
    현재 metric/log/audit 신호를 기준으로 alert 후보와 metric tag 원칙을 확인합니다. Prometheus/Grafana dashboard 구현은 Future Scope입니다.
-9. [Test Report](/docs/test-report.md)
+11. [Test Report](/docs/test-report.md)
    실제로 검증한 범위, reliability hardening 테스트 결과, 아직 검증하지 않은 범위를 구분합니다.
-10. [Verification Matrix](/docs/verification-matrix.md)
+12. [Verification Matrix](/docs/verification-matrix.md)
    구현 위치, 테스트 커버리지, 문서 위치, 현재 상태를 한 표로 대조합니다.
-11. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
+13. [AI-assisted Development & Verification](/docs/ai-assisted-development.md)
    AI Agent 활용 범위와 개발자 주도 검증 기준을 확인합니다.
-12. [Claim Audit](/docs/verification/claim-audit.md)
+14. [Claim Audit](/docs/verification/claim-audit.md)
    주요 포트폴리오 claim이 코드, 테스트, 문서 어디에 근거하는지 확인합니다.
-13. [Agent Guides](/docs/agent-guides/README.md)
+15. [Agent Guides](/docs/agent-guides/README.md)
    Codex / AI Agent 작업 규칙, branch workflow, architecture boundary, documentation claim, testing verification 기준을 확인합니다.
-14. [Repository Readability Audit](/docs/verification/readability-audit.md)
+16. [Repository Readability Audit](/docs/verification/readability-audit.md)
    tracked text file의 readability issue와 후속 formatting recovery 범위를 확인합니다.
-15. [OpenAPI / ApiDog](/docs/openapi/README.md)
+17. [OpenAPI / ApiDog](/docs/openapi/README.md)
    구현된 HTTP API만 포함한 ApiDog import-ready OpenAPI 파일을 확인합니다.
-16. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
+18. [Admin Recovery Runbook](/docs/runbooks/admin-recovery-runbook.md)
    notification retry, outbox dead-letter, `PROCESSING` 장기 체류를 metric/log/SQL/admin API 기준으로 확인하는 운영 복구 절차입니다. 관련 observability/recovery diagram은 [Diagram Guide](/docs/diagrams/README.md)에서 확인할 수 있습니다.
-17. [Troubleshooting](/docs/troubleshooting.md)
+19. [Troubleshooting](/docs/troubleshooting.md)
    로컬 실행, 인증, Flyway, Testcontainers, retry/dead-letter 문제를 확인합니다.
 
 ## 2. Supporting Notes
 
 - [Design Notes](/docs/design-notes.md)  
   현재 구조를 왜 이렇게 나눴는지, compensation / notification policy / outbox reliability / DB claim 기준을 정리합니다.
+- [Technical Decisions](/docs/technical-decisions/README.md)
+  기능 설명보다 orchestration reliability 선택 이유와 trade-off를 정리합니다.
+- [Technical Discussion Points](/docs/technical-discussion/commerce-orchestration-technical-discussion-points.md)
+  README의 Technical Discussion Points를 설계 근거, 구현 근거, 검증 근거, Boundary 형태로 확장합니다.
 - [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md)
   WebClient timeout 이후 provider approval state가 불명확한 경우의 confirmation, retry, compensation 판단 기준을 정리합니다. 현재 구현은 mock/dummy provider 기반 unknown state 기록으로 제한됩니다.
 - [WebClient Timeout Confirmation Implementation Review](/docs/implementation-reviews/webclient-timeout-confirmation-implementation-review.md)

@@ -36,21 +36,23 @@ Spring Boot 기반 commerce orchestration backend입니다.
 1. **문서 구조:** [Docs Index](/docs/README.md)
 2. **Modulith / 패키지 구조:** [Architecture Notes](/docs/architecture/README.md)
 3. **Order / Payment / Settlement 흐름:** [Flow Notes](/docs/flows/README.md)
-4. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
-5. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
-6. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
-7. **AI-assisted 검증 기준:**
+4. **기술 선택 근거:** [Technical Decisions](/docs/technical-decisions/README.md)
+5. **기술 검토 포인트:** [Technical Discussion Points](/docs/technical-discussion/commerce-orchestration-technical-discussion-points.md)
+6. **설계 결정과 Trade-off:** [Design Notes](/docs/design-notes.md)
+7. **구현 검토 / Boundary 판단:** [Implementation Review Notes](/docs/implementation-review-notes.md)
+8. **구현-검증 매핑:** [Verification Matrix](/docs/verification-matrix.md)
+9. **AI-assisted 검증 기준:**
    [AI-assisted Development & Verification](/docs/ai-assisted-development.md) / [Claim Audit](/docs/verification/claim-audit.md)
-8. **Future Scope 설계:**
+10. **Future Scope 설계:**
    [Payment Timeout Confirmation Flow](/docs/flows/payment-timeout-confirmation-flow.md) / [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
-9. **운영 관측성:** [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
-10. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
-11. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
+11. **운영 관측성:** [Observability Alert Candidates & Metric Naming](/docs/operations/observability-alert-candidates.md)
+12. **OpenAPI / ApiDog:** [OpenAPI Spec](/docs/openapi/openapi.yaml) / [OpenAPI Guide](/docs/openapi/README.md)
+13. **테스트 결과 / 이슈 대응:** [Test Report](/docs/test-report.md) / [Troubleshooting](/docs/troubleshooting.md)
 
 프로젝트 설계 의도와 구현 범위는 Velog 글에서도 정리했습니다.
 
 - [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/커머스-주문-이후-흐름을-상태-전이와-Orchestration으로-설계하기)
-- [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-재처리-구조에서-중복-처리와-멱등성을-어떻게-방어할까)
+- [Outbox 재처리 구조에서 중복 처리와 멱등성을 설계하기](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)
 
 draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리합니다.  
 현재 overall architecture는 README 대표 이미지로만 유지하고, 세부 흐름과 테이블 관계는 Architecture Notes / Flow Notes / Diagram Guide에서 이어서 확인할 수 있습니다.
@@ -78,8 +80,8 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 | [Notification Recovery Flow](/docs/diagrams/png/commerce_orchestration_notification_recovery_flow.png) | notification 실패 이후 retry/manual intervention 흐름 |
 | [Outbox Retry / Dead Letter](/docs/diagrams/png/commerce_orchestration_outbox_retry_dead_letter.png) | outbox publish 실패 이후 retry/dead-letter 흐름 |
 | [Reliability Hardening Overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png) | payment idempotency, retry claim, publisher adapter 보강 요약 |
-| [Payment Idempotency Flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png) | paymentRequestId 기반 중복 결제 요청 방어 |
-| [Notification / Outbox Processing Claim Flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png) | `PROCESSING` claim 기반 중복 재처리 방어 |
+| [Payment Idempotency Flow](/docs/diagrams/png/commerce_orchestration_payment_idempotency_flow.png) | paymentRequestId 기반 중복 결제 요청 제어 |
+| [Notification / Outbox Processing Claim Flow](/docs/diagrams/png/commerce_orchestration_notification_outbox_processing_claim_flow.png) | `PROCESSING` claim 기반 중복 재처리 제어 |
 | [Outbox Publisher Adapter](/docs/diagrams/png/commerce_orchestration_outbox_publisher_adapter.png) | Outbox 상태 관리와 Kafka 발행 구현 분리 |
 
 ![Reliability hardening overview](/docs/diagrams/png/commerce_orchestration_reliability_hardening_overview.png)
@@ -387,9 +389,10 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
 
 ---
 
-## 11. Interview Talking Points
+## 11. Technical Discussion Points
 
-이 프로젝트는 면접에서 아래 주제로 설명할 수 있도록 구성했습니다.
+이 프로젝트의 주요 설계 선택은 아래 관점에서 설명할 수 있습니다.
+상세 설계 근거, 구현 근거, 검증 근거, Boundary는 [Technical Discussion Points](/docs/technical-discussion/commerce-orchestration-technical-discussion-points.md)와 [Technical Decisions](/docs/technical-decisions/README.md)에서 확인할 수 있습니다.
 
 ### 1. 왜 Orchestration 구조를 선택했는가
 
@@ -500,8 +503,8 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 
 - Velog: [커머스 주문 이후 흐름을 상태 전이와 Orchestration으로 설계하기](https://velog.io/@wsx2386/커머스-주문-이후-흐름을-상태-전이와-Orchestration으로-설계하기)
   - 주문 이후 결제, 정산, 알림, Outbox 흐름을 상태 전이와 Orchestration 관점에서 정리한 대표 설계 글입니다.
-- Velog: [Outbox 재처리 구조에서 중복 처리와 멱등성을 어떻게 방어할까](https://velog.io/@wsx2386/Outbox-재처리-구조에서-중복-처리와-멱등성을-어떻게-방어할까)
-  - Outbox와 Retry 구조에서 발생할 수 있는 중복 요청, 동시 재처리, 중복 publish 가능성을 `paymentRequestId`와 `PROCESSING` claim으로 방어한 과정을 정리한 심화 글입니다.
+- Velog: [Outbox 재처리 구조에서 중복 처리와 멱등성을 설계하기](https://velog.io/@wsx2386/Outbox-%EC%9E%AC%EC%B2%98%EB%A6%AC-%EA%B5%AC%EC%A1%B0%EC%97%90%EC%84%9C-%EC%A4%91%EB%B3%B5-%EC%B2%98%EB%A6%AC%EC%99%80-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%A9%EC%96%B4%ED%95%A0%EA%B9%8C)
+  - Outbox와 Retry 구조에서 발생할 수 있는 중복 요청, 동시 재처리, 중복 publish 가능성을 `paymentRequestId`와 `PROCESSING` claim으로 제어한 과정을 정리한 심화 글입니다.
 - Portfolio Index: [Backend Portfolio / Notes Index](https://velog.io/@wsx2386/백엔드-포트폴리오-글-모음-운영형-Backend-문제를-구조로-풀어낸-기록)
 
 ---
@@ -511,6 +514,8 @@ DB 스키마는 Flyway migration을 기준으로 관리합니다.
 - [Docs Index](/docs/README.md)
 - [Architecture Notes](/docs/architecture/README.md)
 - [Flow Notes](/docs/flows/README.md)
+- [Technical Decisions](/docs/technical-decisions/README.md)
+- [Technical Discussion Points](/docs/technical-discussion/commerce-orchestration-technical-discussion-points.md)
 - [Diagram Guide](/docs/diagrams/README.md)
 - [Design Notes](/docs/design-notes.md)
 - [Verification Matrix](/docs/verification-matrix.md)

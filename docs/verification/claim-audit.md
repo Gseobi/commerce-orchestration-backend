@@ -10,6 +10,64 @@ Status values:
 - `Future Scope`: intentionally left for later work.
 - `Not Implemented`: not present in current implementation.
 
+## Evidence Ladder
+
+Evidence Ladder는 README/docs claim이 코드보다 앞서가지 않도록 아래 순서로 점검합니다.
+
+1. Claim: README/docs에서 말하는 주장
+2. Reason: 이 선택을 한 이유
+3. Implementation Evidence: 실제 코드 위치
+4. Test Evidence: 테스트 위치
+5. Boundary: 현재 구현하지 않은 범위
+
+### Orchestration 중심 흐름 제어
+
+1. Claim: 주문 이후 payment, settlement, notification, outbox 흐름은 orchestration service 중심으로 제어합니다.
+2. Reason: 각 단계의 실패 의미와 복구 정책이 달라서 흐름 제어와 failure branch를 한 위치에서 읽을 수 있어야 합니다.
+3. Implementation Evidence: `CommerceOrchestrationService`, `OrderController#orchestrate`, `PaymentApplication`, `SettlementApplication`, `NotificationApplication`, `OutboxApplication`
+4. Test Evidence: `OrderFlowIntegrationTest`, `OrderOutboxHappyPathIntegrationTest`, `ModulithArchitectureTest#verifiesModularStructure`
+5. Boundary: Kafka consumer 기반 choreography나 event-sourced workflow engine은 구현하지 않았습니다.
+
+### settlement compensation과 notification recovery 분리
+
+1. Claim: settlement 실패와 notification 실패는 같은 rollback 정책으로 처리하지 않습니다.
+2. Reason: settlement 실패는 결제 승인 이후 거래 정합성 문제이고, notification 실패는 retry/manual/ignore로 복구 가능한 후속 처리 실패일 수 있습니다.
+3. Implementation Evidence: `CommerceOrchestrationService#handleSettlementFailure`, `PaymentService#cancelLatestApprovedPayment`, `CommerceOrchestrationService#handleNotificationFailure`, `NotificationHandlingPolicy`
+4. Test Evidence: `OrderFlowIntegrationTest#orchestrate_settlementFailure_recordsCompensation`, `NotificationRecoveryIntegrationTest`
+5. Boundary: 실제 settlement provider와 notification channel별 운영 정책은 mock 중심이며 외부 provider round-trip을 검증하지 않습니다.
+
+### paymentRequestId 기반 idempotency
+
+1. Claim: 같은 `paymentRequestId` approve replay는 provider를 다시 호출하지 않습니다.
+2. Reason: orchestration replay나 timeout 이후 재호출이 중복 결제 승인으로 이어지는 것을 막아야 합니다.
+3. Implementation Evidence: `CommerceOrchestrationService#paymentRequestId`, `PaymentService#approve`, `PaymentRepository#findByPaymentRequestId`
+4. Test Evidence: `PaymentServiceTest#approve_idempotent_replay_reuses_existing_payment_without_provider_call`, `PaymentServiceTest#approve_idempotent_replay_reusesConfirmationRequiredPayment_without_provider_call`
+5. Boundary: provider callback idempotency endpoint/table은 구현하지 않았습니다.
+
+### mock/dummy timeout unknown state 기록
+
+1. Claim: mock/dummy timeout unknown scenario는 `CONFIRMATION_REQUIRED` payment로 기록합니다.
+2. Reason: timeout은 provider 승인 여부를 확정할 수 없으므로 단순 성공 또는 단순 실패로 과장하지 않아야 합니다.
+3. Implementation Evidence: `MockPaymentProviderClient`, `PaymentStatus.CONFIRMATION_REQUIRED`, `PaymentService#approve`
+4. Test Evidence: `MockPaymentProviderClientTest#approve_timeoutUnknownToken_returnsConfirmationRequired`, `PaymentServiceTest#approve_timeoutUnknown_savesConfirmationRequired_andDoesNotTreatAsSuccess`, `OrderFlowIntegrationTest#orchestrate_paymentTimeoutUnknown_recordsConfirmationRequiredPayment`
+5. Boundary: external provider confirmation request, admin confirmation API, confirmation OpenAPI path는 구현하지 않았습니다.
+
+### Outbox publish claim + publisher adapter 분리
+
+1. Claim: Outbox publish는 `PROCESSING` claim 이후 publisher adapter를 통해 발행합니다.
+2. Reason: 중복 publish 가능성을 줄이고, retry/dead-letter 상태 전이 정책과 Kafka send 구현을 분리해야 합니다.
+3. Implementation Evidence: `OutboxEventRepository#claimPublishableEvent`, `OutboxPublisherService#publishReadyEvents`, `OutboxEventPublisher`, `KafkaOutboxEventPublisher`
+4. Test Evidence: `OutboxPublisherServiceTest`, `OrderOutboxHappyPathIntegrationTest`, `OutboxRetryDeadLetterIntegrationTest`
+5. Boundary: Kafka consumer 기반 상태 전이와 stale `PROCESSING` automatic recovery job은 구현하지 않았습니다.
+
+### metric/log/runbook 기반 recovery observability
+
+1. Claim: recovery observability는 metric, structured log, audit, runbook 기반으로 구현되어 있습니다.
+2. Reason: 운영자는 retry/dead-letter 증가, skipped claim, admin recovery 결과를 낮은 cardinality 신호로 확인해야 합니다.
+3. Implementation Evidence: `CommerceRecoveryMetrics`, `OutboxPublisherService`, `NotificationRetryProcessor`, `AdminReprocessingService`, `docs/runbooks/admin-recovery-runbook.md`
+4. Test Evidence: `CommerceRecoveryMetricsTest`, `OutboxPublisherServiceTest`, `NotificationRetryProcessorTest`, `AdminReprocessingServiceTest`
+5. Boundary: Prometheus/Grafana dashboard, alert rule, distributed tracing backend은 구현하지 않았습니다.
+
 ## Verified Claims
 
 ### Spring Modulith boundaries are preserved

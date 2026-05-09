@@ -196,23 +196,6 @@ Status 값은 다음 의미로 사용합니다.
 - Notes: 현재 metric/log/audit 신호를 기준으로 alert 후보를 문서화했습니다.
 - Notes: alert rule configuration은 구현하지 않았습니다.
 
-### Prometheus/Grafana dashboard
-
-- Status: Not Implemented
-- Implementation: 없음
-- Tests: 없음
-- Docs: `docs/operations/observability-alert-candidates.md`, `docs/runbooks/admin-recovery-runbook.md`
-- Docs: `docs/diagrams/README.md`, `docs/test-report.md`
-- Notes: Micrometer metric은 있으나 dashboard와 alert rule은 없습니다.
-
-### Distributed tracing backend
-
-- Status: Not Implemented
-- Implementation: 없음
-- Tests: 없음
-- Docs: `docs/operations/observability-alert-candidates.md`
-- Notes: `X-Trace-Id` request correlation은 있으나 distributed tracing backend integration은 없습니다.
-
 ## Architecture / Platform
 
 ### Spring Modulith boundary verification
@@ -262,6 +245,8 @@ Status 값은 다음 의미로 사용합니다.
 
 ## Future Scope / Not Implemented
 
+이 섹션의 항목은 README, Technical Decisions, Technical Discussion Points에서 구현된 기능처럼 말하지 않습니다. OpenAPI path에도 Future Scope API를 추가하지 않습니다.
+
 ### Provider callback flow
 
 - Status: Future Scope
@@ -283,6 +268,7 @@ Status 값은 다음 의미로 사용합니다.
 - Notes: Design document를 추가했습니다.
 - Notes: mock/dummy provider 기반 timeout unknown state 기록은 구현했습니다.
 - Notes: 실제 external provider confirmation 요청, admin confirmation API, OpenAPI paths는 구현하지 않았습니다.
+- Notes: README와 Technical Decisions에서는 이 범위를 full confirmation 구현이 아니라 partial implementation으로만 설명합니다.
 
 ### Kafka consumer-based state transition
 
@@ -291,6 +277,7 @@ Status 값은 다음 의미로 사용합니다.
 - Tests: 없음
 - Docs: `docs/implementation-review-notes.md`, `docs/troubleshooting.md`, `docs/test-report.md`
 - Notes: 현재 outbox 상태 전이는 publisher adapter send 결과 기준입니다.
+- Notes: consumer ack 기반 payment/order/outbox 상태 전이는 구현하지 않았습니다.
 
 ### Stale PROCESSING automatic recovery
 
@@ -299,6 +286,24 @@ Status 값은 다음 의미로 사용합니다.
 - Tests: 없음
 - Docs: `docs/runbooks/admin-recovery-runbook.md`, `docs/sql/README.md`
 - Notes: 오래 머무는 `PROCESSING` 조회 SQL과 runbook 판단 절차만 있습니다.
+- Notes: automatic recovery scheduler/job은 없습니다.
+
+### Prometheus/Grafana dashboard
+
+- Status: Not Implemented
+- Implementation: 없음
+- Tests: 없음
+- Docs: `docs/operations/observability-alert-candidates.md`, `docs/runbooks/admin-recovery-runbook.md`
+- Docs: `docs/diagrams/README.md`, `docs/test-report.md`
+- Notes: Micrometer metric은 있으나 dashboard와 alert rule은 없습니다.
+
+### Distributed tracing backend
+
+- Status: Not Implemented
+- Implementation: 없음
+- Tests: 없음
+- Docs: `docs/operations/observability-alert-candidates.md`
+- Notes: `X-Trace-Id` request correlation은 있으나 distributed tracing backend integration은 없습니다.
 
 ### Completed retry-due batch response TODO
 
