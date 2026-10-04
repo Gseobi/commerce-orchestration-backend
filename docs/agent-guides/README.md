@@ -17,6 +17,10 @@
    UTF-8/LF/final newline, formatting-only partition, `.editorconfig`, binary asset 보호 기준을 정의합니다.
 6. [OpenAPI & ApiDog](openapi-apidog.md)
    OpenAPI path 범위, ApiDog import readiness, demo auth/admin auth 문서화 기준을 정의합니다.
+7. [Productization Roadmap](../productization/README.md)
+   제품 목표, 목표 모듈 경계, 단계별 구현 순서와 완료 조건을 정의합니다.
+8. [Module Delivery Playbook](../productization/module-delivery-playbook.md)
+   기능별 branch, PR, 검증, dependency 승인과 완료 보고 절차를 정의합니다.
 
 ## 원칙
 

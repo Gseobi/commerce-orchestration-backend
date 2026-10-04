@@ -243,6 +243,16 @@ Status 값은 다음 의미로 사용합니다.
 - Docs: `README.md`, `docs/README.md`, `docs/test-report.md`
 - Notes: AI Agent는 생산성 도구로 사용하고, 구현 범위와 검증 책임은 개발자 주도 기준으로 문서화합니다.
 
+### Productization delivery harness
+
+- Status: Implemented
+- Implementation: `AGENTS.md`, `.github/pull_request_template.md`
+- Implementation: `docs/productization/README.md`, `docs/productization/module-delivery-playbook.md`
+- Tests: documentation link inspection, `git diff --check`, Gradle verification
+- Docs: `docs/README.md`, `docs/agent-guides/workflow.md`
+- Notes: 기능별 branch/PR/verification/report 절차와 제품화 단계별 exit criteria를 정의합니다.
+- Notes: roadmap의 제품 기능은 모두 Planned이며 production capability 구현을 주장하지 않습니다.
+
 ## Future Scope / Not Implemented
 
 이 섹션의 항목은 README, Technical Decisions, Technical Discussion Points에서 구현된 기능처럼 말하지 않습니다. OpenAPI path에도 Future Scope API를 추가하지 않습니다.

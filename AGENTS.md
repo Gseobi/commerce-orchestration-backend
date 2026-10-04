@@ -11,11 +11,13 @@
 
 ## Current Branch Workflow / 브랜치 운영
 
-- Work branch: `development`
-- `main`에는 직접 작업하지 않습니다.
-- 하루 작업이 검증 완료된 뒤 사용자가 명시적으로 요청할 때만 `main`으로 merge합니다.
-- Codex는 사용자의 명시적 지시 없이 merge, rebase, force push를 수행하지 않습니다.
-- 각 partition은 가능한 한 독립된 commit으로 분리합니다.
+- Base branch: `main`
+- Feature work branch: `codex/dev-<module>-<scope>`
+- 기능 구현은 새 feature branch에서 진행하고 검증 후 PR로 `main`에 반영합니다.
+- `main` 직접 작업은 사용자가 명시적으로 승인한 repository governance/bootstrap 작업으로 제한합니다.
+- Codex는 사용자의 명시적 지시 없이 rebase 또는 force push를 수행하지 않습니다.
+- 각 module delivery unit은 가능한 한 독립된 branch, PR, commit으로 분리합니다.
+- 상세 delivery 규칙은 `docs/productization/module-delivery-playbook.md`를 따릅니다.
 
 ## Non-negotiable Rules / 절대 규칙
 
@@ -40,6 +42,8 @@
 - [Testing & Verification](docs/agent-guides/testing-verification.md)
 - [Formatting & Readability](docs/agent-guides/formatting-readability.md)
 - [OpenAPI & ApiDog](docs/agent-guides/openapi-apidog.md)
+- [Productization Roadmap](docs/productization/README.md)
+- [Module Delivery Playbook](docs/productization/module-delivery-playbook.md)
 
 ## Required Final Report / 작업 완료 보고 형식
 
