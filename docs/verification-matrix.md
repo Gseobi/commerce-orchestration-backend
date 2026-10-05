@@ -198,6 +198,19 @@ Status 값은 다음 의미로 사용합니다.
 
 ## Architecture / Platform
 
+### Merchant/store foundation core
+
+- Status: Verified
+- Implementation: `merchant` module, `MerchantApplication`, `Merchant`, `Store`
+- Implementation: `V7__merchant_foundation.sql`
+- Tests: `MerchantTest`, `MerchantServiceTest`, `MerchantFoundationIntegrationTest`
+- Tests: `ModulithArchitectureTest#verifiesModularStructure`
+- Docs: `docs/productization/README.md`
+- Docs: `docs/verification/merchant-foundation-core-test-report.md`
+- Notes: merchant/store 등록과 조회는 내부 application contract만 제공하며 HTTP API는 없습니다.
+- Notes: store 단건/목록 조회는 merchant-scoped repository query를 사용합니다.
+- Notes: 기존 order/payment/notification/outbox tenant 적용과 production identity/RBAC는 아직 구현하지 않았습니다.
+
 ### Spring Modulith boundary verification
 
 - Status: Verified

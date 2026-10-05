@@ -4,6 +4,10 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 
+    MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "MERCHANT_NOT_FOUND", "사업자를 찾을 수 없습니다."),
+    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_NOT_FOUND", "스토어를 찾을 수 없습니다."),
+    DUPLICATE_MERCHANT_CODE(HttpStatus.CONFLICT, "DUPLICATE_MERCHANT_CODE", "이미 사용 중인 사업자 코드입니다."),
+    DUPLICATE_STORE_CODE(HttpStatus.CONFLICT, "DUPLICATE_STORE_CODE", "이미 사용 중인 스토어 코드입니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND", "주문을 찾을 수 없습니다."),
     INVALID_ORDER_STATE(HttpStatus.BAD_REQUEST, "INVALID_ORDER_STATE", "현재 주문 상태에서는 요청을 처리할 수 없습니다."),
     PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT_FAILED", "결제 처리에 실패했습니다."),
