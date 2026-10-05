@@ -32,7 +32,7 @@ docker compose ps
 - PostgreSQL/Kafka Compose: healthy
 - Testcontainers PostgreSQL/Kafka: PASS
 - 기존 Spring Modulith architecture test: PASS
-- 원격 CI: 원격 push 후 별도 확인 필요
+- 원격 CI: [PR #3](https://github.com/Gseobi/commerce-orchestration-backend/pull/3)의 최신 head 기준 checks에서 확인
 
 ## 검증된 동작
 
@@ -55,5 +55,6 @@ context는 조회 snapshot이며 진행 중인 작업과 revoke 간 직렬화는
 ## 자동 Delivery 상태
 
 로컬 구현·테스트·수치 집계·build는 완료했습니다.
-로컬 GitHub HTTPS 인증이 없으므로 push/PR/원격 CI/merge가 완료되었다고 주장하지 않습니다.
-원격 쓰기 권한이 준비되면 같은 브랜치에서 이어서 진행합니다.
+GitHub HTTPS 인증을 macOS Keychain에 저장하고 branch push 및 PR #3 생성을 완료했습니다.
+토큰 값은 repository와 보고서에 기록하지 않습니다.
+원격 CI와 merge의 최종 상태는 PR의 최신 head 및 merge 기록을 기준으로 확인합니다.
