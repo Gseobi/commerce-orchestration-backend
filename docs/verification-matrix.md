@@ -211,6 +211,16 @@ Status 값은 다음 의미로 사용합니다.
 - Notes: store 단건/목록 조회는 merchant-scoped repository query를 사용합니다.
 - Notes: 기존 order/payment/notification/outbox tenant 적용과 production identity/RBAC는 아직 구현하지 않았습니다.
 
+### Merchant membership access
+
+- Status: Verified (internal contract only)
+- Implementation: `MerchantAccessService`, `MerchantMembership`, `V8__merchant_membership.sql`
+- Tests: `MerchantAccessServiceTest`, `MerchantMembershipIntegrationTest`
+- Docs: `docs/productization/merchant-membership-access.md`
+- Docs: `docs/verification/merchant-membership-access-test-report.md`
+- Notes: 활성 membership과 사업자 상태를 DB에서 확인하고 READ/WRITE를 제한합니다.
+- Notes: HTTP 인증 연결, membership 관리 API, 기존 business aggregate 보호는 Future Scope입니다.
+
 ### Spring Modulith boundary verification
 
 - Status: Verified
