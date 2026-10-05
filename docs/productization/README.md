@@ -29,12 +29,14 @@
 - metrics, structured logs, audit 기록
 - Spring Modulith 경계 검증
 - PostgreSQL, Kafka, Testcontainers 기반 통합 테스트 구조
+- merchant/store core model, timezone, 기본 수동 복구 정책 snapshot
+- merchant-scoped store repository query와 cross-tenant 조회 차단
 
 근거는 [Verification Matrix](../verification-matrix.md)와 [Claim Audit](../verification/claim-audit.md)에서 관리합니다.
 
 ### Not implemented
 
-- merchant/tenant/store 모델과 데이터 격리
+- HTTP tenant context와 기존 주문/결제/알림/outbox 데이터의 tenant 격리
 - 상품, 옵션, SKU, 주문 라인
 - 재고 원장, 예약, 차감, 해제, 부족 알림
 - 실제 PG credential 관리와 provider별 production adapter
@@ -82,7 +84,16 @@ external adapters: PG providers, message channels, carriers
 
 ### P0 - Product foundation
 
-Status: `Planned`
+Status: `In Progress`
+
+Current progress:
+
+- merchant/store core model과 Flyway V7 schema
+- 내부 `MerchantApplication` contract와 merchant-scoped store 조회
+- merchant 간 store 조회 격리 integration test
+
+아직 구현하지 않은 범위는 HTTP tenant context, production identity/RBAC, merchant membership,
+기존 주문/결제/알림/outbox의 tenant ownership입니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책
 2. production identity/RBAC 설계와 merchant membership

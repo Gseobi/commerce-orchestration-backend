@@ -168,3 +168,15 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - Prometheus/Grafana dashboard와 alert rule
 - stale `PROCESSING` automatic recovery job
 - refresh token / key rotation / user store 연동
+
+## 10. Merchant Foundation Core
+
+merchant/store core delivery unit의 로컬 정량 검증 결과는
+[Merchant Foundation Core Test Report](/docs/verification/merchant-foundation-core-test-report.md)에 기록합니다.
+
+- unit test: 44개에서 55개로 증가, 전체 PASS
+- integration test: 11개에서 13개로 증가, 전체 PASS
+- 신규 merchant unit test: 11개 PASS
+- 신규 merchant integration test: 2개 PASS
+- PostgreSQL/Kafka Docker Compose health: healthy
+- HTTP endpoint는 추가하지 않았으므로 OpenAPI path 변경 없음

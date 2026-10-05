@@ -77,6 +77,8 @@ public abstract class TestcontainersIntegrationSupport {
     void resetIntegrationState() {
         jdbcTemplate.execute("""
                 TRUNCATE TABLE
+                    stores,
+                    merchants,
                     audit_logs,
                     orchestration_steps,
                     outbox_events,
