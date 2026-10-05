@@ -31,6 +31,7 @@
 - PostgreSQL, Kafka, Testcontainers 기반 통합 테스트 구조
 - merchant/store core model, timezone, 기본 수동 복구 정책 snapshot
 - merchant-scoped store repository query와 cross-tenant 조회 차단
+- merchant membership의 VIEWER/OPERATOR 권한 확인 및 revoke/정지 사업자 접근 차단
 
 근거는 [Verification Matrix](../verification-matrix.md)와 [Claim Audit](../verification/claim-audit.md)에서 관리합니다.
 
@@ -43,7 +44,7 @@
 - 실제 환불/부분 환불과 provider callback 처리
 - 사업자별 영업 시간과 복구 정책
 - 배송, 택배사 접수, 송장, 배송 추적
-- production user store, RBAC, merchant membership
+- production user store, HTTP authorization 연동, membership 관리 API
 - dashboard/alert rule과 장기 `PROCESSING` 자동 복구
 
 ## 4. Target Module Map
@@ -91,8 +92,9 @@ Current progress:
 - merchant/store core model과 Flyway V7 schema
 - 내부 `MerchantApplication` contract와 merchant-scoped store 조회
 - merchant 간 store 조회 격리 integration test
+- 내부 membership role/permission 검증, revoke 및 SUSPENDED 접근 차단
 
-아직 구현하지 않은 범위는 HTTP tenant context, production identity/RBAC, merchant membership,
+아직 구현하지 않은 범위는 HTTP tenant context, production identity 및 membership 관리 API,
 기존 주문/결제/알림/outbox의 tenant ownership입니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책

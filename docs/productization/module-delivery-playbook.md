@@ -26,6 +26,18 @@
 - rebase와 force push는 명시적 사용자 지시 없이는 수행하지 않습니다.
 - PR 제목은 conventional commit 형식을 권장합니다.
 - 구현하지 않은 API를 OpenAPI나 README에 선반영하지 않습니다.
+- 문서와 PR 설명은 한국어 중심으로 작성하고 code identifier, command, status는 English를 유지합니다.
+
+### 자동 Delivery / 사용자 승인 범위
+
+사용자가 자동 완료를 요청한 작업은 commit, push, PR 생성, CI 확인, merge, merge 후 검증까지 이어서 진행합니다.
+PR 설명은 template을 실제 구현과 실행 결과로 채웁니다. 빈 template으로 생성하지 않습니다.
+GitHub 쓰기 인증이 없으면 로컬 구현·검증·커밋·PR 본문 준비를 완료하고 막힌 단계와 원인을 보고합니다.
+권한 제한을 우회하거나 credentials를 임의로 설치·추출하지 않습니다.
+
+merge 직전 PR head SHA와 모든 required checks를 확인합니다. SHA가 바뀌면 새 commit의 검증 결과를 다시 확인합니다.
+실패, skipped 또는 아직 실행 중인 required check가 있으면 merge하지 않습니다.
+merge API에는 expected head SHA를 전달하고, merge 후 main에서 해당 변경이 포함됐는지와 CI 결과를 확인합니다.
 
 ## 3. Definition of Ready
 
@@ -77,6 +89,10 @@ docker compose ps
 ```
 
 CI parity가 필요한 unit은 `.github/workflows/ci.yml`의 command를 동일하게 실행합니다.
+
+정량 보고는 전체 테스트 실행 후 `python3 scripts/test_report.py`로 XML을 집계합니다.
+이 도구는 결과 누락·실패·오류·skip이 있으면 non-zero exit code를 반환합니다.
+suite time은 XML의 합계이며 Gradle wall time과 구분합니다. 실행시간 차이를 성능 개선으로 주장하지 않습니다.
 
 ## 6. Dependency and Plugin Approval
 

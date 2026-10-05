@@ -180,3 +180,9 @@ merchant/store core delivery unit의 로컬 정량 검증 결과는
 - 신규 merchant integration test: 2개 PASS
 - PostgreSQL/Kafka Docker Compose health: healthy
 - HTTP endpoint는 추가하지 않았으므로 OpenAPI path 변경 없음
+
+## 11. Merchant Membership Access
+
+[Membership Access 정량 보고서](/docs/verification/merchant-membership-access-test-report.md)를 참고합니다.
+단위 68개, 통합 17개가 모두 통과했으며 membership 활성 상태, 사업자 상태, READ/WRITE 권한을 검증합니다.
+HTTP 인증 연결은 아직 구현하지 않았습니다.
