@@ -22,8 +22,9 @@
 | `compileJava` | Pass | 메인 소스 컴파일 성공 |
 | `test` | Pass | 단위 테스트와 MockMvc 기반 흐름 검증 |
 | `integrationTest` | Pass | PostgreSQL / Kafka Testcontainers 검증 |
-| JWT token issuance | Implemented | `/api/auth/token` |
-| `/api/**` authentication | Implemented | 인증 없는 주문 생성 `401` 확인 |
+| JWT token issuance | Implemented | explicit local/test demo mode의 `/api/auth/token` |
+| `/api/**` authentication | Implemented | demo mode 인증 없는 주문 생성 `401`; disabled/oidc legacy 차단 |
+| OIDC Resource Server | Verified (fixture) | RS256/JWKS/issuer/audience/token-kind 검증 및 mode 분리; 실제 IdP/HTTP tenant adapter 미완료 |
 | Order create / detail / flow API | Implemented | `OrderFlowIntegrationTest` |
 | Orchestration happy path | Implemented | 상태 전이, step, outbox 생성 검증 |
 | Settlement failure compensation | Implemented | payment cancel compensation 검증 |

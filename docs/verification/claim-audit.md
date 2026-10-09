@@ -258,9 +258,18 @@ Evidence Ladder는 README/docs claim이 코드보다 앞서가지 않도록 아�
 - Evidence: `docs/runbooks/admin-recovery-runbook.md`, `docs/sql/README.md`
 - Notes: Current support is SQL/runbook inspection, not automatic recovery.
 
-### Refresh token/key rotation/real user store is not implemented
+### Refresh token/demo signing-key rotation/real user store is not implemented
 
 - Status: Not Implemented
 - Evidence: `AuthController`, `JwtTokenProvider`
 - Evidence: `README.md`, `docs/openapi/openapi.yaml`
-- Notes: `/api/auth/token` is demo-only access token issuance.
+- Notes: `/api/auth/token` exists only in explicit local/test demo mode.
+  External JWKS verification/rotation is fixture-verified in `OidcJwtDecoderTest`;
+  this does not mean demo signing-key rotation or a real provider deployment is implemented.
+
+### OIDC token verification and legacy isolation
+
+- Status: Verified (local fixtures, not a production provider connection)
+- Evidence: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
+- Notes: RS256, issuer/audience/claim types, token kind, JWKS faults and mode isolation.
+  Merchant membership HTTP authorization is still Future Scope.

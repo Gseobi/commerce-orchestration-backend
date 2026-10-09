@@ -4,6 +4,9 @@
 
 이 문서는 notification retry, outbox dead-letter, admin recovery를 운영자가 어떤 순서로 확인하고 복구할지 정리합니다.
 
+현재 전역 admin API 실행은 명시적인 local/test demo mode 기준입니다.
+disabled/oidc mode에서는 legacy admin API를 차단합니다. OIDC ADMIN claim으로 접근할 수 있다고 가정하지 않습니다.
+
 현재 범위는 자동화된 운영 시스템이 아니라 포트폴리오 프로젝트의 운영 복구 설계 기준입니다. Micrometer custom metric, key-value style structured log, SQL 점검, admin API를 조합해 실패 지점과 복구 결과를 확인하는 데 초점을 둡니다.
 
 운영 복구 흐름의 전체 연결 관계는 아래 다이어그램을 함께 참고합니다.

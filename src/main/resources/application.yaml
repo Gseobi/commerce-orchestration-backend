@@ -28,6 +28,11 @@ spring:
 
 app:
   security:
+    mode: ${APP_SECURITY_MODE:disabled}
+    oidc:
+      issuer: ${OIDC_ISSUER:}
+      audience: ${OIDC_AUDIENCE:}
+      jwk-set-uri: ${OIDC_JWK_SET_URI:}
     jwt:
       secret: ${JWT_SECRET:commerce-orchestration-demo-secret-key-2026}
       access-token-validity-seconds: 3600

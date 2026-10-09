@@ -6,6 +6,11 @@ info:
     Import-ready OpenAPI specification for the implemented HTTP APIs in
     commerce-orchestration-backend.
 
+    Auth, Orders, and Admin Recovery paths are the implemented demo-mode APIs.
+    They require APP_SECURITY_MODE=demo with a local/test profile. Default disabled
+    mode and OIDC mode deny business/admin access. OIDC verifies JWT access tokens
+    but does not yet expose tenant-scoped HTTP APIs.
+
     This document describes only currently implemented endpoints. Future scope
     items such as provider callbacks, WebClient timeout confirmation flow,
     Kafka consumer-based state transitions, Prometheus/Grafana dashboards,
@@ -32,6 +37,7 @@ paths:
       description: |
         Issues a demo access token for local/manual API testing. This is not a
         production login, refresh token, key rotation, or real user-store flow.
+        Available only with explicit demo mode in a local/test profile.
       operationId: issueDemoToken
       requestBody:
         required: true

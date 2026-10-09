@@ -381,7 +381,7 @@ README에서는 구현 범위를 과장하지 않고, "무엇을 검증하는 �
   현재는 Future Scope / Design Review이며 production code, OpenAPI path, automated test로 구현되어 있지 않습니다.
 - notification 채널별 retry policy 세분화
 - dead-letter 이벤트의 운영 자동화
-- refresh token / key rotation / user store 연동
+- refresh token / demo signing-key rotation / user store 연동
 - admin 레벨 재처리 / 재검증 API 고도화
 - provider callback API와 full WebClient timeout confirmation flow 구현
 
@@ -438,7 +438,7 @@ notification 실패는 주문 자체를 되돌리기보다 retry, manual interve
 
 ```bash
 docker compose up -d
-SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
+SPRING_PROFILES_ACTIVE=local APP_SECURITY_MODE=demo ./gradlew bootRun
 ```
 
 기본 로컬 값은 아래를 사용합니다.
@@ -450,10 +450,24 @@ SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 
 `.env.example`을 참고해 환경변수를 맞출 수 있습니다.
 
+### Authentication Modes / 인증 범위
+
+기본 mode는 `disabled`이며 health/error 이외의 요청을 차단합니다.
+기존 token 발급·주문·admin API는 `APP_SECURITY_MODE=demo`와 local/test profile에서만 사용합니다.
+`prod` 또는 `production` profile과 demo 조합은 시작 시 거부됩니다.
+
+`APP_SECURITY_MODE=oidc`는 `OIDC_ISSUER`, `OIDC_AUDIENCE`, `OIDC_JWK_SET_URI`를 모두 요구합니다.
+설정된 HTTPS JWKS의 RS256 서명, issuer/audience/시간/subject 및 `typ=at+jwt` access token을 검증합니다.
+demo token 발급 bean은 생성하지 않으며 token role을 전역 ADMIN 권한으로 매핑하지 않습니다.
+아직 merchant HTTP adapter가 없으므로 OIDC에서는 기존 business/admin API를 모두 차단합니다.
+실제 IdP 연결, tenant HTTP API, refresh token/계정 관리가 완료된 제품 인증이라는 의미는 아닙니다.
+설정·검증 범위: [OIDC Resource Server](docs/productization/oidc-resource-server.md).
+
 ### External Payment Provider 골격 확인
 
 ```bash
 SPRING_PROFILES_ACTIVE=local \
+APP_SECURITY_MODE=demo \
 PAYMENT_PROVIDER_MODE=external \
 PAYMENT_PROVIDER_BASE_URL=http://localhost:8089 \
 ./gradlew bootRun
