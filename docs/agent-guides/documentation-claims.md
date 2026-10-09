@@ -28,7 +28,7 @@
 - Alert rules
 - Kafka consumer-based state transition
 - Stale `PROCESSING` automatic recovery job
-- Refresh token / key rotation / real user store
+- Refresh token / demo signing-key rotation / real user store
 - Real external payment provider production integration
 - Payment provider callback flow
 - WebClient timeout confirmation flow
@@ -64,6 +64,9 @@ README, docs, test-report, verification-matrix, claim-audit는 서로 다른 cla
 ## Security Claims / 보안 표현
 
 - demo token 발급 기능은 production auth로 오해되지 않게 문서화합니다.
-- real user store, refresh token, key rotation이 구현되지 않았다면 Future Scope 또는 Not Implemented로 표시합니다.
+- real user store, refresh token, demo signing-key rotation이 구현되지 않았다면 Future Scope 또는 Not Implemented로 표시합니다.
+- 외부 JWKS rotation fixture 검증은 별도로 구분하며 실제 IdP 연결이나 demo key rotation으로 확대하지 않습니다.
+- disabled/demo/oidc mode별 접근 범위와 내부 membership/HTTP adapter 구현 여부를 구분합니다.
+- delivery report의 당시 base/count/time은 보존하고 최신 구현 상태 문서로 연결합니다.
 - request/response example에는 실제 secret, token, private value를 넣지 않습니다.
 - authorization header, token, secret, raw payload는 log/audit에 남긴다고 표현하지 않습니다.

@@ -44,6 +44,8 @@ Admin notification retry, notification ignore, outbox dead-letter retry API는 �
 ```
 
 `operatorId`와 `reason`은 audit detail에만 안전하게 남기고 metric tag나 structured log field에는 사용하지 않습니다. 긴 값은 저장 길이에 맞춰 잘립니다.
+`operatorId`는 호출자 입력 context이며 검증된 로그인 identity나 운영자 실명 증명이 아닙니다.
+직접 SQL UPDATE는 API의 audit/order 복구/version 처리를 우회하므로 API와 같은 결과를 보장하지 않습니다.
 
 ## 3. Notification retry due batch
 

@@ -21,7 +21,7 @@ OpenAPI는 포트폴리오 검토자가 Controller, DTO, admin recovery 흐름�
 2. OpenAPI / Swagger import를 선택합니다.
 3. `docs/openapi/openapi.yaml`을 선택합니다.
 4. environment base URL을 `http://localhost:8080`으로 설정합니다.
-5. `POST /api/auth/token`으로 demo token을 발급한 뒤, protected APIs 호출 시 Bearer token으로 사용합니다.
+5. local profile + `APP_SECURITY_MODE=demo`로 실행한 경우에만 `POST /api/auth/token`을 발급해 사용합니다.
 
 Manual import status:
 
@@ -42,8 +42,11 @@ Docker Compose 또는 local profile 실행 방법은 repository root의 `README.
 
 `POST /api/auth/token`은 demo token 발급용 endpoint입니다.
 
-- production auth, refresh token, key rotation, real user store를 의미하지 않습니다.
-- Admin APIs는 Bearer JWT와 ADMIN role이 필요합니다.
+- production auth, refresh token, demo signing-key rotation, real user store를 의미하지 않습니다.
+- demo Admin APIs는 Bearer JWT와 ADMIN role이 필요합니다.
+- disabled/oidc에서는 명세의 legacy 업무/admin 경로가 차단됩니다. OIDC token 발급 API는 없습니다.
+- 외부 JWKS rotation 검증과 demo signing-key rotation은 별개입니다.
+- merchant HTTP API는 아직 없으며 설계 후보를 paths에 넣지 않습니다.
 - token, authorization header, secret 값은 docs, logs, audit detail에 남기지 않습니다.
 
 ## Documented APIs / 문서화된 API

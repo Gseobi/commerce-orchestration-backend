@@ -6,9 +6,9 @@ Spring Boot 기반 commerce orchestration backend입니다.
 
 주문 이후 후속 처리를 단순 순차 호출로 흩뿌리지 않고, `CommerceOrchestrationService`를 중심으로 명시적 상태 전이, failure branching, compensation, retry/dead-letter, admin reprocessing 흐름으로 추적 가능하게 구성했습니다.
 
-이 레포는 pinned 대표 포트폴리오 레포로,
-"커머스 거래 흐름에서 상태·정합성·실패 복구를 어떻게 설계했고, 어디까지 검증했는가"를
-짧은 시간 안에 이해시키는 것을 목표로 합니다.
+이 레포는 포트폴리오의 orchestration 기반을 소규모 사업자용 제품으로 확장하고 있습니다.
+현재는 P0 foundation 진행 중이며 재고·실제 PG·배송 기능이나 실서비스 출시가 완료된 상태는 아닙니다.
+[현재 구현 기준선](/docs/project-status.md)과 [제품화 Roadmap](/docs/productization/README.md)을 먼저 확인합니다.
 
 핵심 포인트는 세 가지입니다.
 
@@ -59,7 +59,8 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 ## Diagram Snapshot
 
-이 그림은 현재 구현 기준의 overall architecture를 한 장으로 요약한 미리보기입니다.
+이 그림은 기존 주문 이후 orchestration 기준선입니다. merchant/membership/OIDC 추가분은 포함하지 않으며,
+최신 구조는 [Architecture Notes](/docs/architecture/README.md)에서 확인합니다.
 
 ![Overall architecture](/docs/diagrams/png/commerce_orchestration_overall_architecture.png)
 
@@ -161,8 +162,9 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 현재 기준선은 아래와 같습니다.
 
-- 비즈니스 외부 진입점은 `OrderController`입니다.
-- 인증용 `AuthController`는 데모 JWT 발급 보조 엔드포인트만 제공합니다.
+- 기존 demo 업무 흐름의 외부 진입점은 `OrderController`입니다. disabled/oidc에서는 차단됩니다.
+- 인증용 `AuthController`는 explicit demo mode에서만 생성되는 JWT 발급 보조 엔드포인트입니다.
+- merchant/store와 membership은 내부 공개 계약만 있으며 HTTP API는 아직 없습니다.
 - `CommerceOrchestrationService`는 주문 이후 흐름 제어를 담당합니다.
 - `NotificationRetryProcessor`는 `RETRY_SCHEDULED` notification event의 due retry 처리를 담당합니다.
 - `payment`, `settlement`, `notification`, `outbox`, `audit`는 각자 자기 repository를 내부 service가 소유합니다.
@@ -324,7 +326,7 @@ body가 없거나 값이 비어 있으면 audit detail에는 `operatorId=unknown
 현재 실제 구현 및 검증 범위는 아래를 포함합니다.
 
 - order create / detail / flow API
-- JWT 발급 및 `/api/**` 보호
+- demo mode의 JWT 발급 및 `/api/**` 보호; OIDC 검증과 legacy 경로 차단
 - orchestration happy path
 - settlement failure compensation
 - notification failure 분기와 ignore policy

@@ -21,6 +21,16 @@
   notification retry claim을 위한 version 컬럼
 - `V6__outbox_processing_claim.sql`  
   outbox publish claim을 위한 version 컬럼
+- `V7__merchant_foundation.sql`
+  merchants/stores, merchant FK, merchant별 store code unique 및 optimistic version
+- `V8__merchant_membership.sql`
+  merchant_memberships, merchant FK, merchant/actor unique, VIEWER/OPERATOR role check
+
+V7/V8은 기존 주문·결제·알림·outbox에 tenant ownership을 추가하지 않습니다.
+현재 운영 SQL은 legacy orchestration 점검용이며 multi-tenant 운영 도구가 아닙니다.
+UPDATE 예시는 영향 row와 이전 상태·외부 처리 결과를 확인하고 승인된 복구 절차에서만 사용합니다.
+직접 UPDATE는 application의 audit/order 완료 복구/version 갱신을 실행하지 않습니다.
+특히 notification IGNORED 변경만으로 order가 COMPLETED가 되지 않으므로 admin API와 동등한 복구로 보지 않습니다.
 
 ## 2. docs/sql의 역할
 

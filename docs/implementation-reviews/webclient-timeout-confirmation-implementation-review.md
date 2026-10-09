@@ -1,5 +1,14 @@
 # WebClient Timeout Confirmation Implementation Review
 
+## Review Snapshot / 후속 구현과의 관계
+
+아래 options/"다음 partition"은 원래 검토 시점의 제안입니다.
+현재는 mock/dummy의 `CONFIRMATION_REQUIRED` 기록과 replay/실패 분기 테스트만 구현했습니다.
+Option B의 confirmation 계약·worker/API까지 완료한 것은 아닙니다.
+"automated timeout confirmation test 없음"은 provider 결과 재조회/복구 테스트에 한정하며,
+unknown 상태 기록 테스트는 [Verification Matrix](../verification-matrix.md)에 존재합니다.
+후속 PG 작업 시점은 [Roadmap](../productization/README.md)의 P3를 따릅니다.
+
 ## Purpose / 목적
 
 이 문서는 WebClient approve 요청 timeout 이후 provider 결제 상태가 불명확해지는 문제를

@@ -1,5 +1,12 @@
 # Test Report
 
+## Latest Baseline / 최신 기준
+
+현재 구현 상태는 [Project Status](project-status.md), 이번 전체 재실행 결과는
+[문서 정합성 보고서](verification/documentation-current-state-audit.md)를 기준으로 확인합니다.
+아래 reliability/observability 및 delivery별 결과는 당시 검증 기록입니다.
+과거 명령·테스트 수를 현재 전체 suite 수나 성능 개선 수치로 해석하지 않습니다.
+
 이 문서는 commerce-orchestration-backend가 주장하는 orchestration, 상태 전이, 실패 분기, 보상 처리, outbox retry/dead-letter, notification retry 흐름이 실제 테스트로 어디까지 검증되었는지 정리합니다.
 
 특히 이 프로젝트는 구현 범위를 과장하지 않고, 현재 검증한 흐름과 아직 남은 운영 확장 범위를 분리해 보여주는 것을 목표로 합니다.
@@ -168,9 +175,13 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - admin 레벨 재처리 / 재검증 API 고도화
 - Prometheus/Grafana dashboard와 alert rule
 - stale `PROCESSING` automatic recovery job
-- refresh token / key rotation / user store 연동
+- refresh token / demo signing-key rotation / user store 연동
+- 실제 IdP production 연결과 merchant membership HTTP/tenant API
 
-## 10. Merchant Foundation Core
+외부 JWKS rotation/cache/장애는 로컬 signed JWT fixture에서 검증했습니다.
+위 demo signing-key rotation 미구현과 구분하며 실제 IdP 운영 검증으로 주장하지 않습니다.
+
+## 10. Merchant Foundation Core (delivery snapshot)
 
 merchant/store core delivery unit의 로컬 정량 검증 결과는
 [Merchant Foundation Core Test Report](/docs/verification/merchant-foundation-core-test-report.md)에 기록합니다.
@@ -182,8 +193,14 @@ merchant/store core delivery unit의 로컬 정량 검증 결과는
 - PostgreSQL/Kafka Docker Compose health: healthy
 - HTTP endpoint는 추가하지 않았으므로 OpenAPI path 변경 없음
 
-## 11. Merchant Membership Access
+## 11. Merchant Membership Access (delivery snapshot)
 
 [Membership Access 정량 보고서](/docs/verification/merchant-membership-access-test-report.md)를 참고합니다.
 단위 68개, 통합 17개가 모두 통과했으며 membership 활성 상태, 사업자 상태, READ/WRITE 권한을 검증합니다.
 HTTP 인증 연결은 아직 구현하지 않았습니다.
+
+## 12. OIDC Resource Server (delivery snapshot)
+
+[OIDC 검증 보고서](verification/oidc-resource-server-test-report.md)에 unit 122개,
+integration 21개, 실패·오류·skip 0개를 기록했습니다.
+Resource Server/mode 격리 구현만 검증했으며 HTTP membership adapter는 미완료입니다.

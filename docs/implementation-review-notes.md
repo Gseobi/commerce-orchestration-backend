@@ -1,5 +1,11 @@
 # Implementation Review Notes
 
+## Review Context / 검토 범위
+
+이 문서는 기존 notification retry trigger와 reliability hardening 구현 검토 기록입니다.
+아래 전역 admin/JWT 권한 설명은 explicit demo mode 기준이며 disabled/oidc에서는 legacy API를 차단합니다.
+merchant/OIDC foundation의 최신 상태는 [Project Status](project-status.md)를 참고합니다.
+
 이 문서는 Codex를 활용해 구현한 notification retry recovery trigger 결과물을 직접 검토하면서, 설계 의도와 실제 코드 구조가 일치하는지 확인한 기록입니다.
 
 검토 초점은 기능 설명 자체보다, 왜 scheduler와 admin-triggered retry endpoint를 trigger 역할로만 두었는지, 그리고 왜 `notification.api` 포트를 통해 Spring Modulith boundary를 지키도록 설계했는지에 있습니다.

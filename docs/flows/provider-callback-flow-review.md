@@ -8,6 +8,10 @@
 
 검토 결론은 현재 포트폴리오 단계에서는 provider callback을 바로 구현하지 않고 Future Scope / Extension Point로 유지하는 것입니다. 실제 provider 연동 강조가 다음 목표가 될 때, 먼저 WebClient timeout confirmation state model을 확정한 뒤 callback flow를 구현하는 편이 적절합니다.
 
+제품화 이후에도 callback은 미구현입니다. 위 결론은 기존 portfolio review의 판단이며,
+실제 PG adapter/callback/confirmation delivery는 [Roadmap](../productization/README.md)의 P3에서 검토합니다.
+당장 다음 개발 단위는 P0 merchant HTTP/membership 연결입니다.
+
 ## Current Implementation Boundary / 현재 구현 경계
 
 현재 payment/order/orchestration 구현은 아래 범위까지 포함합니다.

@@ -1,3 +1,9 @@
+## Historical PR Body / 당시 PR 설명
+
+이 본문은 membership delivery 시점의 기록입니다. PR #3은 main에 병합 완료했습니다.
+아래 미체크 CI 항목은 본문 작성 당시 상태이며 현재 PR 실패나 미병합을 뜻하지 않습니다.
+현재 구현과 최신 검증은 [Project Status](../project-status.md)를 참고합니다.
+
 ## Delivery Unit / 작업 단위
 
 - Module: `merchant`

@@ -95,8 +95,10 @@ Current progress:
 - 내부 `MerchantApplication` contract와 merchant-scoped store 조회
 - merchant 간 store 조회 격리 integration test
 - 내부 membership role/permission 검증, revoke 및 SUSPENDED 접근 차단
+- V8 membership schema와 OIDC Resource Server 검증, canonical actor identity
+- disabled/demo/oidc mode 분리와 legacy HTTP 접근 차단
 
-아직 구현하지 않은 범위는 HTTP tenant context, production identity 및 membership 관리 API,
+아직 구현하지 않은 범위는 HTTP tenant context, 실제 IdP production 연결 및 membership 관리 API,
 기존 주문/결제/알림/outbox의 tenant ownership입니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책

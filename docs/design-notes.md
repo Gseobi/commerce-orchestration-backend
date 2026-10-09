@@ -6,6 +6,9 @@
   
 실제 검증 범위는 [Test Report](/docs/test-report.md)를 기준으로 확인합니다.  
 
+이 문서는 기존 orchestration 설계 선택을 설명합니다. HTTP 주문/admin 흐름은 demo mode 기준이며
+disabled/oidc에서는 차단됩니다. 제품화 P0 범위는 [Project Status](project-status.md)를 참고합니다.
+
 ## 1. 왜 현재 구조를 택했는가
 
 이 프로젝트는 주문 이후의 후속 작업을 여러 controller로 분산시키기보다,  
@@ -153,6 +156,10 @@ Payment는 `paymentRequestId`를 기준으로 provider 중복 호출을 방지�
   notification retry claim을 위한 version 컬럼
 - `V6__outbox_processing_claim.sql`  
   outbox publish claim을 위한 version 컬럼
+- `V7__merchant_foundation.sql`: merchants/stores와 merchant-scoped store constraint
+- `V8__merchant_membership.sql`: membership FK/unique/role constraint
+
+V7/V8은 legacy 거래 테이블의 tenant ownership을 추가하지 않습니다.
 
 애플리케이션은 Flyway 적용 후 JPA `validate`로 매핑 정합성을 확인합니다.
 

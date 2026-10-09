@@ -17,6 +17,7 @@
 - Spring Modulith boundary decisions: 모듈 간 협력은 직접 repository 접근이 아니라 public `*.api` contract를 통해 수행하도록 유지했습니다.
 - Implemented vs Future Scope boundary: 구현되지 않은 흐름은 Future Scope 또는 Not Implemented로 문서화했습니다.
 - Documentation claim discipline: README, docs, OpenAPI의 claim이 code와 tests를 앞서가지 않도록 점검했습니다.
+- 제품화 목표와 외부 OIDC 선택, Resource Server dependency/Security patch 다운로드는 사용자가 승인했습니다.
 
 ## AI-assisted Scope / AI Agent를 보조적으로 활용한 범위
 
@@ -58,4 +59,7 @@
 - 모든 코드가 AI로 자동 생성되었다는 뜻이 아닙니다.
 - 실행하지 않은 tests를 통과했다고 주장하지 않습니다.
 - Prometheus/Grafana dashboard, alert rules, Kafka consumer-based state transition, stale `PROCESSING` automatic recovery job을 implemented로 주장하지 않습니다.
-- Refresh token, key rotation, real user store, provider callback flow, full WebClient timeout confirmation flow가 구현되었다고 주장하지 않습니다.
+- Refresh token, demo signing-key rotation, real user store, provider callback flow, full confirmation flow가 구현되었다고 주장하지 않습니다.
+- OIDC JWT/JWKS fixture 검증은 실제 IdP 운영 연결이나 HTTP membership/전체 tenant 격리 완료가 아닙니다.
+
+최신 제품화 범위와 delivery별 검증은 [Project Status](project-status.md)를 기준으로 확인합니다.

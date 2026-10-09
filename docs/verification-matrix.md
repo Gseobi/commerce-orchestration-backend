@@ -3,6 +3,9 @@
 이 문서는 README/docs의 구현 주장과 실제 코드/테스트 위치를 대조하기 위한 문서입니다.
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
+구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
+[문서 감사 보고서](verification/documentation-current-state-audit.md)를 참고합니다.
+
 Status 값은 다음 의미로 사용합니다.
 
 - `Verified`: 구현이 있고 현재 테스트 커버리지로 확인합니다.

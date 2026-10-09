@@ -1,5 +1,8 @@
 # OIDC Security Design / 검증 보고서
 
+> Historical snapshot: Resource Server 구현 전 설계 unit의 회귀 결과입니다.
+> 후속 구현 완료·미완료 상태는 [Project Status](../project-status.md)를 참고합니다.
+
 - Date: 2026-10-09 (Asia/Seoul)
 - Base: `f1695e6`
 - Branch: `codex/dev-security-oidc-design`

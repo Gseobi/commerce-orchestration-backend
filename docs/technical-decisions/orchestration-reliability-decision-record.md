@@ -1,5 +1,9 @@
 # Orchestration Reliability Decision Record
 
+이 기록은 기존 orchestration/reliability 설계 선택을 설명합니다.
+HTTP 주문/admin 동작은 demo mode 기준이며 OIDC token에 legacy 권한을 부여하지 않습니다.
+제품화 foundation과 후속 순서는 [Project Status](../project-status.md)를 참고합니다.
+
 ## 1. Problem
 
 주문 이후 payment, settlement, notification, outbox publish는 서로 다른 실패 의미를 갖습니다.

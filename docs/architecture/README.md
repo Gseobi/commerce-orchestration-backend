@@ -71,6 +71,17 @@
 - audit
 - admin
 - common
+- merchant (merchant/store와 membership 내부 공개 계약)
+- security / config / auth (mode 분리, OIDC 검증, demo 발급)
+
+### P0 Foundation Boundary
+
+`merchant::api`는 `MerchantApplication`과 `MerchantAccessApplication`을 공개합니다.
+repository/entity는 merchant 내부 소유이며 store 조회는 merchantId를 조건으로 제한합니다.
+security는 아직 merchant 권한 계약을 호출하지 않습니다. 검증된 OIDC identity를 만드는 단계까지만
+구현했고 HTTP membership adapter 및 tenant-scoped Controller는 다음 unit입니다.
+기존 order/payment/notification/outbox에는 merchant ownership이 없으므로 전체 tenant 격리를 주장하지 않습니다.
+[현재 상태](/docs/project-status.md)와 [OIDC 구현 범위](/docs/productization/oidc-resource-server.md)를 참고합니다.
 
 ## 7. Table Relation Overview
 
@@ -78,7 +89,9 @@
 - [PNG 이미지](/docs/diagrams/png/commerce_orchestration_table_relation_overview.png)
 - [PDF 문서](/docs/diagrams/pdf/commerce_orchestration_table_relation_overview.pdf)
 
-이 다이어그램은 `src/main/resources/db/migration` 아래 Flyway migration을 source of truth로 삼아 현재 테이블 구조를 요약한 logical relation overview입니다.
+이 다이어그램은 기존 V1~V6 orchestration 테이블의 logical relation overview입니다.
+V7의 merchants/stores와 V8의 merchant_memberships는 이미지에 포함하지 않습니다.
+전체 최신 스키마의 source of truth는 `src/main/resources/db/migration`이며 [SQL Guide](/docs/sql/README.md)에서 목록을 확인합니다.
 
 실제 FK constraint를 새로 추가한 것이 아니라, 대부분 `order_id`를 기준으로 `orders`와 연결되는 운영/상태 추적 구조를 보여줍니다.
 

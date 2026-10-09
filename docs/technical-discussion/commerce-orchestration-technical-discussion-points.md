@@ -2,6 +2,9 @@
 
 이 문서는 commerce-orchestration-backend의 주요 설계 선택, 구현 근거, 검증 근거, 현재 Boundary를 기술 검토 Q&A 형태로 정리합니다. 모든 설명은 현재 구현된 코드와 테스트 범위를 기준으로 합니다.
 
+아래 내용은 기존 orchestration 중심이며 HTTP 주문/admin 흐름은 demo mode 기준입니다.
+제품화 P0 및 OIDC/membership의 최신 경계는 [Project Status](../project-status.md)를 참고합니다.
+
 ## Q1. 왜 Orchestration 구조를 선택했나요?
 
 ### Technical Explanation
