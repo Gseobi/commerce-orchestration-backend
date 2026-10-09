@@ -13,6 +13,17 @@ Status 값은 다음 의미로 사용합니다.
 
 ## Order / Auth APIs
 
+기존 주문/전역 admin/token APIs의 검증은 명시적인 demo mode 기준입니다.
+disabled/oidc mode는 이 legacy 경로를 차단합니다.
+
+### OIDC Resource Server foundation
+
+- Status: Verified (local signed JWT/JWKS fixture; production provider 미연결)
+- Implementation: `SecurityConfig`, `OidcSecurityConfig`, `StrictClaimShapeJwtDecoder`, `TrustedActorResolver`
+- Tests: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
+- Docs: `docs/productization/oidc-resource-server.md`
+- Notes: token 검증과 demo/legacy 차단만 구현. HTTP membership/tenant APIs는 Future Scope.
+
 ### Order create API
 
 - Status: Verified
@@ -46,7 +57,7 @@ Status 값은 다음 의미로 사용합니다.
 - Tests: `OrderFlowIntegrationTest`, `AdminReprocessingIntegrationTest`
 - Tests: `NotificationRetryProcessorIntegrationTest` token setup
 - Docs: `README.md`, `docs/troubleshooting.md`
-- Notes: 데모용 access token 발급이며 refresh token/user store는 없습니다.
+- Notes: explicit demo mode와 local/test profile 전용. refresh token/user store는 없습니다.
 
 ## Payment / Settlement
 

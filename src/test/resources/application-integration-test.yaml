@@ -11,6 +11,7 @@ spring:
 
 app:
   security:
+    mode: demo
     jwt:
       secret: commerce-orchestration-integration-test-secret-key-2026
       access-token-validity-seconds: 3600

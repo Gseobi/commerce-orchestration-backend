@@ -26,6 +26,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             AuthenticationException authException
     ) throws IOException, ServletException {
         response.setStatus(ErrorCode.UNAUTHORIZED.getHttpStatus().value());
+        response.setHeader(org.springframework.http.HttpHeaders.WWW_AUTHENTICATE, "Bearer");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(
                 response.getWriter(),

@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @RestController
+@ConditionalOnProperty(name = "app.security.mode", havingValue = "demo")
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {

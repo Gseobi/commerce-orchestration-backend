@@ -167,5 +167,6 @@ Payment는 `paymentRequestId`를 기준으로 provider 중복 호출을 방지�
   - 현재는 mock/dummy provider 기반 `CONFIRMATION_REQUIRED` 상태 기록까지만 구현되어 있습니다.
 - provider callback API와 `providerTransactionId` 기반 callback idempotency
   - 검토 문서: [Provider Callback Flow Review](/docs/flows/provider-callback-flow-review.md)
-- refresh token / key rotation / user store
+- refresh token / demo signing-key rotation / user store
+  - OIDC JWKS 검증과 외부 키 교체 fixture는 [OIDC Resource Server](productization/oidc-resource-server.md)에 구현 범위를 기록합니다.
 - admin 레벨 재처리 / 재검증 API 고도화

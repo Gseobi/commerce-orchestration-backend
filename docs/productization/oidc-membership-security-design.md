@@ -2,7 +2,7 @@
 
 - Date: 2026-10-09 (Asia/Seoul)
 - Phase: P0 - Product foundation
-- Status: `Design accepted direction; implementation pending`
+- Status: `Resource Server implemented; membership HTTP adapter pending`
 - Base: `f1695e6` (merchant membership access 병합)
 - 사용자 선택: 외부 OIDC / JWT 검증. 자체 비밀번호 저장소는 만들지 않음.
 
@@ -11,10 +11,11 @@
 현재 `MerchantAccessApplication.authorize`는 신뢰된 actorId를 요구하는 내부 계약입니다.
 `AuthController`는 username/role을 호출자가 지정하는 demo 토큰을 발급합니다.
 기존 `JwtAuthenticationFilter`와 `JwtTokenProvider`는 이 demo용이며 production identity가 아닙니다.
-현재 issuer 검증 및 외부 JWKS 검증이 구현됐다고 주장하지 않습니다.
+2026-10-09 후속 구현에서 mode 분리와 JWKS/issuer 검증을 추가했습니다.
+실제 구현과 테스트 범위는 [OIDC Resource Server](oidc-resource-server.md)를 기준으로 확인합니다.
 
-이번 delivery unit은 설계와 실행 기준선 보고만 추가합니다. 코드, DB, 설정, OpenAPI는 변경하지 않습니다.
-아래 클래스명, 설정, API 경로, 동작은 모두 `Planned`입니다.
+원래 설계 delivery unit은 설계와 실행 기준선 보고만 추가했습니다.
+아래 내용은 target 설계이며 Resource Server 외 HTTP API와 membership 연결은 여전히 `Planned`입니다.
 
 ## 2. 인증과 권한 분리
 
@@ -120,7 +121,9 @@ Compose 파일과 기존 test fixture의 demo 사용은 명시 설정으로 보�
 Spring Security OAuth2 Resource Server + JOSE/Nimbus를 사용하며 수동 JJWT 외부 키 검증을 만들지 않습니다.
 기존 JJWT는 demo mode에만 유지합니다. provider SDK와 OAuth2 client starter는 이 API 서버에 불필요합니다.
 
-**아직 추가/다운로드/승인되지 않았습니다.** 구현 착수 전 다음을 사용자에게 제시합니다.
+2026-10-09 사용자 승인으로 starter를 추가하고 Security 계열만 `7.0.7`로 patch했습니다.
+승인/보안 검토 기록은 [OIDC Resource Server](oidc-resource-server.md)에 남깁니다.
+실제 제공자 연결 전 다음 항목을 계속 확인합니다.
 
 - 정확한 resolved runtime/test transitive versions, license와 공개 advisory 검토
 - 출처: Spring 공식 프로젝트/Maven Central. runtime 권한: 설정된 IdP/JWKS로 outbound HTTPS
