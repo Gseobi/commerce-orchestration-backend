@@ -1,5 +1,8 @@
 # Merchant Foundation Core Test Report
 
+> Historical snapshot: 이 보고서의 count/time/미구현 항목은 해당 delivery 당시 기준입니다.
+> 후속 membership/OIDC 반영 상태는 [Project Status](../project-status.md)를 참고합니다.
+
 ## Scope
 
 - Date: 2026-10-05 Asia/Seoul

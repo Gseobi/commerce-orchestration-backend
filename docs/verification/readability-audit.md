@@ -1,5 +1,9 @@
 # Repository Readability Audit
 
+> Historical audit: 아래 186개 tracked text file 및 development branch 결과는 당시 기준입니다.
+> 현재 전체 파일 수나 최신 feature 검증 결과로 해석하지 않습니다.
+> 최신 문서 상태는 [Project Status](../project-status.md)를 참고합니다.
+
 ## Purpose / 목적
 
 이 문서는 `commerce-orchestration-backend` repository의 tracked text file이 리뷰 가능한 형태인지 점검한 품질 관리 기록입니다.

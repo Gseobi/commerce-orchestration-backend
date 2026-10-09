@@ -29,6 +29,11 @@
 - provider callback observability
 - WebClient timeout confirmation observability
 - Kafka consumer-based state transition observability
+- OIDC/JWKS 장애 전용 counter와 merchant별 운영 dashboard
+
+OIDC 검증 자체는 구현되어 있지만 이 문서의 commerce recovery counter가 JWKS 장애를 계측하지는 않습니다.
+legacy admin API/ADMIN Actuator 접근은 demo mode 기준이며 disabled/oidc에서는 차단됩니다.
+tenant별 관측·운영 완료 여부는 [Project Status](../project-status.md)를 참고합니다.
 
 ## Current Signals / 현재 관측 신호
 

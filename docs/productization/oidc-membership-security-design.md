@@ -56,7 +56,8 @@ HTTP 테스트 JWKS는 test profile의 loopback fixture에만 허용합니다.
 검증 실패는 401, 인증 성공 후 membership 부족/정지 merchant는 기존 계약과 동일한 403입니다.
 없는 merchant와 타 사업자 접근은 동일한 403이며 존재 여부를 노출하지 않습니다.
 JWKS timeout/unknown kid/잘못된 응답은 허용으로 fallback하지 않습니다.
-이미 cache된 유효 공개키로 검증 가능한 요청의 처리는 cache 정책에 따르며 외부 장애와 token 오류를 구분해 관측합니다.
+이미 cache된 유효 공개키로 검증 가능한 요청은 bounded TTL 정책에 따릅니다.
+외부 장애와 token 오류를 구분하는 전용 metric은 Planned이며 현재 구현하지 않았습니다.
 새 키 조회는 bounded timeout/cache로 제한하고 키 교체·cache 만료·장애 시나리오를 검증합니다.
 JWT는 bearer credential이므로 탈취 후 만료까지 replay가 가능할 수 있습니다. logout 즉시 무효화를 보장하지 않습니다.
 짧은 access-token TTL 및 revocation/introspection 필요 여부는 제공자 선정 시 확정합니다.
@@ -103,7 +104,7 @@ Modulith verification은 그대로 유지합니다.
 
 ## 6. Demo Isolation / 설정 전환
 
-다음 구현에서는 인증 mode를 명시적인 `disabled`, `demo`, `oidc`로 구분합니다.
+Resource Server unit에서 인증 mode를 명시적인 `disabled`, `demo`, `oidc`로 구분했습니다.
 default는 `disabled`이며 protected API에 접근을 허용하지 않습니다. local/test demo는 명시적으로 opt-in합니다.
 production + demo 조합, 불명확한 복수 mode, issuer/audience 누락은 startup 실패입니다.
 mode별 filter chain은 상호 배타적이며 같은 요청에서 demo와 OIDC decoder를 동시에 적용하지 않습니다.
@@ -140,6 +141,11 @@ fixture 테스트 성공은 실제 제공자 production 연동 성공을 의미�
 1. `codex/dev-security-oidc-resource-server`: mode 분리, decoder/validator, canonical actor resolver.
 2. `codex/dev-merchant-tenant-http-access`: security membership adapter와 읽기 전용 store HTTP slice/OpenAPI.
 3. 이후 별도 unit: membership provisioning 운영 절차, legacy aggregate ownership/event 전파.
+
+1번은 PR #5로 완료했으며 2~3번은 Planned입니다.
+현재 알고리즘은 RS256만 허용하고 typ은 `at+jwt` 또는 `application/at+jwt`로 고정했습니다.
+다른 알고리즘/token-use claim 지원은 제공자 계약 검토 없이 이미 지원한다고 표현하지 않습니다.
+아래 표는 전체 target의 검증 계획이며 membership HTTP/tenant 연동 행은 아직 미검증입니다.
 
 각 unit은 main 기준 독립 branch/PR, 전체 회귀와 numeric report, CI 통과 후 expected head SHA로 merge합니다.
 

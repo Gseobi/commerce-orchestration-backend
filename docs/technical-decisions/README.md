@@ -6,6 +6,11 @@
 
 ## Decision Records
 
+- [OIDC Membership Security Adapter 설계](../productization/oidc-membership-security-design.md)
+  인증·권한 분리와 Planned HTTP 경계. Resource Server 구현 상태는 [OIDC 구현 범위](../productization/oidc-resource-server.md) 참조.
+- [현재 구현 기준선](../project-status.md)
+  기존 orchestration 선택과 제품화 P0의 완료·미완료 경계를 구분합니다.
+
 - [Orchestration Reliability Decision Record](orchestration-reliability-decision-record.md)
   - orchestration service, explicit state transition, settlement compensation, notification recovery, payment idempotency, retry/publish claim, outbox publisher adapter, observability 경계를 정리합니다.
 

@@ -1,5 +1,7 @@
 # Claim Audit
 
+현재 구현 기준과 보고서 snapshot 구분은 [Project Status](../project-status.md)를 참고합니다.
+
 This document maps major portfolio claims to implementation, tests, and documentation evidence.
 
 Status values:

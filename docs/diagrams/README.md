@@ -4,6 +4,15 @@
 
 draw.io 원본은 `source`, 문서 본문에서 보여주는 이미지는 `png`, 공유용 문서는 `pdf` 아래에 둡니다.
 
+## Scope / 최신 구현과의 관계
+
+기존 자산은 주문 이후 orchestration/reliability 기준선입니다.
+merchant/store(V7), membership(V8), OIDC mode/identity adapter는 포함하지 않습니다.
+특히 table relation overview를 전체 최신 schema로 해석하지 않습니다.
+현재 전체 구조는 [Architecture Notes](/docs/architecture/README.md),
+제품화 target은 [Roadmap](/docs/productization/README.md)을 참고합니다.
+이번 문서 감사에서는 PNG/PDF/drawio를 수정하거나 새로 렌더링하지 않았습니다.
+
 ## Directory
 
 - `/docs/diagrams/source/`

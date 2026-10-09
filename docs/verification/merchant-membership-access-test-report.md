@@ -1,5 +1,8 @@
 # Merchant Membership Access / 로컬 검증 보고서
 
+> Historical snapshot: base/count/time과 미구현 범위는 해당 delivery 당시 기록입니다.
+> 최신 OIDC 및 HTTP adapter 진행 상태는 [Project Status](../project-status.md)를 참고합니다.
+
 - Date: 2026-10-05 (Asia/Seoul)
 - Base: `43472f4` (merchant foundation PR 병합 확인)
 - Branch: `codex/dev-merchant-membership-access`

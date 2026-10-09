@@ -8,6 +8,14 @@
 notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추가되었습니다.
 자세한 설계와 검증 결과는 Architecture Notes, Flow Notes, Diagram Guide, Test Report에 나누어 정리합니다.
 
+## Current Baseline / 현재 상태
+
+현재는 제품화 P0 진행 중입니다. merchant/store(V7), membership(V8), OIDC Resource Server는
+main에 반영했지만 HTTP membership adapter와 기존 거래 데이터의 tenant ownership은 미완료입니다.
+[Project Status](project-status.md)를 최신 구현 안내의 entrypoint로 사용합니다.
+[문서 감사 보고서](verification/documentation-current-state-audit.md)는 이번 점검 범위와 수치를 기록합니다.
+delivery별 test report는 당시 snapshot이며 현재 전체 테스트 수와 혼동하지 않습니다.
+
 ## 1. Recommended Order
 
 처음 보는 사람 기준 권장 읽기 순서는 아래입니다.

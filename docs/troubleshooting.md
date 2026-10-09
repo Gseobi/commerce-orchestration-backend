@@ -8,9 +8,13 @@
 
 ### 1.1 `401 Unauthorized`가 발생하는 경우
 
-- `/api/**`는 JWT 인증이 필요합니다.
-- 먼저 `POST /api/auth/token`으로 access token을 발급받아야 합니다.
-- `Authorization: Bearer <token>` 헤더가 빠졌는지 확인합니다.
+- 먼저 `APP_SECURITY_MODE`와 active profile을 확인합니다. 기본 `disabled`는 업무 API 차단입니다.
+- demo 시 `SPRING_PROFILES_ACTIVE=local APP_SECURITY_MODE=demo ./gradlew bootRun`으로 실행합니다.
+- demo에서만 `POST /api/auth/token` 발급 후 Bearer 헤더를 사용합니다. 실제 사용자 인증이 아닙니다.
+- OIDC protected 요청은 missing/invalid token에 `401`, valid token이어도 현재 legacy 업무/admin은 `403`입니다.
+- OIDC의 issuer/audience/JWKS/RS256/typ 계약은 [OIDC 구현 범위](productization/oidc-resource-server.md)를 확인합니다.
+- `.env`는 Compose 치환용이며 `bootRun`/IDE에 자동 로딩된다고 가정하지 않습니다.
+- token, Authorization, secret이나 raw claim을 오류 보고서에 첨부하지 않습니다.
 
 ### 1.2 로컬에서 PostgreSQL / Kafka 연결이 실패하는 경우
 
@@ -28,7 +32,8 @@
 
 - 기본/로컬/통합 테스트 프로필은 Flyway 적용 후 JPA `ddl-auto=validate`를 사용합니다.
 - 이미 존재하는 로컬 DB가 예전 `ddl-auto=update` 기반 스키마를 가지고 있다면 migration 적용 시점에 충돌할 수 있습니다.
-- 이 경우 로컬 개발 DB를 비우고 migration부터 다시 적용하는 편이 안전합니다.
+- 데이터 보존 여부와 backup을 먼저 확인합니다. 공유/운영 DB를 비우거나 volume을 삭제하지 않습니다.
+- 폐기 가능한 로컬 DB인 경우에만 사용자 확인 후 초기화하며, schema 충돌 원인과 migration history를 먼저 조사합니다.
 - 실제 스키마 기준은 `src/main/resources/db/migration`입니다.
 
 ### 1.5 테스트는 통과하는데 로컬 실행에서만 인프라 오류가 나는 경우

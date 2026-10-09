@@ -76,7 +76,8 @@ READY / RETRY_WAIT -> PROCESSING
 Docker Compose는 어떤 개발 환경에서도 실행 가능한 상태를 유지해야 합니다.
 
 - `compose.yaml`, `.env.example`, application profile 설정을 임의로 깨지 않습니다.
-- PostgreSQL, Kafka, Kafka UI, application service 간 연결성을 훼손하지 않습니다.
+- PostgreSQL, Kafka, Kafka UI 및 별도 실행 애플리케이션 간 연결성을 훼손하지 않습니다.
+- 현재 Compose에는 application service가 없습니다. 실행 형태를 문서와 일치시킵니다.
 - 로컬 실행 편의성을 낮추는 변경은 피합니다.
 - 환경 변수 이름을 변경하면 README, docs, `.env.example`, CI 설정을 함께 수정합니다.
 - code/config/infrastructure 변경 후 Docker 기반 verification이 필요한 경우 PostgreSQL과 Kafka container health를 확인합니다.

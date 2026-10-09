@@ -1,5 +1,8 @@
 # OIDC Resource Server / 검증 보고서
 
+> Delivery snapshot: 아래 실행시간/count는 Resource Server unit 당시 결과입니다.
+> 후속 재실행 결과는 [문서 감사 보고서](documentation-current-state-audit.md)와 구분합니다.
+
 - Date: 2026-10-09 (Asia/Seoul)
 - Base: `95d370b`
 - Branch: `codex/dev-security-oidc-resource-server`

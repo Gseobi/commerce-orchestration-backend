@@ -6,7 +6,11 @@
 
 ## 1. Current Lifecycle
 
-1. JWT 발급
+아래는 explicit local/test `demo` mode의 기존 orchestration 흐름입니다.
+`disabled`/`oidc`에서는 이 업무 API를 차단하며 외부 token 검증만으로 주문 권한을 부여하지 않습니다.
+merchant membership HTTP 흐름은 [설계](/docs/productization/oidc-membership-security-design.md)의 Planned 범위입니다.
+
+1. 데모 JWT 발급 (production 로그인 아님)
 2. 주문 생성
 3. orchestration 시작
 4. payment 승인
