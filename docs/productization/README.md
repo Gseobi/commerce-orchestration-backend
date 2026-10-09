@@ -223,6 +223,13 @@ Exit criteria:
 
 ## 8. Immediate Next Unit
 
-첫 기능 단위는 `merchant foundation`입니다. 구현 전에 aggregate, tenant propagation, authorization boundary, migration, 테스트 시나리오를 작은 설계 문서로 고정합니다. catalog/inventory/payment/shipping은 이 foundation이 완료된 이후 시작합니다.
+`merchant foundation`과 `merchant membership access`는 main에 병합했습니다.
+다음 방향은 사용자 선택에 따라 외부 OIDC/JWT 검증이며, [OIDC Membership Security Adapter 설계](oidc-membership-security-design.md)를 기준으로 진행합니다.
+현재는 설계만 추가했으며 외부 인증과 HTTP membership adapter가 구현된 것은 아닙니다.
+
+다음 구현 단위는 `security OIDC resource server`입니다. 의존성 보안 검토와 사용자 다운로드 승인 후
+demo mode 분리, token 검증, issuer/subject actor mapping을 먼저 구현합니다.
+그다음 읽기 전용 merchant-scoped store HTTP API와 membership 연결을 독립 PR로 진행합니다.
+catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 
 실행 절차는 [Module Delivery Playbook](module-delivery-playbook.md)을 따릅니다.

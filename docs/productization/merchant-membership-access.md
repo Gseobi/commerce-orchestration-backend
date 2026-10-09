@@ -41,3 +41,7 @@ membership 생성과 role 변경 HTTP API, 초대 흐름, production user store�
 
 신뢰할 수 있는 로그인 주체와 membership을 연결하는 security adapter를 구현합니다.
 그 후 merchant-scoped HTTP API와 기존 business aggregate의 ownership 전파를 진행합니다.
+
+사용자 선택으로 외부 OIDC/JWT 검증 방향을 확정했습니다.
+구현 순서와 보안 경계는 [OIDC Membership Security Adapter 설계](oidc-membership-security-design.md)를 따릅니다.
+이 문서 추가만으로 demo JWT가 신뢰된 production identity가 되지는 않습니다.
