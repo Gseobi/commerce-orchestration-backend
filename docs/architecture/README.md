@@ -138,6 +138,11 @@ OutboxPublisherService
 
 `OutboxPublisherService`는 outbox 상태 전이, retry count, backoff, dead-letter 정책을 담당합니다. Kafka 발행 세부 구현과 failure message truncation은 `KafkaOutboxEventPublisher`가 담당합니다.
 
+SaaS hardening 이후 orchestration은 `OrderEventType`만 전달하고 outbox가 topic/JSON을 생성합니다.
+publisher port는 entity 대신 `OutboxPublishMessage` immutable snapshot을 받습니다.
+orchestration→infrastructure 의존과 infrastructure→outbox::entity 의존을 제거하고 entity 공개를 폐쇄했습니다.
+현재 payload에 tenant를 추가한 것은 아닙니다. [보강 계획](/docs/productization/saas-hardening-plan.md)을 참고합니다.
+
 ### Observability Boundary
 
 `CommerceRecoveryMetrics`는 outbox publish, notification retry, admin recovery 결과를 counter로 기록하는 공통 wrapper입니다. metric/log는 상태 전이 책임을 대체하지 않고, 처리 결과를 관측하기 위한 보조 장치입니다.

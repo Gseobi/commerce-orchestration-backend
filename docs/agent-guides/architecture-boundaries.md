@@ -51,6 +51,9 @@ OutboxPublisherService
 - Kafka 예외 처리
 - infra adapter 역할
 
+publisher port는 `OutboxPublishMessage` 값만 전달하고 JPA entity를 공개하지 않습니다.
+orchestration은 `OrderEventType` intent만 요청하며 transport topic/payload 직렬화를 직접 소유하지 않습니다.
+
 Kafka consumer 기반 상태 전이를 추가하려면 별도 설계 문서, 테스트, README 반영이 필요합니다.
 암묵적으로 추가하지 않습니다.
 

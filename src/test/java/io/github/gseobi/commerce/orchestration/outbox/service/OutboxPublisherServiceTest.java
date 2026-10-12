@@ -12,6 +12,7 @@ import io.github.gseobi.commerce.orchestration.common.metrics.CommerceRecoveryMe
 import io.github.gseobi.commerce.orchestration.config.OutboxProperties;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventPublisher;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishResult;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishMessage;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
 import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
@@ -72,7 +73,7 @@ class OutboxPublisherServiceTest {
         when(outboxEventRepository.claimPublishableEvent(eq(1L), eq(List.of(OutboxStatus.READY, OutboxStatus.RETRY_WAIT)), any(LocalDateTime.class)))
                 .thenReturn(1);
         when(outboxEventRepository.findById(1L)).thenReturn(Optional.of(outboxEvent));
-        when(outboxEventPublisher.publish(outboxEvent)).thenReturn(OutboxPublishResult.success());
+        when(outboxEventPublisher.publish(message(outboxEvent))).thenReturn(OutboxPublishResult.success());
 
         int publishedCount = outboxPublisherService.publishReadyEvents(100);
 
@@ -92,7 +93,7 @@ class OutboxPublisherServiceTest {
         when(outboxEventRepository.claimPublishableEvent(eq(1L), eq(List.of(OutboxStatus.READY, OutboxStatus.RETRY_WAIT)), any(LocalDateTime.class)))
                 .thenReturn(1);
         when(outboxEventRepository.findById(1L)).thenReturn(Optional.of(outboxEvent));
-        when(outboxEventPublisher.publish(outboxEvent))
+        when(outboxEventPublisher.publish(message(outboxEvent)))
                 .thenReturn(OutboxPublishResult.failure("IllegalStateException", "broker unavailable"));
 
         int publishedCount = outboxPublisherService.publishReadyEvents(100);
@@ -121,7 +122,7 @@ class OutboxPublisherServiceTest {
         when(outboxEventRepository.claimPublishableEvent(eq(1L), eq(List.of(OutboxStatus.READY, OutboxStatus.RETRY_WAIT)), any(LocalDateTime.class)))
                 .thenReturn(1);
         when(outboxEventRepository.findById(1L)).thenReturn(Optional.of(outboxEvent));
-        when(outboxEventPublisher.publish(outboxEvent))
+        when(outboxEventPublisher.publish(message(outboxEvent)))
                 .thenReturn(OutboxPublishResult.failure("IllegalStateException", "still unavailable"));
 
         int publishedCount = outboxPublisherService.publishReadyEvents(100);
@@ -146,7 +147,7 @@ class OutboxPublisherServiceTest {
         int publishedCount = outboxPublisherService.publishReadyEvents(100);
 
         assertThat(publishedCount).isZero();
-        verify(outboxEventPublisher, never()).publish(ArgumentMatchers.any(OutboxEvent.class));
+        verify(outboxEventPublisher, never()).publish(ArgumentMatchers.any(OutboxPublishMessage.class));
         assertThat(meterRegistry.find("commerce.outbox.publish.skipped")
                 .tag("reason", "claim_failed")
                 .counter()
@@ -166,5 +167,9 @@ class OutboxPublisherServiceTest {
                 .tag("topic", "commerce.notification.requested")
                 .counter()
                 .count();
+    }
+
+    private OutboxPublishMessage message(OutboxEvent event) {
+        return new OutboxPublishMessage(event.getOrderId(), event.getTopic(), event.getEventType(), event.getPayload());
     }
 }

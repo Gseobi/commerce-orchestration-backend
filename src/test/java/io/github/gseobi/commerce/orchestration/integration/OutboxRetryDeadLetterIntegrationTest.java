@@ -11,6 +11,7 @@ import io.github.gseobi.commerce.orchestration.order.dto.response.OrderResponse;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminApplication;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminView;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
+import io.github.gseobi.commerce.orchestration.outbox.api.OrderEventType;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
 import io.github.gseobi.commerce.orchestration.outbox.service.OutboxPublisherService;
 import java.math.BigDecimal;
@@ -64,12 +65,7 @@ class OutboxRetryDeadLetterIntegrationTest extends TestcontainersIntegrationSupp
                 "KRW",
                 "integration-retry-path"
         ));
-        outboxApplication.appendOrderEvent(
-                order.orderId(),
-                "commerce.notification.requested",
-                "NOTIFICATION_REQUESTED",
-                "{\"orderId\":" + order.orderId() + "}"
-        );
+        outboxApplication.appendOrderEvent(order.orderId(), OrderEventType.NOTIFICATION_REQUESTED);
 
         int firstAttempt = outboxPublisherService.publishReadyEvents(10);
         assertThat(firstAttempt).isZero();
@@ -100,12 +96,7 @@ class OutboxRetryDeadLetterIntegrationTest extends TestcontainersIntegrationSupp
                 "KRW",
                 "integration-admin-retry-failure-path"
         ));
-        outboxApplication.appendOrderEvent(
-                order.orderId(),
-                "commerce.notification.requested",
-                "NOTIFICATION_REQUESTED",
-                "{\"orderId\":" + order.orderId() + "}"
-        );
+        outboxApplication.appendOrderEvent(order.orderId(), OrderEventType.NOTIFICATION_REQUESTED);
 
         outboxPublisherService.publishReadyEvents(10);
         outboxPublisherService.publishReadyEvents(10);

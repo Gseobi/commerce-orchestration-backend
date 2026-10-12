@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface OutboxApplication {
 
-    void appendOrderEvent(Long orderId, String topic, String eventType, String payload);
+    void appendOrderEvent(Long orderId, OrderEventType eventType);
 
     List<OutboxEventSummary> getOrderEvents(Long orderId);
 }

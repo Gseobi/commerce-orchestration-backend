@@ -12,6 +12,8 @@ merchant/store(V7), membership(V8), OIDC mode/identity adapter는 포함하지 �
 현재 전체 구조는 [Architecture Notes](/docs/architecture/README.md),
 제품화 target은 [Roadmap](/docs/productization/README.md)을 참고합니다.
 이번 문서 감사에서는 PNG/PDF/drawio를 수정하거나 새로 렌더링하지 않았습니다.
+후속 outbox hardening의 typed intent/immutable publisher 및 제거된 의존성은 기존 자산에 반영하지 않았습니다.
+최신 경계는 [SaaS Hardening Plan](/docs/productization/saas-hardening-plan.md)을 참고합니다.
 
 ## Directory
 

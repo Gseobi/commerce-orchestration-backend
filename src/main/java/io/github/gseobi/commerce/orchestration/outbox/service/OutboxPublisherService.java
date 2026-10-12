@@ -6,6 +6,7 @@ import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.common.metrics.CommerceRecoveryMetrics;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventPublisher;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishResult;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishMessage;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
 import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxStatus;
 import io.github.gseobi.commerce.orchestration.outbox.repository.OutboxEventRepository;
@@ -107,7 +108,8 @@ public class OutboxPublisherService {
         commerceRecoveryMetrics.incrementOutboxPublishAttempt(outboxEvent.getEventType(), outboxEvent.getTopic());
         OutboxPublishResult result;
         try {
-            result = outboxEventPublisher.publish(outboxEvent);
+            result = outboxEventPublisher.publish(new OutboxPublishMessage(outboxEvent.getOrderId(),
+                    outboxEvent.getTopic(), outboxEvent.getEventType(), outboxEvent.getPayload()));
         } catch (RuntimeException exception) {
             String failureCode = exception.getClass().getSimpleName();
             commerceRecoveryMetrics.incrementOutboxPublishFailure(

@@ -2,8 +2,7 @@
         allowedDependencies = {
                 "common",
                 "config",
-                "outbox::api",
-                "outbox::entity"
+                "outbox::api"
         }
 )
 package io.github.gseobi.commerce.orchestration.infrastructure;

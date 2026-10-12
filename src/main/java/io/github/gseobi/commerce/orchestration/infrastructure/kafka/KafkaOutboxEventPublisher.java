@@ -3,7 +3,7 @@ package io.github.gseobi.commerce.orchestration.infrastructure.kafka;
 import io.github.gseobi.commerce.orchestration.config.OutboxProperties;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventPublisher;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishResult;
-import io.github.gseobi.commerce.orchestration.outbox.entity.OutboxEvent;
+import io.github.gseobi.commerce.orchestration.outbox.api.OutboxPublishMessage;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,10 +20,10 @@ class KafkaOutboxEventPublisher implements OutboxEventPublisher {
     private final OutboxProperties outboxProperties;
 
     @Override
-    public OutboxPublishResult publish(OutboxEvent event) {
+    public OutboxPublishResult publish(OutboxPublishMessage message) {
         try {
             SendResult<String, String> result = kafkaTemplate
-                    .send(event.getTopic(), String.valueOf(event.getOrderId()), event.getPayload())
+                    .send(message.topic(), String.valueOf(message.orderId()), message.payload())
                     .get(outboxProperties.publishTimeout().toSeconds(), TimeUnit.SECONDS);
             if (result != null) {
                 return OutboxPublishResult.success();

@@ -1,7 +1,7 @@
 # Project Status / 현재 구현 기준선
 
 - 점검일: 2026-10-12 (Asia/Seoul)
-- 구현 기준: `5a51f31`에서 시작한 merchant tenant HTTP delivery (이 문서와 같은 변경 단위)
+- 구현 기준: `a51487f`에서 시작한 outbox SaaS hardening delivery (이 문서와 같은 변경 단위)
 - 제품화 단계: `P0 In Progress`. 실서비스 출시 완료가 아닙니다.
 
 ## Implemented / 구현된 범위
@@ -55,14 +55,16 @@ docker compose ps
 `test`는 non-integration tag suite이고 H2/mock 및 로컬 JWKS 검증 등을 포함합니다.
 `integrationTest`는 별도 PostgreSQL/Kafka Testcontainers를 사용하므로 Compose DB의 데이터로
 테스트하는 것이 아닙니다. XML suite time 합계는 wall time이나 부하 성능 수치가 아닙니다.
-최신 실행 수치는 [Merchant HTTP 검증 보고서](verification/merchant-tenant-http-access-test-report.md),
+최신 실행 수치는 [Outbox SaaS 보강 보고서](verification/outbox-saas-hardening-test-report.md),
 capability 근거는 [Verification Matrix](verification-matrix.md)에서 확인합니다.
 
 ## Next Unit / 다음 개발 단위
 
 읽기 전용 merchant-scoped store HTTP slice와 membership adapter를 구현했습니다.
-다음 후보는 membership provisioning 운영 경계 설계이며 실제 계정/가입/초대 API는 아직 없습니다.
-legacy aggregate/event ownership 전파도 별도 P0 unit입니다.
+신규 기능 이전에 [SaaS Hardening](productization/saas-hardening-plan.md)을 우선합니다.
+outbox 계약 결합을 완화했고 다음은 legacy 보존/격리와 신규 거래 owner 필수 적용 migration 설계·구현입니다.
+실제 IdP는 후보 비교만 진행하며 선택·계정 생성·설치·운영 연결은 별도 승인입니다.
+실제 계정/가입/초대와 거래 owner migration은 아직 구현하지 않았습니다.
 P0 완료 전 catalog/inventory/payment/shipping 제품 모듈을 완료로 표현하지 않습니다.
 
 ## Document Lifecycle / 문서 수명

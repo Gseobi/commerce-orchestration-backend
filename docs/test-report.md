@@ -3,7 +3,7 @@
 ## Latest Baseline / 최신 기준
 
 현재 구현 상태는 [Project Status](project-status.md), 이번 전체 재실행 결과는
-[Merchant HTTP 검증 보고서](verification/merchant-tenant-http-access-test-report.md)를 기준으로 확인합니다.
+[Outbox SaaS 보강 보고서](verification/outbox-saas-hardening-test-report.md)를 기준으로 확인합니다.
 아래 reliability/observability 및 delivery별 결과는 당시 검증 기록입니다.
 과거 명령·테스트 수를 현재 전체 suite 수나 성능 개선 수치로 해석하지 않습니다.
 
@@ -211,3 +211,8 @@ Resource Server/mode 격리 구현만 검증했으며 HTTP membership adapter는
 위 10~12절은 delivery 당시 snapshot입니다. 후속 store GET HTTP adapter는
 [구현 범위](productization/merchant-tenant-http-access.md)와 [정량 보고서](verification/merchant-tenant-http-access-test-report.md)를 참고합니다.
 현재 실제 IdP 운영 연결과 legacy aggregate/event ownership은 미완료입니다.
+
+## 14. Outbox SaaS Boundary Hardening
+
+typed business intent, outbox serialization, immutable publisher contract로 결합을 완화했습니다.
+unit 147/integration 36의 실행 근거와 미구현 경계는 [정량 보고서](verification/outbox-saas-hardening-test-report.md)를 참고합니다.

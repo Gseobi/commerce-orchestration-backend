@@ -2,7 +2,6 @@ package io.github.gseobi.commerce.orchestration.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFacade;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.order.dto.request.CreateOrderRequest;
@@ -55,8 +54,8 @@ class OrderOutboxHappyPathIntegrationTest extends TestcontainersIntegrationSuppo
             Set<String> topics = new HashSet<>();
             Set<String> payloads = new HashSet<>();
             consumer.subscribe(java.util.List.of(
-                    KafkaTopicNames.SETTLEMENT_REQUESTED,
-                    KafkaTopicNames.NOTIFICATION_REQUESTED
+                    "commerce.settlement.requested",
+                    "commerce.notification.requested"
             ));
 
             org.awaitility.Awaitility.await()
@@ -69,8 +68,8 @@ class OrderOutboxHappyPathIntegrationTest extends TestcontainersIntegrationSuppo
                         }
 
                         assertThat(topics).containsExactlyInAnyOrder(
-                                KafkaTopicNames.SETTLEMENT_REQUESTED,
-                                KafkaTopicNames.NOTIFICATION_REQUESTED
+                                "commerce.settlement.requested",
+                                "commerce.notification.requested"
                         );
                         assertThat(payloads).allMatch(payload -> payload.contains("\"orderId\":" + order.orderId()));
                     });
