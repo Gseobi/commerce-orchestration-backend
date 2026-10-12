@@ -78,8 +78,8 @@
 
 `merchant::api`는 `MerchantApplication`과 `MerchantAccessApplication`을 공개합니다.
 repository/entity는 merchant 내부 소유이며 store 조회는 merchantId를 조건으로 제한합니다.
-security는 아직 merchant 권한 계약을 호출하지 않습니다. 검증된 OIDC identity를 만드는 단계까지만
-구현했고 HTTP membership adapter 및 tenant-scoped Controller는 다음 unit입니다.
+security 내부 HTTP adapter/controller는 검증된 OIDC identity로 `merchant::api`의 READ authorize를 호출합니다.
+그 뒤 단일 스토어 GET을 merchant-scoped application 계약으로 조회합니다. merchant 내부 repository는 참조하지 않습니다.
 기존 order/payment/notification/outbox에는 merchant ownership이 없으므로 전체 tenant 격리를 주장하지 않습니다.
 [현재 상태](/docs/project-status.md)와 [OIDC 구현 범위](/docs/productization/oidc-resource-server.md)를 참고합니다.
 

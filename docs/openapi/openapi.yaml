@@ -8,8 +8,9 @@ info:
 
     Auth, Orders, and Admin Recovery paths are the implemented demo-mode APIs.
     They require APP_SECURITY_MODE=demo with a local/test profile. Default disabled
-    mode and OIDC mode deny business/admin access. OIDC verifies JWT access tokens
-    but does not yet expose tenant-scoped HTTP APIs.
+    mode denies business access. OIDC mode exposes only the merchant-scoped store
+    GET path after verified identity and active READ membership checks; legacy
+    Orders/Admin/Auth paths stay denied. No production IdP connection is claimed.
 
     This document describes only currently implemented endpoints. Future scope
     items such as provider callbacks, WebClient timeout confirmation flow,
@@ -28,7 +29,54 @@ tags:
     description: ADMIN-only recovery APIs for failed notification and outbox sub-units.
   - name: Health
     description: Public health check endpoint.
+  - name: Merchant Stores
+    description: OIDC-only merchant-scoped read access with database membership authorization.
 paths:
+  /api/merchants/{merchantId}/stores/{storeId}:
+    get:
+      tags:
+        - Merchant Stores
+      summary: Read a store within an authorized merchant
+      description: |
+        OIDC mode only. Requires a verified RS256 access token and active VIEWER
+        or OPERATOR membership for an ACTIVE merchant. Identity is derived from
+        validated issuer/subject, never request actorId or role/merchant claims.
+        Unknown merchant or absent/revoked membership returns the same 403.
+        An authorized merchant with an absent or foreign store returns 404.
+        Revoke is checked on the next request, not serialized against in-flight work.
+        Demo/disabled modes do not expose this controller. There are no store
+        registration, list, mutation, or membership provisioning APIs in this slice.
+      operationId: getMerchantStore
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - $ref: '#/components/parameters/StoreId'
+      responses:
+        '200':
+          description: Authorized merchant-scoped store metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseStoreView'
+        '400':
+          description: Non-numeric/overflow path identifier, or non-positive storeId after authorization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Store is absent within the authorized merchant (STORE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/auth/token:
     post:
       tags:
@@ -513,6 +561,24 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    MerchantId:
+      name: merchantId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 1
+    StoreId:
+      name: storeId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 1
     OrderId:
       name: orderId
       in: path
@@ -581,7 +647,7 @@ components:
                 message: 인증이 필요합니다.
                 data: null
     Forbidden:
-      description: Authenticated user does not have the required role.
+      description: Authenticated identity lacks permission, active membership, or an active merchant; route may be denied by mode.
       content:
         application/json:
           schema:
@@ -620,6 +686,43 @@ components:
                 message: 서버 내부 오류가 발생했습니다.
                 data: null
   schemas:
+    ApiResponseStoreView:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/StoreView'
+    StoreView:
+      type: object
+      required:
+        - id
+        - merchantId
+        - code
+        - name
+        - status
+        - timezone
+        - recoveryPolicy
+      properties:
+        id:
+          type: integer
+          format: int64
+        merchantId:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        timezone:
+          type: string
+          example: Asia/Seoul
+        recoveryPolicy:
+          type: string
+          enum: [MANUAL_REVIEW]
     ApiResponseBase:
       type: object
       required:

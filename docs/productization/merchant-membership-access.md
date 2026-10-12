@@ -4,8 +4,8 @@
 
 P0의 두 번째 단위는 내부 `MerchantAccessApplication.authorize(merchantId, actorId, permission)` 계약입니다.
 actorId는 검증된 issuer/subject에서 만든 canonical identity를 전달해야 합니다.
-OIDC resolver는 구현했지만 HTTP 연결은 아직 하지 않았습니다.
-현재 demo JWT나 request body의 actorId를 연결하면 사용자가 identity를 위조할 수 있으므로 이 계약을 HTTP에 연결하지 않습니다.
+OIDC resolver와 스토어 GET의 [HTTP adapter](merchant-tenant-http-access.md)를 구현했습니다.
+demo JWT나 request body의 actorId는 identity 위조 가능성이 있으므로 연결하지 않습니다.
 
 - `VIEWER`: READ
 - `OPERATOR`: READ, WRITE
@@ -41,7 +41,8 @@ membership 생성과 role 변경 HTTP API, 초대 흐름, production user store�
 ## 다음 단위
 
 OIDC Resource Server는 [구현 범위](oidc-resource-server.md)까지 완료했습니다.
-다음은 검증된 주체와 membership을 연결하는 HTTP adapter 및 읽기 전용 store slice입니다.
+검증된 주체와 membership을 연결하는 HTTP adapter 및 읽기 전용 store slice까지 구현했습니다.
+다음은 membership provisioning 운영 경계의 설계/검증입니다.
 기존 business aggregate/event의 ownership 전파는 이후 별도 unit입니다.
 
 사용자 선택으로 외부 OIDC/JWT 검증 방향을 확정했습니다.

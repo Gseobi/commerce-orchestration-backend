@@ -34,19 +34,20 @@
 - merchant membership의 VIEWER/OPERATOR 권한 확인 및 revoke/정지 사업자 접근 차단
 - OIDC Resource Server의 RS256/JWKS 검증, issuer/audience/claim 검증, canonical actor identity
 - disabled/demo/oidc 분리 및 OIDC에서 legacy business/admin API 접근 차단
+- OIDC-only store GET, READ membership 확인, HTTP cross-tenant/revoke/spoof 차단
 
 근거는 [Verification Matrix](../verification-matrix.md)와 [Claim Audit](../verification/claim-audit.md)에서 관리합니다.
 
 ### Not implemented
 
-- HTTP tenant context와 기존 주문/결제/알림/outbox 데이터의 tenant 격리
+- store GET 외 HTTP tenant 적용과 기존 주문/결제/알림/outbox 데이터의 tenant 격리
 - 상품, 옵션, SKU, 주문 라인
 - 재고 원장, 예약, 차감, 해제, 부족 알림
 - 실제 PG credential 관리와 provider별 production adapter
 - 실제 환불/부분 환불과 provider callback 처리
 - 사업자별 영업 시간과 복구 정책
 - 배송, 택배사 접수, 송장, 배송 추적
-- production user store, HTTP authorization 연동, membership 관리 API
+- 실제 IdP production 연결, membership 관리 API (자체 비밀번호 저장소는 선택하지 않음)
 - dashboard/alert rule과 장기 `PROCESSING` 자동 복구
 
 ## 4. Target Module Map
@@ -97,8 +98,9 @@ Current progress:
 - 내부 membership role/permission 검증, revoke 및 SUSPENDED 접근 차단
 - V8 membership schema와 OIDC Resource Server 검증, canonical actor identity
 - disabled/demo/oidc mode 분리와 legacy HTTP 접근 차단
+- 읽기 전용 store HTTP slice와 `merchant::api` READ membership adapter
 
-아직 구현하지 않은 범위는 HTTP tenant context, 실제 IdP production 연결 및 membership 관리 API,
+아직 구현하지 않은 범위는 추가 HTTP tenant 적용, 실제 IdP production 연결 및 membership 관리 API,
 기존 주문/결제/알림/outbox의 tenant ownership입니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책
@@ -230,10 +232,11 @@ Exit criteria:
 `merchant foundation`과 `merchant membership access`는 main에 병합했습니다.
 다음 방향은 사용자 선택에 따라 외부 OIDC/JWT 검증이며, [OIDC Membership Security Adapter 설계](oidc-membership-security-design.md)를 기준으로 진행합니다.
 Resource Server 및 demo mode 분리는 [OIDC Resource Server](oidc-resource-server.md)로 구현했습니다.
-실제 IdP production 연결과 HTTP membership adapter는 아직 구현 완료가 아닙니다.
+읽기 전용 HTTP membership adapter는 [Merchant HTTP Access](merchant-tenant-http-access.md)로 구현했습니다.
+실제 IdP production 연결과 membership 관리 API는 아직 미완료입니다.
 
-다음 구현 단위는 읽기 전용 merchant-scoped store HTTP API와 membership 연결입니다.
-Resource Server를 재사용하되 tenant 권한 검증을 완료한 단일 slice만 독립 PR로 노출합니다.
+다음 후보는 membership provisioning 운영 경계 설계입니다.
+canonical actor identity의 등록·권한 부여·회수 감사와 운영 절차를 정하고 기존 aggregate/event ownership을 후속 unit으로 전파합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 
 실행 절차는 [Module Delivery Playbook](module-delivery-playbook.md)을 따릅니다.

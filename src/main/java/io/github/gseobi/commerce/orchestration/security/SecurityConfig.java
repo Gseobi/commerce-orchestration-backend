@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/merchants/**").denyAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll())
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class);
@@ -62,10 +63,11 @@ public class SecurityConfig {
             RestAuthenticationEntryPoint entryPoint, RestAccessDeniedHandler denied, RequestTraceFilter trace)
             throws Exception {
         common(http, entryPoint, trace);
-        // No tenant-scoped HTTP API is exposed in this delivery unit.
+        // Expose only the verified read slice; legacy and future routes stay closed.
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/merchants/{merchantId}/stores/{storeId}").authenticated()
                 .anyRequest().denyAll())
                 .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(denied))
                 .oauth2ResourceServer(resource -> resource

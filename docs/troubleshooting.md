@@ -12,6 +12,9 @@
 - demo 시 `SPRING_PROFILES_ACTIVE=local APP_SECURITY_MODE=demo ./gradlew bootRun`으로 실행합니다.
 - demo에서만 `POST /api/auth/token` 발급 후 Bearer 헤더를 사용합니다. 실제 사용자 인증이 아닙니다.
 - OIDC protected 요청은 missing/invalid token에 `401`, valid token이어도 현재 legacy 업무/admin은 `403`입니다.
+- OIDC store GET은 별도로 active READ membership이 필요합니다. role/scope/요청 actorId로 권한을 만들지 않습니다.
+- 해당 merchant의 권한이 없으면 `403`, 권한 확인 후 store가 없거나 다른 merchant 소속이면 `404`입니다.
+- 실제 membership 생성 API는 없으므로 demo username으로 운영 DB membership을 임의 생성하지 않습니다.
 - OIDC의 issuer/audience/JWKS/RS256/typ 계약은 [OIDC 구현 범위](productization/oidc-resource-server.md)를 확인합니다.
 - `.env`는 Compose 치환용이며 `bootRun`/IDE에 자동 로딩된다고 가정하지 않습니다.
 - token, Authorization, secret이나 raw claim을 오류 보고서에 첨부하지 않습니다.

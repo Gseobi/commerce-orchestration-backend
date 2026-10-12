@@ -29,7 +29,7 @@ demo token 발급 API는 production auth가 아니라 demo-only임을 명시합�
 real user store, refresh token, demo signing-key rotation이 구현되지 않았다면 production auth처럼 표현하지 않습니다.
 외부 JWKS rotation의 fixture 검증과 실제 IdP 운영 검증을 구분합니다.
 현재 명세의 legacy APIs는 demo mode 전용이며 disabled/oidc에서 차단됩니다.
-미구현 merchant HTTP slice를 내부 membership 계약만으로 OpenAPI에 추가하지 않습니다.
+store GET의 OIDC-only READ membership 조건을 명시합니다. 추가 merchant HTTP slice는 구현 전에 paths에 넣지 않습니다.
 
 ## Admin Endpoint Auth / Admin API
 

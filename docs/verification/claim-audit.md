@@ -274,4 +274,13 @@ Evidence Ladder는 README/docs claim이 코드보다 앞서가지 않도록 아�
 - Status: Verified (local fixtures, not a production provider connection)
 - Evidence: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
 - Notes: RS256, issuer/audience/claim types, token kind, JWKS faults and mode isolation.
-  Merchant membership HTTP authorization is still Future Scope.
+  The OIDC-only store GET now uses database READ membership authorization.
+  Membership provisioning and legacy aggregate/event tenant ownership remain Future Scope.
+
+### Merchant-scoped HTTP store read uses trusted OIDC identity
+
+- Status: Verified (local signed JWT/JWKS and PostgreSQL/Kafka fixtures)
+- Evidence: `MerchantRequestAccessAdapter`, `MerchantStoreController`, `MerchantApplication#getStore`
+- Tests: adapter/controller unit tests, `OidcApplicationIntegrationTest`, `SecurityModeTest`
+- Notes: Request identity selectors and token roles never provision membership. Demo ADMIN cannot access the route.
+- Boundary: One read-only slice, not complete production IdP setup or multi-tenant commerce protection.
