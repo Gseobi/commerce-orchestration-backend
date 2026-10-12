@@ -3,7 +3,6 @@
                 "common",
                 "common::error",
                 "common::metrics",
-                "infrastructure",
                 "order::api",
                 "payment::api",
                 "settlement::api",

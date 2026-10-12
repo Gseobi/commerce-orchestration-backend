@@ -4,7 +4,7 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[Merchant HTTP 검증 보고서](verification/merchant-tenant-http-access-test-report.md)를 참고합니다.
+[Outbox SaaS 보강 보고서](verification/outbox-saas-hardening-test-report.md)를 참고합니다.
 
 Status 값은 다음 의미로 사용합니다.
 
@@ -185,6 +185,8 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Tests: [OutboxPublisherServiceTest](/src/test/java/io/github/gseobi/commerce/orchestration/outbox/service/OutboxPublisherServiceTest.java), `OrderOutboxHappyPathIntegrationTest`
 - Docs: `README.md`, `docs/architecture/README.md`, `docs/flows/README.md`
 - Notes: 상태 전이는 service가, Kafka send는 infrastructure adapter가 담당합니다.
+- Notes: typed `OrderEventType` intent와 JSON 직렬화는 outbox 소유. adapter는 entity 대신 immutable `OutboxPublishMessage`만 받습니다.
+- Tests: `OutboxServiceTest`, `KafkaOutboxEventPublisherTest`, 기존 unit/Kafka integration/Modulith 회귀.
 
 ### Outbox processing claim
 

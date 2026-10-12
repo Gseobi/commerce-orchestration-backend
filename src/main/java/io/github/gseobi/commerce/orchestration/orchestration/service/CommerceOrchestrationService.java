@@ -2,7 +2,6 @@ package io.github.gseobi.commerce.orchestration.orchestration.service;
 
 import io.github.gseobi.commerce.orchestration.audit.api.AuditRecorder;
 import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
-import io.github.gseobi.commerce.orchestration.infrastructure.kafka.KafkaTopicNames;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationApplication;
 import io.github.gseobi.commerce.orchestration.notification.api.NotificationFailureView;
 import io.github.gseobi.commerce.orchestration.orchestration.entity.OrchestrationStep;
@@ -14,6 +13,7 @@ import io.github.gseobi.commerce.orchestration.order.api.OrderFlowResponse;
 import io.github.gseobi.commerce.orchestration.order.api.OrderFlowUseCase;
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
+import io.github.gseobi.commerce.orchestration.outbox.api.OrderEventType;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxEventSummary;
 import io.github.gseobi.commerce.orchestration.payment.api.PaymentApplication;
 import io.github.gseobi.commerce.orchestration.payment.api.PaymentResponse;
@@ -81,13 +81,13 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
             orderWorkflowAccess.markSettlementRequested(orderId);
             recordStep(orderId, OrchestrationStepType.SETTLEMENT, OrchestrationStepStatus.SUCCESS,
                     "Settlement requested: settlementId=" + settlementId);
-            createOutboxEvent(orderId, KafkaTopicNames.SETTLEMENT_REQUESTED, "SETTLEMENT_REQUESTED");
+            outboxApplication.appendOrderEvent(orderId, OrderEventType.SETTLEMENT_REQUESTED);
 
             Long notificationEventId = notificationApplication.request(orderId, order.description());
             orderWorkflowAccess.markNotificationRequested(orderId);
             recordStep(orderId, OrchestrationStepType.NOTIFICATION, OrchestrationStepStatus.SUCCESS,
                     "Notification requested: notificationEventId=" + notificationEventId);
-            createOutboxEvent(orderId, KafkaTopicNames.NOTIFICATION_REQUESTED, "NOTIFICATION_REQUESTED");
+            outboxApplication.appendOrderEvent(orderId, OrderEventType.NOTIFICATION_REQUESTED);
 
             orderWorkflowAccess.markCompleted(orderId);
             recordStep(orderId, OrchestrationStepType.COMPLETE, OrchestrationStepStatus.SUCCESS,
@@ -141,11 +141,6 @@ class CommerceOrchestrationService implements OrderFlowUseCase {
             String detail
     ) {
         orchestrationStepRepository.save(new OrchestrationStep(orderId, stepType, status, detail));
-    }
-
-    private void createOutboxEvent(Long orderId, String topic, String eventType) {
-        String payload = "{\"orderId\":" + orderId + ",\"eventType\":\"" + eventType + "\"}";
-        outboxApplication.appendOrderEvent(orderId, topic, eventType, payload);
     }
 
     private String paymentRequestId(Long orderId) {

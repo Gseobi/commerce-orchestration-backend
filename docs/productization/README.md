@@ -235,8 +235,9 @@ Resource Server 및 demo mode 분리는 [OIDC Resource Server](oidc-resource-ser
 읽기 전용 HTTP membership adapter는 [Merchant HTTP Access](merchant-tenant-http-access.md)로 구현했습니다.
 실제 IdP production 연결과 membership 관리 API는 아직 미완료입니다.
 
-다음 후보는 membership provisioning 운영 경계 설계입니다.
-canonical actor identity의 등록·권한 부여·회수 감사와 운영 절차를 정하고 기존 aggregate/event ownership을 후속 unit으로 전파합니다.
+신규 제품 기능 이전에 [SaaS Hardening Plan](saas-hardening-plan.md)의 미완성 경계 보강을 우선합니다.
+사용자 결정으로 IdP는 비교·연결 설계만 진행하고 기존 데이터는 legacy 격리/보존, 신규 SaaS 거래부터 tenant 필수입니다.
+첫 단위는 outbox 계약 결합 완화이며 이후 ownership migration/거래 vertical slice와 identity onboarding을 분리합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 
 실행 절차는 [Module Delivery Playbook](module-delivery-playbook.md)을 따릅니다.

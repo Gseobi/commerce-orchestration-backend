@@ -1,5 +1,8 @@
 package io.github.gseobi.commerce.orchestration.outbox.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.gseobi.commerce.orchestration.outbox.api.OrderEventType;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxApplication;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminApplication;
 import io.github.gseobi.commerce.orchestration.outbox.api.OutboxAdminView;
@@ -21,11 +24,28 @@ class OutboxService implements OutboxApplication, OutboxAdminApplication {
 
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxPublisherService outboxPublisherService;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     @Override
-    public void appendOrderEvent(Long orderId, String topic, String eventType, String payload) {
-        outboxEventRepository.save(new OutboxEvent(orderId, topic, eventType, payload, OutboxStatus.READY));
+    public void appendOrderEvent(Long orderId, OrderEventType eventType) {
+        if (orderId == null || orderId <= 0 || eventType == null) {
+            throw new IllegalArgumentException("Positive orderId and supported event type are required");
+        }
+        String topic = switch (eventType) {
+            case SETTLEMENT_REQUESTED -> "commerce.settlement.requested";
+            case NOTIFICATION_REQUESTED -> "commerce.notification.requested";
+        };
+        String payload;
+        try {
+            payload = objectMapper.writeValueAsString(new OrderEventPayload(orderId, eventType.name()));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Order event serialization failed", exception);
+        }
+        outboxEventRepository.save(new OutboxEvent(orderId, topic, eventType.name(), payload, OutboxStatus.READY));
+    }
+
+    private record OrderEventPayload(Long orderId, String eventType) {
     }
 
     @Override
