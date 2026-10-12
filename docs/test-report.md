@@ -3,7 +3,7 @@
 ## Latest Baseline / 최신 기준
 
 현재 구현 상태는 [Project Status](project-status.md), 이번 전체 재실행 결과는
-[문서 정합성 보고서](verification/documentation-current-state-audit.md)를 기준으로 확인합니다.
+[Merchant HTTP 검증 보고서](verification/merchant-tenant-http-access-test-report.md)를 기준으로 확인합니다.
 아래 reliability/observability 및 delivery별 결과는 당시 검증 기록입니다.
 과거 명령·테스트 수를 현재 전체 suite 수나 성능 개선 수치로 해석하지 않습니다.
 
@@ -31,7 +31,8 @@
 | `integrationTest` | Pass | PostgreSQL / Kafka Testcontainers 검증 |
 | JWT token issuance | Implemented | explicit local/test demo mode의 `/api/auth/token` |
 | `/api/**` authentication | Implemented | demo mode 인증 없는 주문 생성 `401`; disabled/oidc legacy 차단 |
-| OIDC Resource Server | Verified (fixture) | RS256/JWKS/issuer/audience/token-kind 검증 및 mode 분리; 실제 IdP/HTTP tenant adapter 미완료 |
+| OIDC Resource Server | Verified (fixture) | RS256/JWKS/issuer/audience/token-kind 검증 및 mode 분리; 실제 IdP 연결 미완료 |
+| Merchant store HTTP GET | Verified (fixture) | OIDC-only READ membership, cross-tenant/revoke/정지/spoof/mode/입력 오류 검증 |
 | Order create / detail / flow API | Implemented | `OrderFlowIntegrationTest` |
 | Orchestration happy path | Implemented | 상태 전이, step, outbox 생성 검증 |
 | Settlement failure compensation | Implemented | payment cancel compensation 검증 |
@@ -176,7 +177,7 @@ GitHub Actions에서는 이 조합이 초기화 시점 `ExceptionInInitializerEr
 - Prometheus/Grafana dashboard와 alert rule
 - stale `PROCESSING` automatic recovery job
 - refresh token / demo signing-key rotation / user store 연동
-- 실제 IdP production 연결과 merchant membership HTTP/tenant API
+- 실제 IdP production 연결, membership 관리와 store GET 이외 tenant API/legacy ownership
 
 외부 JWKS rotation/cache/장애는 로컬 signed JWT fixture에서 검증했습니다.
 위 demo signing-key rotation 미구현과 구분하며 실제 IdP 운영 검증으로 주장하지 않습니다.
@@ -204,3 +205,9 @@ HTTP 인증 연결은 아직 구현하지 않았습니다.
 [OIDC 검증 보고서](verification/oidc-resource-server-test-report.md)에 unit 122개,
 integration 21개, 실패·오류·skip 0개를 기록했습니다.
 Resource Server/mode 격리 구현만 검증했으며 HTTP membership adapter는 미완료입니다.
+
+## 13. Merchant Tenant HTTP Access
+
+위 10~12절은 delivery 당시 snapshot입니다. 후속 store GET HTTP adapter는
+[구현 범위](productization/merchant-tenant-http-access.md)와 [정량 보고서](verification/merchant-tenant-http-access-test-report.md)를 참고합니다.
+현재 실제 IdP 운영 연결과 legacy aggregate/event ownership은 미완료입니다.

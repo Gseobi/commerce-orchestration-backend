@@ -2,7 +2,7 @@
 
 - Date: 2026-10-09 (Asia/Seoul)
 - Phase: P0 - Product foundation
-- Status: `Resource Server implemented; membership HTTP adapter pending`
+- Status: `Resource Server and read-only store HTTP adapter implemented; provisioning/legacy ownership pending`
 - Base: `f1695e6` (merchant membership access 병합)
 - 사용자 선택: 외부 OIDC / JWT 검증. 자체 비밀번호 저장소는 만들지 않음.
 
@@ -15,7 +15,8 @@
 실제 구현과 테스트 범위는 [OIDC Resource Server](oidc-resource-server.md)를 기준으로 확인합니다.
 
 원래 설계 delivery unit은 설계와 실행 기준선 보고만 추가했습니다.
-아래 내용은 target 설계이며 Resource Server 외 HTTP API와 membership 연결은 여전히 `Planned`입니다.
+Resource Server와 [스토어 GET HTTP adapter](merchant-tenant-http-access.md)는 구현했습니다.
+아래 전체 target 중 provisioning과 legacy aggregate/event ownership은 여전히 Planned입니다.
 
 ## 2. 인증과 권한 분리
 
@@ -85,8 +86,7 @@ membership 관리 API와 셀프 가입/초대/계정 연결은 이번 구현 단
 
 ## 5. HTTP Tenant Boundary
 
-첫 HTTP slice 후보는 읽기 전용 `GET /api/merchants/{merchantId}/stores/{storeId}`입니다.
-아직 구현/OpenAPI에 추가하지 않습니다.
+첫 HTTP slice는 읽기 전용 `GET /api/merchants/{merchantId}/stores/{storeId}`이며 구현/OpenAPI에 반영했습니다.
 
 - actorId는 검증된 SecurityContext에서만 얻음. header/body/query의 actorId를 받지 않음.
 - merchantId는 path 한 곳에서만 지정. 현재 slice에는 다른 tenant selector가 없음.
@@ -142,10 +142,11 @@ fixture 테스트 성공은 실제 제공자 production 연동 성공을 의미�
 2. `codex/dev-merchant-tenant-http-access`: security membership adapter와 읽기 전용 store HTTP slice/OpenAPI.
 3. 이후 별도 unit: membership provisioning 운영 절차, legacy aggregate ownership/event 전파.
 
-1번은 PR #5로 완료했으며 2~3번은 Planned입니다.
+1번은 PR #5로 완료했으며 2번은 [HTTP 구현 범위](merchant-tenant-http-access.md)까지 완료했습니다. 3번은 Planned입니다.
 현재 알고리즘은 RS256만 허용하고 typ은 `at+jwt` 또는 `application/at+jwt`로 고정했습니다.
 다른 알고리즘/token-use claim 지원은 제공자 계약 검토 없이 이미 지원한다고 표현하지 않습니다.
-아래 표는 전체 target의 검증 계획이며 membership HTTP/tenant 연동 행은 아직 미검증입니다.
+아래 표는 전체 target의 검증 계획입니다. store READ HTTP 행은 검증했으며 WRITE HTTP API는 없습니다.
+VIEWER WRITE 거부는 내부 membership suite의 검증입니다. 실제 IdP 연동은 fixture로 대신 주장하지 않습니다.
 
 각 unit은 main 기준 독립 branch/PR, 전체 회귀와 numeric report, CI 통과 후 expected head SHA로 merge합니다.
 

@@ -46,7 +46,9 @@ Docker Compose 또는 local profile 실행 방법은 repository root의 `README.
 - demo Admin APIs는 Bearer JWT와 ADMIN role이 필요합니다.
 - disabled/oidc에서는 명세의 legacy 업무/admin 경로가 차단됩니다. OIDC token 발급 API는 없습니다.
 - 외부 JWKS rotation 검증과 demo signing-key rotation은 별개입니다.
-- merchant HTTP API는 아직 없으며 설계 후보를 paths에 넣지 않습니다.
+- OIDC-only `GET /api/merchants/{merchantId}/stores/{storeId}`만 active READ membership 확인 후 제공합니다.
+- [HTTP 구현 범위](../productization/merchant-tenant-http-access.md)에서 400/401/403/404와 mode별 경계를 확인합니다.
+- membership 관리·store 등록/목록/수정 API는 추가하지 않습니다. 실제 IdP/API client 자동 설정도 없습니다.
 - token, authorization header, secret 값은 docs, logs, audit detail에 남기지 않습니다.
 
 ## Documented APIs / 문서화된 API

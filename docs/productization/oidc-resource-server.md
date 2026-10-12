@@ -16,7 +16,7 @@
 - issuer/subject의 versioned length-prefixed SHA-256 identity, 69자 `oidc:` actorId
 - token role/scope/merchant claim을 권한으로 매핑하지 않음
 - 401/403 응답은 기존 envelope의 고정 오류 메시지. token/claim/검증 세부 정보를 반환하지 않음
-- OIDC에서도 아직 business/admin API는 전부 deny. membership 연결은 다음 별도 unit
+- OIDC legacy business/admin API는 deny. 후속 [Merchant HTTP Access](merchant-tenant-http-access.md)에서 단일 store GET만 READ 확인 후 허용
 
 ## Configuration / 설정
 
@@ -76,8 +76,9 @@ resolved Nimbus JOSE JWT는 `10.4`입니다. 기존 JJWT는 demo bean에서만 �
 `OidcPropertiesTest`, `SecurityModeTest`는 설정 거부와 HTTP 401/403·demo bean 분리를 확인합니다.
 `OidcApplicationIntegrationTest`는 실제 Boot + PostgreSQL/Kafka에서 OIDC mode와 legacy 차단을 확인합니다.
 `TrustedActorResolverTest`는 identity 안정성/경계/다른 issuer/입력 거부를 확인합니다.
-Modulith 경계는 변경하지 않습니다. security가 아직 merchant module을 호출하지 않습니다.
+원래 Resource Server unit에서는 Modulith 경계를 변경하지 않았습니다.
+후속 HTTP unit에서 security의 `merchant::api` 의존만 추가해 READ 권한을 확인하며 경계 검증을 유지합니다.
 
-Future Scope: HTTP membership adapter, tenant API/OpenAPI, membership provisioning,
+Future Scope: 추가 tenant APIs, membership provisioning,
 기존 aggregate/event tenant ownership, 실제 provider 연결, MFA/계정 복구/refresh lifecycle.
 모바일 토큰 만료 알림은 이번 개발 범위와 무관하며 사용자 요청대로 보류 상태입니다.

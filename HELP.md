@@ -15,7 +15,7 @@ SPRING_PROFILES_ACTIVE=local APP_SECURITY_MODE=demo ./gradlew bootRun
 ```
 
 기본 `disabled`는 인증 우회가 아니라 업무 API 차단입니다.
-OIDC 설정을 넣어도 아직 merchant HTTP API는 제공되지 않습니다.
+OIDC의 스토어 단건 GET만 active READ membership을 확인해 제공합니다. 등록/목록/수정 API는 없습니다.
 `.env` 값은 `bootRun`에 자동 전달되지 않습니다.
 
 ## 검증

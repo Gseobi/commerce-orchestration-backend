@@ -1,13 +1,18 @@
 package io.github.gseobi.commerce.orchestration.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.gseobi.commerce.orchestration.auth.controller.AuthController;
 import io.github.gseobi.commerce.orchestration.config.AppSecurityProperties;
+import io.github.gseobi.commerce.orchestration.merchant.api.MerchantAccessApplication;
+import io.github.gseobi.commerce.orchestration.merchant.api.MerchantApplication;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -33,6 +38,7 @@ class SecurityModeTest {
                     .apply(springSecurity()).build();
             assertThat(mvc.perform(post("/api/auth/token")).andReturn().getResponse().getStatus()).isEqualTo(401);
             assertThat(mvc.perform(get("/api/orders/1")).andReturn().getResponse().getStatus()).isEqualTo(401);
+            assertThat(mvc.perform(get("/api/merchants/1/stores/1")).andReturn().getResponse().getStatus()).isEqualTo(401);
         });
     }
 
@@ -64,6 +70,24 @@ class SecurityModeTest {
     void incompleteOidcConfigurationFailsStartup() {
         runner.withPropertyValues("app.security.mode=oidc")
                 .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void demoAdminCannotAccessMerchantReadSlice() {
+        runner.withPropertyValues("app.security.mode=demo", "spring.profiles.active=local",
+                "app.security.jwt.secret=local-fixture-signing-key-with-32-bytes",
+                "app.security.jwt.issuer=demo", "app.security.jwt.access-token-validity-seconds=3600")
+                .run(context -> {
+                    var mvc = MockMvcBuilders.webAppContextSetup(context.getSourceApplicationContext())
+                            .apply(springSecurity()).build();
+                    String token = context.getBean(JwtTokenProvider.class)
+                            .createAccessToken("actor-1", java.util.List.of("ROLE_ADMIN"));
+                    mvc.perform(get("/api/merchants/1/stores/1")
+                                    .header("Authorization", "Bearer " + token))
+                            .andExpect(status().isForbidden());
+                    assertThat(context).doesNotHaveBean(MerchantStoreController.class)
+                            .doesNotHaveBean(MerchantRequestAccessAdapter.class);
+                });
     }
 
     @Test
@@ -101,7 +125,12 @@ class SecurityModeTest {
                                 fixture.token(fixture.claims().audience("other-api").build(), fixture.key, "at+jwt"))) {
                             assertThat(mvc.perform(get("/api/orders/1").header("Authorization", "Bearer " + malformed))
                                     .andReturn().getResponse().getStatus()).isEqualTo(401);
+                            mvc.perform(get("/api/merchants/1/stores/1").header("Authorization", "Bearer " + malformed))
+                                    .andExpect(status().isUnauthorized());
                         }
+                        mvc.perform(get("/api/merchants/1/stores/1")).andExpect(status().isUnauthorized());
+                        verifyNoInteractions(context.getBean(MerchantAccessApplication.class),
+                                context.getBean(MerchantApplication.class));
                         assertThat(mvc.perform(get("/api/orders/1")).andReturn().getResponse().getStatus())
                                 .isEqualTo(401);
                     });
@@ -113,11 +142,21 @@ class SecurityModeTest {
     @EnableConfigurationProperties(AppSecurityProperties.class)
     @Import({SecurityConfig.class, OidcSecurityConfig.class, JwtTokenProvider.class, JwtAuthenticationFilter.class,
             AuthController.class, RequestTraceFilter.class, RestAuthenticationEntryPoint.class,
-            RestAccessDeniedHandler.class})
+            RestAccessDeniedHandler.class, MerchantStoreController.class, MerchantRequestAccessAdapter.class})
     static class Bootstrap {
         @Bean
         ObjectMapper objectMapper() {
             return new ObjectMapper();
+        }
+
+        @Bean
+        MerchantApplication merchants() {
+            return mock(MerchantApplication.class);
+        }
+
+        @Bean
+        MerchantAccessApplication merchantAccess() {
+            return mock(MerchantAccessApplication.class);
         }
     }
 }

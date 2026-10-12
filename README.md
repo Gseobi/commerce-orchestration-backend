@@ -164,7 +164,7 @@ draw.io 자산은 [Diagram Guide](/docs/diagrams/README.md) 기준으로 관리�
 
 - 기존 demo 업무 흐름의 외부 진입점은 `OrderController`입니다. disabled/oidc에서는 차단됩니다.
 - 인증용 `AuthController`는 explicit demo mode에서만 생성되는 JWT 발급 보조 엔드포인트입니다.
-- merchant/store와 membership은 내부 공개 계약만 있으며 HTTP API는 아직 없습니다.
+- merchant/store 내부 계약과 OIDC-only 스토어 GET API가 있습니다. READ membership을 DB에서 확인합니다.
 - `CommerceOrchestrationService`는 주문 이후 흐름 제어를 담당합니다.
 - `NotificationRetryProcessor`는 `RETRY_SCHEDULED` notification event의 due retry 처리를 담당합니다.
 - `payment`, `settlement`, `notification`, `outbox`, `audit`는 각자 자기 repository를 내부 service가 소유합니다.
@@ -461,8 +461,10 @@ SPRING_PROFILES_ACTIVE=local APP_SECURITY_MODE=demo ./gradlew bootRun
 `APP_SECURITY_MODE=oidc`는 `OIDC_ISSUER`, `OIDC_AUDIENCE`, `OIDC_JWK_SET_URI`를 모두 요구합니다.
 설정된 HTTPS JWKS의 RS256 서명, issuer/audience/시간/subject 및 `typ=at+jwt` access token을 검증합니다.
 demo token 발급 bean은 생성하지 않으며 token role을 전역 ADMIN 권한으로 매핑하지 않습니다.
-아직 merchant HTTP adapter가 없으므로 OIDC에서는 기존 business/admin API를 모두 차단합니다.
-실제 IdP 연결, tenant HTTP API, refresh token/계정 관리가 완료된 제품 인증이라는 의미는 아닙니다.
+OIDC는 `GET /api/merchants/{merchantId}/stores/{storeId}`만 active READ membership 검증 후 허용합니다.
+기존 주문/business/admin API는 계속 차단합니다. demo ADMIN도 merchant slice에 접근할 수 없습니다.
+구현 경계는 [Merchant HTTP Access](docs/productization/merchant-tenant-http-access.md)를 참고합니다.
+실제 IdP 연결, 전체 거래 tenant ownership, refresh token/계정 관리 완료를 의미하지 않습니다.
 설정·검증 범위: [OIDC Resource Server](docs/productization/oidc-resource-server.md).
 
 ### External Payment Provider 골격 확인

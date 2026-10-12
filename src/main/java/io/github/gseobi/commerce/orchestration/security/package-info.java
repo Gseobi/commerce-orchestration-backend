@@ -3,6 +3,7 @@
                 "common::api",
                 "common::error",
                 "common::web",
+                "merchant::api",
                 "config"
         }
 )

@@ -4,7 +4,7 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[문서 감사 보고서](verification/documentation-current-state-audit.md)를 참고합니다.
+[Merchant HTTP 검증 보고서](verification/merchant-tenant-http-access-test-report.md)를 참고합니다.
 
 Status 값은 다음 의미로 사용합니다.
 
@@ -25,7 +25,15 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Implementation: `SecurityConfig`, `OidcSecurityConfig`, `StrictClaimShapeJwtDecoder`, `TrustedActorResolver`
 - Tests: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
 - Docs: `docs/productization/oidc-resource-server.md`
-- Notes: token 검증과 demo/legacy 차단만 구현. HTTP membership/tenant APIs는 Future Scope.
+- Notes: token 검증과 demo/legacy 차단. 후속 store GET은 active READ membership 확인 후 허용하며 실제 IdP는 미연결.
+
+### Merchant-scoped store HTTP read
+
+- Status: Verified (local signed JWT/JWKS + PostgreSQL/Kafka fixture)
+- Implementation: `MerchantStoreController`, `MerchantRequestAccessAdapter`, `MerchantAccessApplication`, `MerchantApplication`
+- Tests: `MerchantRequestAccessAdapterTest`, `MerchantStoreControllerTest`, `OidcApplicationIntegrationTest`, `SecurityModeTest`
+- Docs: `docs/productization/merchant-tenant-http-access.md`, `docs/openapi/openapi.yaml`
+- Notes: OIDC-only GET 한 개. actor spoof/tenant isolation/revoke/정지/400/401/403/404 및 타 method 차단. provisioning/legacy ownership 미완료.
 
 ### Order create API
 
@@ -221,9 +229,9 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Tests: `ModulithArchitectureTest#verifiesModularStructure`
 - Docs: `docs/productization/README.md`
 - Docs: `docs/verification/merchant-foundation-core-test-report.md`
-- Notes: merchant/store 등록과 조회는 내부 application contract만 제공하며 HTTP API는 없습니다.
+- Notes: 등록/목록은 내부 계약만 제공. 후속 OIDC-only store GET 한 개를 READ 권한 확인 후 노출.
 - Notes: store 단건/목록 조회는 merchant-scoped repository query를 사용합니다.
-- Notes: 기존 order/payment/notification/outbox tenant 적용과 production identity/RBAC는 아직 구현하지 않았습니다.
+- Notes: 기존 order/payment/notification/outbox tenant 적용과 실제 IdP 운영 연결은 미완료입니다.
 
 ### Merchant membership access
 
@@ -233,7 +241,7 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Docs: `docs/productization/merchant-membership-access.md`
 - Docs: `docs/verification/merchant-membership-access-test-report.md`
 - Notes: 활성 membership과 사업자 상태를 DB에서 확인하고 READ/WRITE를 제한합니다.
-- Notes: HTTP 인증 연결, membership 관리 API, 기존 business aggregate 보호는 Future Scope입니다.
+- Notes: store GET의 HTTP 인증 연결만 완료. membership 관리 API, 기존 business aggregate 보호는 Future Scope입니다.
 
 ### Spring Modulith boundary verification
 
@@ -288,7 +296,7 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Tests: documentation link inspection, `git diff --check`, Gradle verification
 - Docs: `docs/README.md`, `docs/agent-guides/workflow.md`
 - Notes: 기능별 branch/PR/verification/report 절차와 제품화 단계별 exit criteria를 정의합니다.
-- Notes: roadmap의 제품 기능은 모두 Planned이며 production capability 구현을 주장하지 않습니다.
+- Notes: P0는 부분 구현/In Progress, P1~P6는 Planned이며 production 운영 완료를 주장하지 않습니다.
 
 ## Future Scope / Not Implemented
 
