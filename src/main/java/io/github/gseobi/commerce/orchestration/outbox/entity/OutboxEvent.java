@@ -1,6 +1,6 @@
 package io.github.gseobi.commerce.orchestration.outbox.entity;
 
-import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
+import io.github.gseobi.commerce.orchestration.common.LegacyCommerceEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,7 +16,8 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "outbox_events")
-public class OutboxEvent extends BaseTimeEntity {
+@org.hibernate.annotations.SQLRestriction("ownership_mode = 'LEGACY'")
+public class OutboxEvent extends LegacyCommerceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

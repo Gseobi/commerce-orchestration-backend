@@ -4,7 +4,14 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[Outbox SaaS 보강 보고서](verification/outbox-saas-hardening-test-report.md)를 참고합니다.
+[HB2 소유권 검증 보고서](verification/tenant-ownership-migration-test-report.md)를 참고합니다.
+
+### HB2 ownership expand and legacy isolation
+
+- Status: Verified (PostgreSQL fixtures/isolated V8 upgrade; production migration 미실행)
+- Implementation: V9, `LegacyCommerceEntity`, 7개 `SQLRestriction`, outbox/notification bulk claim guards.
+- Tests: `CommerceOwnershipMigrationIntegrationTest`, 기존 전체 회귀.
+- Boundary: V8 데이터/legacy orphan 보존, TENANT DB 제약과 기존 runtime 차단. tenant writer/RLS/전체 SaaS API는 미구현.
 
 Status 값은 다음 의미로 사용합니다.
 
@@ -233,7 +240,7 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Docs: `docs/verification/merchant-foundation-core-test-report.md`
 - Notes: 등록/목록은 내부 계약만 제공. 후속 OIDC-only store GET 한 개를 READ 권한 확인 후 노출.
 - Notes: store 단건/목록 조회는 merchant-scoped repository query를 사용합니다.
-- Notes: 기존 order/payment/notification/outbox tenant 적용과 실제 IdP 운영 연결은 미완료입니다.
+- Notes: V9 schema/legacy guard만 완료. tenant-aware writer/API/worker 전파와 실제 IdP 운영 연결은 미완료입니다.
 
 ### Merchant membership access
 

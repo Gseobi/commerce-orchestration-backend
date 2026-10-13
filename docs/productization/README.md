@@ -35,6 +35,7 @@
 - OIDC Resource Server의 RS256/JWKS 검증, issuer/audience/claim 검증, canonical actor identity
 - disabled/demo/oidc 분리 및 OIDC에서 legacy business/admin API 접근 차단
 - OIDC-only store GET, READ membership 확인, HTTP cross-tenant/revoke/spoof 차단
+- V9 ownership expand schema 및 기존 7개 거래 entity의 LEGACY 전용 ORM/worker guard (HB2)
 
 근거는 [Verification Matrix](../verification-matrix.md)와 [Claim Audit](../verification/claim-audit.md)에서 관리합니다.
 
@@ -101,7 +102,7 @@ Current progress:
 - 읽기 전용 store HTTP slice와 `merchant::api` READ membership adapter
 
 아직 구현하지 않은 범위는 추가 HTTP tenant 적용, 실제 IdP production 연결 및 membership 관리 API,
-기존 주문/결제/알림/outbox의 tenant ownership입니다.
+기존 주문/결제/알림/outbox의 owner-aware SaaS writer/queries/event 전파입니다. V9 schema/legacy guard만 먼저 구현합니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책
 2. production identity/RBAC 설계와 merchant membership
@@ -238,6 +239,8 @@ Resource Server 및 demo mode 분리는 [OIDC Resource Server](oidc-resource-ser
 신규 제품 기능 이전에 [SaaS Hardening Plan](saas-hardening-plan.md)의 미완성 경계 보강을 우선합니다.
 사용자 결정으로 IdP는 비교·연결 설계만 진행하고 기존 데이터는 legacy 격리/보존, 신규 SaaS 거래부터 tenant 필수입니다.
 첫 단위는 outbox 계약 결합 완화이며 이후 ownership migration/거래 vertical slice와 identity onboarding을 분리합니다.
+HB2 [소유권 migration](tenant-ownership-migration.md) 이후 HB3 전체 거래 경로를 진행합니다.
+[제품 완성도 점검](product-readiness-review.md)에 모듈별 남은 설계, 트레이드오프와 release blocker를 정리합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 
 실행 절차는 [Module Delivery Playbook](module-delivery-playbook.md)을 따릅니다.

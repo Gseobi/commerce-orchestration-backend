@@ -41,6 +41,7 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
                 event.lastAttemptAt = :now,
                 event.version = event.version + 1
             where event.id = :id
+              and event.ownershipMode = 'LEGACY'
               and event.status = io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus.RETRY_SCHEDULED
               and event.nextAttemptAt <= :now
               and event.retryCount < :maxRetryCount

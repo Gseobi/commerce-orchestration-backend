@@ -1,6 +1,6 @@
 package io.github.gseobi.commerce.orchestration.notification.entity;
 
-import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
+import io.github.gseobi.commerce.orchestration.common.LegacyCommerceEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,7 +16,8 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "notification_events")
-public class NotificationEvent extends BaseTimeEntity {
+@org.hibernate.annotations.SQLRestriction("ownership_mode = 'LEGACY'")
+public class NotificationEvent extends LegacyCommerceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

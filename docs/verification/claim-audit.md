@@ -275,7 +275,7 @@ Evidence Ladder는 README/docs claim이 코드보다 앞서가지 않도록 아�
 - Evidence: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
 - Notes: RS256, issuer/audience/claim types, token kind, JWKS faults and mode isolation.
   The OIDC-only store GET now uses database READ membership authorization.
-  Membership provisioning and legacy aggregate/event tenant ownership remain Future Scope.
+  V9 schema/legacy runtime isolation is implemented; tenant writers/queries/events and membership provisioning remain Future Scope.
 
 ### Merchant-scoped HTTP store read uses trusted OIDC identity
 

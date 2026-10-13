@@ -3,7 +3,7 @@
 - Base: `a51487f`, 2026-10-12 (Asia/Seoul)
 - 사용자 결정: IdP 미선정, 후보 비교·연결 설계만 진행. 계정 생성/설치/계약 별도 승인.
 - 사용자 결정: 기존 데이터 보존·legacy 격리, 신규 SaaS 거래부터 tenant 필수.
-- 상태: 첫 outbox boundary unit 구현. 아래 tenant/IdP/복구 기능은 Planned이며 출시 완료 아님.
+- 상태: HB1 완료, HB2 V9/legacy runtime guard 구현. HB3 tenant writer/IdP/복구 기능은 Planned이며 출시 완료 아님.
 
 ## Audit / 현재 결합과 공백
 
@@ -41,11 +41,14 @@ tenant ID/actorId를 metric tag로 사용하지 않습니다.
 각 단위는 별도 `codex/dev-*` branch/PR, 전체 회귀/정량 보고, CI와 main 확인을 유지합니다.
 필요한 module 계약을 확장하되 별도 서비스·이벤트 프레임워크·SDK를 근거 없이 추가하지 않습니다.
 
-## Tenant Migration / 보존과 격리 설계 (아직 미구현)
+## Tenant Migration / 단계별 구현 경계
+
+[HB2 확정 설계](tenant-ownership-migration.md)의 V9 ownership 제약과 legacy ORM/worker guard를 구현합니다.
+아래 내용 중 API owner 전파·tenant event·전체 worker/admin 경계는 HB3에서 구현해야 합니다.
 
 - migration 후보: 명시적인 ownership mode(LEGACY/TENANT)와 merchant owner. legacy는 owner 미할당,
   TENANT 신규 거래는 non-null owner/merchant FK 필수라는 CHECK 제약. nullable owner만 추가해 신규 누락을 허용하지 않음.
-- 실제 DDL은 다음 migration unit에서 확정. V1~V8을 수정하지 않으며 이번 unit은 schema를 바꾸지 않음.
+- HB2는 V9 forward migration이며 V1~V8은 변경하지 않습니다. 기존 row는 LEGACY/NULL로 보존합니다.
 - 주문 owner는 인증 후 membership 권한과 store 소속을 확인한 ingress에서 확정. body/header owner를 신뢰하지 않음.
 - 모든 child row는 부모 order와 같은 owner. 후보 composite FK `(merchant_id, order_id)`와 parent unique로
   cross-tenant 참조를 DB에서 방어. 현재 legacy orphan/nullable audit order부터 조사하고 무조건 FK를 추가하지 않음.
@@ -92,3 +95,5 @@ revoke/정지/다른 tenant 거부와 JWKS 장애/rotation을 확인해야 실�
 - HTTP/OpenAPI path, 기존 저장 row/topic/key/payload 의미는 미변경. 실제 tenant envelope/새 provider/자동 recovery는 추가하지 않음.
 - 예상 검증: enum 두 event의 기존 JSON 의미, invalid 입력/serialization failure 시 저장 없음,
   adapter key/payload 유지 및 failure mapping, 기존 Kafka happy/retry/dead-letter/Modulith 전체 회귀.
+
+전체 남은 작업·트레이드오프·출시 기준은 [Product Readiness Review](product-readiness-review.md)를 참고합니다.
