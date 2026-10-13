@@ -1,6 +1,6 @@
 package io.github.gseobi.commerce.orchestration.payment.entity;
 
-import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
+import io.github.gseobi.commerce.orchestration.common.LegacyCommerceEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,7 +16,8 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "payments")
-public class Payment extends BaseTimeEntity {
+@org.hibernate.annotations.SQLRestriction("ownership_mode = 'LEGACY'")
+public class Payment extends LegacyCommerceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

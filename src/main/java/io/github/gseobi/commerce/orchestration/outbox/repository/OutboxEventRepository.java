@@ -34,6 +34,7 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
                 event.lastAttemptAt = :now,
                 event.version = event.version + 1
             where event.id = :id
+              and event.ownershipMode = 'LEGACY'
               and event.status in :statuses
               and event.nextAttemptAt <= :now
             """)

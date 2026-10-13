@@ -1,6 +1,6 @@
 package io.github.gseobi.commerce.orchestration.order.entity;
 
-import io.github.gseobi.commerce.orchestration.common.BaseTimeEntity;
+import io.github.gseobi.commerce.orchestration.common.LegacyCommerceEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,7 +17,8 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "orders")
-public class Order extends BaseTimeEntity {
+@org.hibernate.annotations.SQLRestriction("ownership_mode = 'LEGACY'")
+public class Order extends LegacyCommerceEntity {
 
     private static final Map<OrderStatus, EnumSet<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
             OrderStatus.CREATED, EnumSet.of(OrderStatus.PAYMENT_PENDING, OrderStatus.FAILED, OrderStatus.CANCELLED),

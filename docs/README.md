@@ -11,6 +11,7 @@ notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추�
 ## Current Baseline / 현재 상태
 
 새 제품 기능보다 [SaaS Hardening Plan](productization/saas-hardening-plan.md)의 결합도·tenant·IdP·복구 보강을 우선합니다.
+[Product Readiness Review](productization/product-readiness-review.md)에서 모듈별 잔여 설계·트레이드오프·출시 blocker를 확인합니다.
 
 현재는 제품화 P0 진행 중입니다. merchant/store(V7), membership(V8), OIDC Resource Server는
 main 기준 foundation 이후 OIDC-only 스토어 GET과 membership adapter를 연결했습니다.

@@ -97,6 +97,10 @@ V7의 merchants/stores와 V8의 merchant_memberships는 이미지에 포함하�
 
 ## 8. Why This Matters
 
+HB2의 V9는 owner 제약을 추가하고 기존 7개 entity는 `LegacyCommerceEntity` + SQLRestriction으로
+LEGACY row만 조회합니다. tenant 동적 권한이나 RLS가 아니라 기존 전역 경로의 차단 장치입니다.
+outbox/notification bulk claim도 LEGACY 조건을 유지합니다. HB3의 tenant writer 공개는 별도 gate입니다.
+
 커머스 거래 흐름에서는 결제, 정산, 알림, 이벤트 발행이 모두 같은 실패 의미를 가지지 않습니다.
 
 따라서 architecture의 목표는 모든 후속 처리를 하나의 거대한 service에 밀어 넣는 것이 아니라, orchestration은 흐름을 제어하고 각 domain은 자기 상태와 복구 기준을 소유하도록 분리하는 것입니다.
