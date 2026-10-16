@@ -275,7 +275,16 @@ Evidence Ladder는 README/docs claim이 코드보다 앞서가지 않도록 아�
 - Evidence: `OidcJwtDecoderTest`, `OidcPropertiesTest`, `SecurityModeTest`, `OidcApplicationIntegrationTest`
 - Notes: RS256, issuer/audience/claim types, token kind, JWKS faults and mode isolation.
   The OIDC-only store GET now uses database READ membership authorization.
-  V9 schema/legacy runtime isolation is implemented; tenant writers/queries/events and membership provisioning remain Future Scope.
+  V9 schema/legacy runtime isolation and an internal owner-scoped order header query are implemented.
+  Tenant writers/downstream queries/events and membership provisioning remain Future Scope.
+
+### HB3a internal tenant order read is not an authenticated HTTP API
+
+- Status: Verified (unit/PostgreSQL fixtures; internal read contract only)
+- Evidence: `TenantOrderQuery`, `TenantOrderReadRepository`, `TenantOrderQueryService`.
+- Tests: `TenantOrderQueryServiceTest`, `TenantOrderQueryIntegrationTest`.
+- Boundary: Explicit TENANT/owner/order predicates; no LEGACY fallback or global lookup.
+  Membership authorization is the caller's responsibility. No controller, writer, downstream workflow or RLS is added.
 
 ### Merchant-scoped HTTP store read uses trusted OIDC identity
 

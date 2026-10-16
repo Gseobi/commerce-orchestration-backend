@@ -16,6 +16,8 @@ notification/outbox `PROCESSING` claim, Outbox publisher adapter 분리가 추�
 현재는 제품화 P0 진행 중입니다. merchant/store(V7), membership(V8), OIDC Resource Server는
 main 기준 foundation 이후 OIDC-only 스토어 GET과 membership adapter를 연결했습니다.
 membership 관리 API/실제 IdP 연결/기존 거래 데이터 tenant ownership은 미완료입니다.
+V9 ownership 제약/LEGACY guard와 [HB3a 내부 tenant 주문 header 조회](productization/tenant-order-read-boundary.md)는 구현했습니다.
+tenant writer/하위 모듈/event/worker/HTTP의 전체 전파는 아직 미완료입니다.
 [Merchant HTTP Access](productization/merchant-tenant-http-access.md)에서 새 slice의 범위를 확인합니다.
 [Project Status](project-status.md)를 최신 구현 안내의 entrypoint로 사용합니다.
 [문서 감사 보고서](verification/documentation-current-state-audit.md)는 이번 점검 범위와 수치를 기록합니다.

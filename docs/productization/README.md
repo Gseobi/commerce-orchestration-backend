@@ -240,6 +240,8 @@ Resource Server 및 demo mode 분리는 [OIDC Resource Server](oidc-resource-ser
 사용자 결정으로 IdP는 비교·연결 설계만 진행하고 기존 데이터는 legacy 격리/보존, 신규 SaaS 거래부터 tenant 필수입니다.
 첫 단위는 outbox 계약 결합 완화이며 이후 ownership migration/거래 vertical slice와 identity onboarding을 분리합니다.
 HB2 [소유권 migration](tenant-ownership-migration.md) 이후 HB3 전체 거래 경로를 진행합니다.
+HB3a [내부 tenant 주문 header 조회](tenant-order-read-boundary.md)까지 구현했습니다.
+writer/하위 모듈/event/worker/recovery/HTTP는 후속 HB3b~e이며 SaaS 주문 생성 API는 아직 공개하지 않습니다.
 [제품 완성도 점검](product-readiness-review.md)에 모듈별 남은 설계, 트레이드오프와 release blocker를 정리합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 
