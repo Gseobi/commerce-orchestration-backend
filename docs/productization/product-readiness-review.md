@@ -1,6 +1,6 @@
 # Product Readiness Review / 남은 설계와 트레이드오프
 
-- 점검일: 2026-10-13, base `e3e4425` + HB2 작업 단위
+- 점검일: 2026-10-17, base `8405a88` + HB3a 작업 단위
 - 기준: 코드/테스트/roadmap 대조. 출시 승인·법률 검토·비용 견적·부하 검증은 아닙니다.
 - P0는 In Progress, P1~P6는 Planned. 목표 기능 전체가 제품화된 상태는 아닙니다.
 
@@ -21,7 +21,7 @@ shipping을 MVP에서 빼려면 배송 지원을 제품 약속으로 표시하�
 |---|---|---|
 | Identity/security HB4 | IdP 선택, dev access token·ID token 거부, JWKS 장애/rotation, issuer 변경 절차 | managed의 운영 부담 vs 계정/기능 비용, self-hosted의 제어권 vs 패치/backup 책임. 제공자 SDK를 domain에 넣지 않음 |
 | Merchant/membership P0 | provisioning, 권한 변경/revoke 감사, 마지막 운영자 보호, store 설정 관리 | invite/self-service 편의 vs 권한 상승 방어. 첫 관리자 bootstrap과 actor 검증 책임을 먼저 정의 |
-| Ownership HB2/HB3 | V9 upgrade·legacy guard 다음 owner-aware query/worker/복구, event envelope version | shared DB의 비용 vs 누락 predicate 위험. composite FK + 앱 권한 확인; RLS 별도 검토. owner immutable로 merchant 이동은 자동 허용하지 않음 |
+| Ownership HB2/HB3 | V9/legacy guard·내부 주문 header 조회 이후 writer/하위 query/worker/복구, event envelope version | shared DB의 비용 vs 누락 predicate 위험. composite FK + 앱 권한 확인; RLS 별도 검토. owner immutable로 merchant 이동은 자동 허용하지 않음 |
 | Order HB3/P1 | tenant/store 필수 생성, 가격·통화 snapshot, order line, 취소 규칙 | 동기 orchestration의 단순성 vs 외부 latency/장기 transaction. business state 소유는 order, provider 세부는 adapter |
 | Orchestration HB3/HB5 | owner 전파, durable step/실패 보상 상태, typed 실패 category/result | 순차 흐름의 단순성 vs 재시작 가능한 saga/hold. error 이름 prefix·문자열 상태에 대한 의미 결합을 줄이되 일괄 비동기화를 먼저 하지 않음 |
 | Catalog P1 | SKU/옵션/가격/판매 상태·버전, merchant별 조회/수정 | 조합 옵션의 유연성 vs 검증 복잡도. 주문 가격은 최신 catalog 값 대신 당시 snapshot |
@@ -41,8 +41,8 @@ shipping을 MVP에서 빼려면 배송 지원을 제품 약속으로 표시하�
 | 단위 | 상태 | 남은 실제 개발 |
 |---|---|---|
 | HB1 | Complete, PR #8 | tenant event schema는 별도 HB3 |
-| HB2 | 이번 단위: V9 + legacy runtime isolation | historical scope FK VALIDATE, 큰 DB lock/upgrade 리허설 |
-| HB3 | Planned | tenant-aware 모든 계약/queries/worker/admin/audit + write endpoint 공개 gate |
+| HB2 | V9 + legacy runtime isolation 구현, PR #9 | historical scope FK VALIDATE, 큰 DB lock/upgrade 리허설 |
+| HB3 | In Progress: HB3a 내부 주문 header 조회 구현 | HB3b~e: writer/하위 queries/worker/admin/audit + write endpoint 공개 gate |
 | HB4 | Planned, IdP 비교만 완료 | 제공자/계정 승인, 실제 연결, provisioning 감사 |
 | HB5 | Planned | payment intent/confirmation/callback/실패 보상/환불 |
 | HB6 | Planned | 실제 알림 채널/tenant 운영 정책/lease/observability |
@@ -71,4 +71,4 @@ HB4는 HB3과 설계 병행할 수 있지만 IdP를 선정하지 않은 상태�
 production profile 설정을 포함해 별도 delivery report로 남겨야 합니다.
 
 연결 문서: [Roadmap](README.md), [SaaS Hardening](saas-hardening-plan.md),
-[HB2 확정 설계](tenant-ownership-migration.md).
+[HB2 확정 설계](tenant-ownership-migration.md), [HB3a 구현·후속 분할](tenant-order-read-boundary.md).

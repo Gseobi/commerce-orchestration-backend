@@ -1,7 +1,7 @@
 # Project Status / 현재 구현 기준선
 
-- 점검일: 2026-10-13 (Asia/Seoul)
-- 구현 기준: `e3e4425`에서 시작한 HB2 ownership migration delivery (이 문서와 같은 변경 단위)
+- 점검일: 2026-10-17 (Asia/Seoul)
+- 구현 기준: `8405a88`에서 시작한 HB3a tenant order read delivery (이 문서와 같은 변경 단위)
 - 제품화 단계: `P0 In Progress`. 실서비스 출시 완료가 아닙니다.
 
 ## Implemented / 구현된 범위
@@ -12,7 +12,7 @@
 | Merchant foundation | merchant/store, timezone, 기본 수동 복구 정책 snapshot, V7 | 영업 시간·휴일·사업자별 자동 복구 정책 |
 | Membership | V8, VIEWER READ / OPERATOR READ·WRITE, revoke/정지 차단, OIDC 스토어 GET의 READ adapter | 가입·초대·membership 관리 API |
 | OIDC security | RS256, 고정 JWKS, issuer/audience/claim/typ 검증, canonical actorId | 실제 IdP 연결, 로그인 UI/client, 즉시 token revoke |
-| Tenant boundary | store GET 권한, V9 owner 제약, 7개 거래 entity/worker LEGACY guard | HB3 tenant 거래 writer/queries/event 전체 전파 |
+| Tenant boundary | store GET 권한, V9 owner 제약, 7개 거래 entity/worker LEGACY guard, 내부 tenant 주문 header 조회 | HB3 tenant 거래 writer/하위 조회/event/worker 전체 전파 |
 | 운영 | Micrometer counter, structured log, audit, SQL/runbook, Testcontainers | dashboard/alert rule, stale PROCESSING 자동 회수 |
 | 제품 모듈 | 위 기반만 구현 | catalog/inventory, 실제 알림 채널, shipping/tracking, 비용/SLO 검증 |
 
@@ -55,14 +55,16 @@ docker compose ps
 `test`는 non-integration tag suite이고 H2/mock 및 로컬 JWKS 검증 등을 포함합니다.
 `integrationTest`는 별도 PostgreSQL/Kafka Testcontainers를 사용하므로 Compose DB의 데이터로
 테스트하는 것이 아닙니다. XML suite time 합계는 wall time이나 부하 성능 수치가 아닙니다.
-최신 실행 수치는 [HB2 소유권 검증 보고서](verification/tenant-ownership-migration-test-report.md),
+최신 실행 수치는 [HB3a 조회 경계 검증 보고서](verification/tenant-order-read-test-report.md),
 capability 근거는 [Verification Matrix](verification-matrix.md)에서 확인합니다.
 
 ## Next Unit / 다음 개발 단위
 
 읽기 전용 merchant-scoped store HTTP slice와 membership adapter를 구현했습니다.
 신규 기능 이전에 [SaaS Hardening](productization/saas-hardening-plan.md)을 우선합니다.
-HB2는 V9 제약/legacy runtime guard까지 진행했습니다. 다음은 HB3의 owner-aware 거래 전체 경로입니다.
+HB2는 V9 제약/legacy runtime guard, HB3a는 owner 필수 내부 주문 header 조회까지 진행했습니다.
+HB3 전체는 미완료입니다. 다음은 [HB3b~e 분할 계획](productization/tenant-order-read-boundary.md)의
+owner 필수 내부 writer, 하위 모듈, event/worker/recovery, HTTP vertical slice 순서입니다.
 실제 IdP는 후보 비교만 진행하며 선택·계정 생성·설치·운영 연결은 별도 승인입니다.
 실제 계정/가입/초대와 tenant writer/API 전파는 아직 구현하지 않았습니다.
 모듈별 잔여 설계·trade-off·출시 조건은 [제품 완성도 점검](productization/product-readiness-review.md)을 참고합니다.

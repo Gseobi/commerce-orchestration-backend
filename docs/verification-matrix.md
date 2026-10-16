@@ -4,7 +4,16 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB2 소유권 검증 보고서](verification/tenant-ownership-migration-test-report.md)를 참고합니다.
+[HB3a 조회 경계 검증 보고서](verification/tenant-order-read-test-report.md)를 참고합니다.
+
+### HB3a internal tenant order header read
+
+- Status: Verified (unit/PostgreSQL fixtures; internal read port only)
+- Implementation: `TenantOrderQuery`, `TenantOrderQueryService`, `TenantOrderReadRepository` scalar projection.
+- Tests: `TenantOrderQueryServiceTest`, `TenantOrderQueryIntegrationTest`.
+- Boundary: 양수 owner/order 필수, foreign/legacy/missing 동일 not-found, 고객 식별자/설명 제외.
+  내부 호출자의 인증/membership 사전 검사가 필요하며 HTTP writer/tenant workflow 구현이 아님.
+- Docs: `docs/productization/tenant-order-read-boundary.md`.
 
 ### HB2 ownership expand and legacy isolation
 
