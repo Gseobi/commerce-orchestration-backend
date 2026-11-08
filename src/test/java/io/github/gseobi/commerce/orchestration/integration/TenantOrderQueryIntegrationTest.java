@@ -7,6 +7,7 @@ import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.merchant.api.MerchantApplication;
 import io.github.gseobi.commerce.orchestration.merchant.api.MerchantRegistrationCommand;
+import io.github.gseobi.commerce.orchestration.merchant.api.StoreRegistrationCommand;
 import io.github.gseobi.commerce.orchestration.order.api.OrderWorkflowAccess;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderQuery;
 import io.github.gseobi.commerce.orchestration.order.repository.OrderRepository;
@@ -111,7 +112,7 @@ class TenantOrderQueryIntegrationTest extends TestcontainersIntegrationSupport {
     }
 
     private Long insertOrder(Long merchantId) {
-        // Trusted JDBC fixtures only; no tenant writer is enabled in the application.
+        // Keep the query test independent of the command port.
         var fields = new LinkedHashMap<String, Object>();
         fields.put("customer_id", "private-customer-fixture");
         fields.put("description", "private-description-fixture");
@@ -122,6 +123,12 @@ class TenantOrderQueryIntegrationTest extends TestcontainersIntegrationSupport {
         fields.put("updated_at", fields.get("created_at"));
         fields.put("ownership_mode", merchantId == null ? "LEGACY" : "TENANT");
         fields.put("merchant_id", merchantId);
+        if (merchantId != null) {
+            fields.put("store_id", merchants.registerStore(
+                    new StoreRegistrationCommand(merchantId, "STORE", "Store")).id());
+            fields.put("store_timezone", "Asia/Seoul");
+            fields.put("store_recovery_policy", "MANUAL_REVIEW");
+        }
         return new SimpleJdbcInsert(jdbc).withTableName("orders")
                 .usingColumns(fields.keySet().toArray(String[]::new))
                 .usingGeneratedKeyColumns("id").executeAndReturnKey(fields).longValue();

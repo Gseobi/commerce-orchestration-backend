@@ -93,13 +93,16 @@ security 내부 HTTP adapter/controller는 검증된 OIDC identity로 `merchant:
 V7의 merchants/stores와 V8의 merchant_memberships는 이미지에 포함하지 않습니다.
 전체 최신 스키마의 source of truth는 `src/main/resources/db/migration`이며 [SQL Guide](/docs/sql/README.md)에서 목록을 확인합니다.
 
-실제 FK constraint를 새로 추가한 것이 아니라, 대부분 `order_id`를 기준으로 `orders`와 연결되는 운영/상태 추적 구조를 보여줍니다.
+도식은 `order_id` 중심의 운영/상태 추적 구조이며, 후속 V9 owner/order FK 및 V10 owner/store FK는
+migration 파일에서 확인합니다.
 
 ## 8. Why This Matters
 
 HB2의 V9는 owner 제약을 추가하고 기존 7개 entity는 `LegacyCommerceEntity` + SQLRestriction으로
 LEGACY row만 조회합니다. tenant 동적 권한이나 RLS가 아니라 기존 전역 경로의 차단 장치입니다.
 outbox/notification bulk claim도 LEGACY 조건을 유지합니다. HB3의 tenant writer 공개는 별도 gate입니다.
+HB3b 내부 writer는 `merchant::api`의 활성 store 잠금·snapshot 계약만 사용하며,
+V10 owner/store FK와 조건부 취소를 적용합니다. HTTP 및 기존 orchestration에서는 호출하지 않습니다.
 
 커머스 거래 흐름에서는 결제, 정산, 알림, 이벤트 발행이 모두 같은 실패 의미를 가지지 않습니다.
 
