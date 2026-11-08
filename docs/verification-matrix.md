@@ -4,7 +4,13 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB3c-2 검증 보고서](verification/tenant-payment-preparation-trace-test-report.md)를 참고합니다.
+[HB3c-3 검증 보고서](verification/tenant-downstream-status-test-report.md)를 참고합니다.
+
+### HB3c-3 tenant downstream status
+
+- Tests: `TenantDownstreamStatusQueryTest`, `TenantDownstreamStatusIntegrationTest`.
+- Boundary: parent owner checked first, scoped latest status only, legacy isolation in both directions, READY with no downstream writes.
+- No tenant settlement execution, notification delivery or HTTP.
 
 ### HB3c-2 tenant preparation trace
 
