@@ -4,7 +4,13 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB3c-1 검증 보고서](verification/tenant-payment-preparation-test-report.md)를 참고합니다.
+[HB3c-2 검증 보고서](verification/tenant-payment-preparation-trace-test-report.md)를 참고합니다.
+
+### HB3c-2 tenant preparation trace
+
+- Tests: `TenantPaymentPreparationTest`, `TenantPaymentPreparationIntegrationTest`.
+- Boundary: same-owner audit/step, V9 FK, legacy isolation, rollback at each write, duplicate/cancellation race.
+- Audit and step record only committed internal preparation success; not PG approval or a failure history.
 
 ### HB3c-1 internal tenant payment preparation
 

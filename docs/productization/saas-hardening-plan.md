@@ -4,7 +4,7 @@
 - 사용자 결정: IdP 미선정, 후보 비교·연결 설계만 진행. 계정 생성/설치/계약 별도 승인.
 - 사용자 결정: 기존 데이터 보존·legacy 격리, 신규 SaaS 거래부터 tenant 필수.
 - 상태: HB1 완료, HB2 V9/legacy guard, HB3a 내부 조회, HB3b 내부 생성·결제 전 취소 구현.
-  HB3c-1 내부 결제 선점·기록 구현.
+  HB3c-1 내부 결제 선점·기록과 HB3c-2 결제 준비 감사·단계 기록 구현.
   전체 tenant 거래 경로/IdP/복구는 미완료이며 출시 완료 아님.
 
 ## Audit / 현재 결합과 공백
@@ -35,7 +35,7 @@ tenant ID/actorId를 metric tag로 사용하지 않습니다.
    worker/admin recovery 경계까지 연결. 이것이 완료되기 전 SaaS 주문 생성 API를 공개하지 않음.
    [HB3a 내부 조회](tenant-order-read-boundary.md)와 [HB3b 내부 생성·취소](tenant-order-write-boundary.md)는 구현.
    하위 거래 모듈과 event/worker/recovery 및 HTTP는 HB3c~e로 분리.
-   HB3c 진행률 및 검증 범위는 [결제 준비 설계](tenant-payment-preparation.md) 참조.
+   HB3c 진행률 및 검증 범위는 [결제 준비 추적 설계](tenant-payment-preparation-trace.md) 참조.
 4. **HB4 Identity onboarding**: IdP 선택·dev 연결 승인 후 실제 access token negative tests,
    membership 생성/권한 변경/회수 감사 및 마지막 운영자 보호. caller role/email로 자동 권한 부여 금지.
 5. **HB5 Financial reliability**: durable payment intent와 provider idempotency, timeout 확인,

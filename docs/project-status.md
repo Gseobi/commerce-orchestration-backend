@@ -1,7 +1,7 @@
 # Project Status / 현재 구현 기준선
 
 - 점검일: 2026-11-08 (Asia/Seoul)
-- 구현 기준: `0282fae`에서 시작한 HB3c-1 내부 결제 준비
+- 구현 기준: `9b0cff3`에서 시작한 HB3c-2 결제 준비 추적
 - 제품화 단계: `P0 In Progress`. 실서비스 출시 완료가 아닙니다.
 
 ## Implemented / 구현된 범위
@@ -55,7 +55,7 @@ docker compose ps
 `test`는 non-integration tag suite이고 H2/mock 및 로컬 JWKS 검증 등을 포함합니다.
 `integrationTest`는 별도 PostgreSQL/Kafka Testcontainers를 사용하므로 Compose DB의 데이터로
 테스트하는 것이 아닙니다. XML suite time 합계는 wall time이나 부하 성능 수치가 아닙니다.
-최신 실행 수치는 [HB3c-1 검증 보고서](verification/tenant-payment-preparation-test-report.md),
+최신 실행 수치는 [HB3c-2 검증 보고서](verification/tenant-payment-preparation-trace-test-report.md),
 capability 근거는 [Verification Matrix](verification-matrix.md)에서 확인합니다.
 
 ## Next Unit / 다음 개발 단위
@@ -63,7 +63,8 @@ capability 근거는 [Verification Matrix](verification-matrix.md)에서 확인�
 읽기 전용 merchant-scoped store HTTP slice와 membership adapter를 구현했습니다.
 신규 기능 이전에 [SaaS Hardening](productization/saas-hardening-plan.md)을 우선합니다.
 HB3a 내부 주문 조회에 이어 [HB3b 내부 생성·취소](productization/tenant-order-write-boundary.md)를 구현했습니다.
-[HB3c-1 내부 결제 준비](productization/tenant-payment-preparation.md)까지 구현했습니다.
+[HB3c-1 내부 결제 준비](productization/tenant-payment-preparation.md)와
+[HB3c-2 성공 감사·단계 기록](productization/tenant-payment-preparation-trace.md)을 구현했습니다.
 다음은 HB3c의 나머지 하위 모듈 owner 전파이며 이후 event/worker/recovery와 HTTP를 연결합니다.
 실제 IdP는 후보 비교만 진행하며 선택·계정 생성·설치·운영 연결은 별도 승인입니다.
 실제 계정/가입/초대와 SaaS 주문 HTTP API는 아직 구현하지 않았습니다.

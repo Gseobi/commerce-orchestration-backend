@@ -3,6 +3,8 @@ package io.github.gseobi.commerce.orchestration.orchestration.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.gseobi.commerce.orchestration.audit.api.TenantOrderAuditRecorder;
+import io.github.gseobi.commerce.orchestration.audit.repository.AuditLogRepository;
 import io.github.gseobi.commerce.orchestration.common.error.BusinessException;
 import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.integration.TestcontainersIntegrationSupport;
@@ -13,6 +15,7 @@ import io.github.gseobi.commerce.orchestration.order.api.CreateTenantOrderComman
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderCommands;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderPaymentClaim;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderQuery;
+import io.github.gseobi.commerce.orchestration.orchestration.repository.OrchestrationStepRepository;
 import io.github.gseobi.commerce.orchestration.payment.api.TenantPaymentRecords;
 import io.github.gseobi.commerce.orchestration.payment.repository.PaymentRepository;
 import java.math.BigDecimal;
@@ -22,6 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,6 +47,10 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
     @Autowired private TenantOrderQuery query;
     @Autowired private TenantPaymentRecords payments;
     @Autowired private PaymentRepository legacyPayments;
+    @Autowired private TenantOrderAuditRecorder audit;
+    @Autowired private TenantPaymentPreparationSteps steps;
+    @Autowired private AuditLogRepository legacyAudit;
+    @Autowired private OrchestrationStepRepository legacySteps;
     @Autowired private MerchantApplication merchants;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private JdbcTemplate jdbc;
@@ -62,9 +71,22 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
                 .containsEntry("amount", new BigDecimal("10.25"))
                 .containsEntry("provider_reference", null);
         assertThat(legacyPayments.findById(paymentId)).isEmpty();
+        assertThat(jdbc.queryForMap("""
+                select merchant_id, order_id, ownership_mode, action, detail from audit_logs
+                """)).containsEntry("merchant_id", order.owner()).containsEntry("order_id", order.id())
+                .containsEntry("ownership_mode", "TENANT").containsEntry("action", "TENANT_PAYMENT_PREPARED")
+                .containsEntry("detail", "Internal payment prepared; provider not called.");
+        assertThat(jdbc.queryForMap("""
+                select merchant_id, order_id, ownership_mode, step_type, status from orchestration_steps
+                """)).containsEntry("merchant_id", order.owner()).containsEntry("order_id", order.id())
+                .containsEntry("ownership_mode", "TENANT").containsEntry("step_type", "PAYMENT_PREPARATION")
+                .containsEntry("status", "SUCCESS");
+        assertThat(legacyAudit.findAllByOrderIdOrderByIdAsc(order.id())).isEmpty();
+        assertThat(legacySteps.findAllByOrderIdOrderByIdAsc(order.id())).isEmpty();
         assertError(() -> commands.cancelCreated(order.owner(), order.id()), ErrorCode.INVALID_ORDER_STATE);
         assertError(() -> preparation.prepare(order.owner(), order.id()), ErrorCode.INVALID_ORDER_STATE);
         assertThat(paymentCount()).isOne();
+        assertTraceCount(1);
     }
 
     @Test
@@ -84,22 +106,23 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
         assertError(() -> preparation.prepare(order.owner(), order.id()), ErrorCode.INVALID_ORDER_STATE);
         assertThat(status(order)).isEqualTo("CANCELLED");
         assertThat(paymentCount()).isZero();
+        assertTraceCount(0);
     }
 
-    @Test
-    void paymentConstraintFailureRollsBackTheOrderClaim() {
+    @ParameterizedTest
+    @EnumSource(RejectedWrite.class)
+    void writeFailureRollsBackOrderAndAllRecords(RejectedWrite write) {
         var order = order("A");
-        jdbc.execute("""
-                alter table payments add constraint ck_test_reject_ready check (status <> 'READY')
-                """);
+        jdbc.execute("alter table " + write.table + " add constraint ck_test_reject_write check (" + write.check + ")");
         try {
             assertThatThrownBy(() -> preparation.prepare(order.owner(), order.id()))
                     .isInstanceOf(DataIntegrityViolationException.class)
-                    .rootCause().hasMessageContaining("ck_test_reject_ready");
+                    .rootCause().hasMessageContaining("ck_test_reject_write");
             assertThat(status(order)).isEqualTo("CREATED");
             assertThat(paymentCount()).isZero();
+            assertTraceCount(0);
         } finally {
-            jdbc.execute("alter table payments drop constraint ck_test_reject_ready");
+            jdbc.execute("alter table " + write.table + " drop constraint ck_test_reject_write");
         }
     }
 
@@ -115,14 +138,33 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
     }
 
     @Test
+    void tracePortsRejectAnOwnerThatDoesNotMatchTheOrder() {
+        var order = order("A");
+        var other = order("B");
+        var tx = new TransactionTemplate(transactionManager);
+        assertThatThrownBy(() -> tx.executeWithoutResult(status -> steps.recordSuccess(other.owner(), order.id())))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .rootCause().hasMessageContaining("fk_orchestration_steps_owner_order");
+        assertThatThrownBy(() -> tx.executeWithoutResult(status -> audit.recordPaymentPrepared(other.owner(), order.id())))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .rootCause().hasMessageContaining("fk_audit_logs_owner_order");
+        assertTraceCount(0);
+    }
+
+    @Test
     void transactionParticipantsRejectStandaloneCalls() {
         var order = order("A");
         assertThatThrownBy(() -> claims.claimPayment(order.owner(), order.id()))
                 .isInstanceOf(IllegalTransactionStateException.class);
         assertThatThrownBy(() -> payments.insertReady(order.owner(), order.id(), BigDecimal.TEN))
                 .isInstanceOf(IllegalTransactionStateException.class);
+        assertThatThrownBy(() -> steps.recordSuccess(order.owner(), order.id()))
+                .isInstanceOf(IllegalTransactionStateException.class);
+        assertThatThrownBy(() -> audit.recordPaymentPrepared(order.owner(), order.id()))
+                .isInstanceOf(IllegalTransactionStateException.class);
         assertThat(status(order)).isEqualTo("CREATED");
         assertThat(paymentCount()).isZero();
+        assertTraceCount(0);
     }
 
     @Test
@@ -137,6 +179,7 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
         }
         assertThat(status(order)).isEqualTo("PAYMENT_PENDING");
         assertThat(paymentCount()).isOne();
+        assertTraceCount(1);
     }
 
     @Test
@@ -151,6 +194,7 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
             assertThat(java.util.List.of(prepared, cancelled)).containsExactlyInAnyOrder("SUCCESS", "INVALID_ORDER_STATE");
             assertThat(status(order)).isEqualTo("SUCCESS".equals(prepared) ? "PAYMENT_PENDING" : "CANCELLED");
             assertThat(paymentCount()).isEqualTo("SUCCESS".equals(prepared) ? 1L : 0L);
+            assertTraceCount("SUCCESS".equals(prepared) ? 1 : 0);
         }
     }
 
@@ -175,6 +219,11 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
         return jdbc.queryForObject("select count(*) from payments", Long.class);
     }
 
+    private void assertTraceCount(long count) {
+        assertThat(jdbc.queryForObject("select count(*) from audit_logs", Long.class)).isEqualTo(count);
+        assertThat(jdbc.queryForObject("select count(*) from orchestration_steps", Long.class)).isEqualTo(count);
+    }
+
     private String status(OwnedOrder order) {
         return query.getOrder(order.owner(), order.id()).status();
     }
@@ -188,5 +237,19 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
     }
 
     private record OwnedOrder(long owner, long id) {
+    }
+
+    private enum RejectedWrite {
+        PAYMENT("payments", "status <> 'READY'"),
+        STEP("orchestration_steps", "step_type <> 'PAYMENT_PREPARATION'"),
+        AUDIT("audit_logs", "action <> 'TENANT_PAYMENT_PREPARED'");
+
+        private final String table;
+        private final String check;
+
+        RejectedWrite(String table, String check) {
+            this.table = table;
+            this.check = check;
+        }
     }
 }

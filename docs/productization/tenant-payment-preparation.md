@@ -2,6 +2,7 @@
 
 - 기준: `0282fae` (HB3b)
 - 범위: 주문 선점과 같은 소유자의 초기 결제 기록. HB3c 전체 완료가 아닙니다.
+- 이 문서는 HB3c-1 시점의 기록입니다. 현재 구현과 수치는 [HB3c-2 추적 설계](tenant-payment-preparation-trace.md)를 참고합니다.
 
 ## Contract And Review
 
