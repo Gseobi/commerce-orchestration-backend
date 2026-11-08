@@ -4,7 +4,13 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB3a 조회 경계 검증 보고서](verification/tenant-order-read-test-report.md)를 참고합니다.
+[HB3b 검증 보고서](verification/tenant-order-write-test-report.md)를 참고합니다.
+
+### HB3b internal tenant order commands
+
+- Tests: `TenantOrderCommandServiceTest`, `TenantOrderCommandIntegrationTest`.
+- Boundary: owner/store 조건, 생성 snapshot, 상태 조건부 취소, V9 업그레이드 보존. HTTP와 결제/환불은 미구현.
+- Docs: [설계 및 사후 검토](productization/tenant-order-write-boundary.md).
 
 ### HB3a internal tenant order header read
 
@@ -20,7 +26,7 @@
 - Status: Verified (PostgreSQL fixtures/isolated V8 upgrade; production migration 미실행)
 - Implementation: V9, `LegacyCommerceEntity`, 7개 `SQLRestriction`, outbox/notification bulk claim guards.
 - Tests: `CommerceOwnershipMigrationIntegrationTest`, 기존 전체 회귀.
-- Boundary: V8 데이터/legacy orphan 보존, TENANT DB 제약과 기존 runtime 차단. tenant writer/RLS/전체 SaaS API는 미구현.
+- Boundary: HB2 범위는 V8 데이터/legacy orphan 보존, TENANT DB 제약과 기존 runtime 차단. 후속 writer는 HB3b 참조.
 
 Status 값은 다음 의미로 사용합니다.
 
@@ -249,7 +255,7 @@ disabled/oidc mode는 이 legacy 경로를 차단합니다.
 - Docs: `docs/verification/merchant-foundation-core-test-report.md`
 - Notes: 등록/목록은 내부 계약만 제공. 후속 OIDC-only store GET 한 개를 READ 권한 확인 후 노출.
 - Notes: store 단건/목록 조회는 merchant-scoped repository query를 사용합니다.
-- Notes: V9 schema/legacy guard만 완료. tenant-aware writer/API/worker 전파와 실제 IdP 운영 연결은 미완료입니다.
+- Notes: V9 legacy guard와 HB3b 내부 주문 writer를 구현했습니다. SaaS 거래 API/worker와 실제 IdP 운영 연결은 미완료입니다.
 
 ### Merchant membership access
 

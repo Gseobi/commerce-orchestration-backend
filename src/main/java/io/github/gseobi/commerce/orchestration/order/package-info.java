@@ -3,6 +3,7 @@
                 "common",
                 "common::api",
                 "common::error",
+                "merchant::api",
                 "payment::api",
                 "settlement::api",
                 "notification::api"

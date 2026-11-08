@@ -26,9 +26,12 @@
 - `V8__merchant_membership.sql`
   merchant_memberships, merchant FK, merchant/actor unique, VIEWER/OPERATOR role check
 - `V9__commerce_ownership_boundary.sql`
+- `V10__tenant_order_store_snapshot.sql`
   7개 거래 table의 LEGACY/TENANT mode, owner FK/CHECK, parent scope/owner FK, immutable owner trigger
 
 V9의 scope/order FK는 NOT VALID이며 기존 orphan 보존을 위한 단계적 제약입니다. 신규 참조에는 적용됩니다.
+V10은 신규 TENANT 주문에 owner/store FK와 스토어 설정 snapshot을 요구합니다.
+기존 snapshot 없는 V9 행은 backfill하지 않으며 기존 LEGACY 주문은 그대로 유지합니다.
 ORM은 LEGACY 전용이지만 raw SQL/RLS 격리는 아닙니다. 아래 예시와 참고 SQL은 운영 legacy 점검용으로,
 직접 실행 시 `ownership_mode = 'LEGACY'` 조건을 추가하고 TENANT row를 전역 변경하지 않습니다.
 공유/운영 DB의 migration 실행은 table lock/backup/rollout 확인 후 승인된 배포에서만 수행합니다.

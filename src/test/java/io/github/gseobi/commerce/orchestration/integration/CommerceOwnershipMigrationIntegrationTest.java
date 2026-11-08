@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.github.gseobi.commerce.orchestration.audit.repository.AuditLogRepository;
 import io.github.gseobi.commerce.orchestration.merchant.api.MerchantApplication;
 import io.github.gseobi.commerce.orchestration.merchant.api.MerchantRegistrationCommand;
+import io.github.gseobi.commerce.orchestration.merchant.api.StoreRegistrationCommand;
 import io.github.gseobi.commerce.orchestration.notification.entity.NotificationEventStatus;
 import io.github.gseobi.commerce.orchestration.notification.repository.NotificationEventRepository;
 import io.github.gseobi.commerce.orchestration.orchestration.repository.OrchestrationStepRepository;
@@ -72,7 +73,7 @@ class CommerceOwnershipMigrationIntegrationTest extends TestcontainersIntegratio
             insert(isolated, "notification_events", 999999L, null, null);
             Map<String, List<String>> before = snapshot(isolated);
             Flyway.configure().dataSource(dataSource).schemas(schema).defaultSchema(schema)
-                    .locations("classpath:db/migration").load().migrate();
+                    .locations("classpath:db/migration").target("9").load().migrate();
             assertThat(snapshot(isolated)).isEqualTo(before);
             for (String table : TABLES) {
                 assertThat(isolated.queryForObject("select count(*) from " + table
@@ -206,6 +207,14 @@ class CommerceOwnershipMigrationIntegrationTest extends TestcontainersIntegratio
             case "orders" -> {
                 fields.put("customer_id", "fixture"); fields.put("total_amount", BigDecimal.TEN);
                 fields.put("currency", "KRW"); fields.put("status", "CREATED");
+                if ("TENANT".equals(mode)) {
+                    Long storeId = order == null
+                            ? merchants.registerStore(new StoreRegistrationCommand(merchant, "FIXTURE", "Fixture")).id()
+                            : database.queryForObject("select store_id from orders where id = ?", Long.class, order);
+                    fields.put("store_id", storeId);
+                    fields.put("store_timezone", "Asia/Seoul");
+                    fields.put("store_recovery_policy", "MANUAL_REVIEW");
+                }
             }
             case "payments" -> { fields.put("status", "APPROVED"); fields.put("amount", BigDecimal.TEN); }
             case "settlements" -> fields.put("status", "REQUESTED");
