@@ -36,6 +36,7 @@ V10은 기존 migration을 수정하거나 임의 backfill/삭제를 하지 않�
 ## Next Gates
 
 - HB3c: 결제/정산/알림/audit/step owner 전파. 외부 효과 이전에 owner와 상태를 원자적으로 확인하는 계약 필요.
-  결제 시작과 취소가 경쟁할 때 후속 모듈이 `CREATED`를 조건부 claim하기 전에는 외부 결제를 호출하지 않습니다.
+  [HB3c-1](tenant-payment-preparation.md)에서 취소와 경쟁하는 조건부 claim과 내부 READY 기록을 추가했습니다.
+  외부 결제 호출은 아직 연결하지 않습니다.
 - HB3d/e: event/worker/recovery 및 인증 HTTP 연결. 생성 요청 중복 방지, membership 변경 경쟁, 전체 tenant negative test.
 - 실제 IdP/PG/알림 연결 및 운영 배포는 이번 범위가 아닙니다.
