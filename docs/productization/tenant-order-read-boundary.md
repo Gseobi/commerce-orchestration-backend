@@ -45,9 +45,10 @@ native query에는 Hibernate restriction이 자동 적용되지 않으므로 sco
 1. [HB3b 구현](tenant-order-write-boundary.md): owner 필수 내부 주문 생성·결제 전 취소, store 소속·정책 snapshot.
    child module이 준비되기 전 HTTP writer·기존 legacy orchestration 연결 금지.
 2. HB3c: payment/settlement/notification/audit/step owner 계약과 부모 검증, 외부 호출 이전 owner 검증.
+   [HB3c-1](tenant-payment-preparation.md)에서 주문 선점과 내부 결제 준비를 구현. 나머지 경계는 미완료.
 3. HB3d: versioned tenant outbox envelope와 row/payload owner 일치, scheduler/claim/recovery owner 경계.
 4. HB3e: 인증·membership을 연결한 HTTP vertical slice와 전체 tenant negative/replay/동시성 테스트.
 
-위 분할 중 c~e는 미구현입니다. HB4 IdP 선택/provisioning, HB5 금전 신뢰성,
+위 분할 중 c는 진행 중, d~e는 미구현입니다. HB4 IdP 선택/provisioning, HB5 금전 신뢰성,
 HB6 채널/lease/운영, P1~P6 제품 모듈도 남습니다.
 [전체 남은 설계와 출시 조건](product-readiness-review.md)을 함께 참고합니다.

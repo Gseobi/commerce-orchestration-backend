@@ -4,7 +4,14 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB3b 검증 보고서](verification/tenant-order-write-test-report.md)를 참고합니다.
+[HB3c-1 검증 보고서](verification/tenant-payment-preparation-test-report.md)를 참고합니다.
+
+### HB3c-1 internal tenant payment preparation
+
+- Tests: `TenantPaymentPreparationTest`, `TenantPaymentPreparationIntegrationTest`.
+- Boundary: owner/scope/state claim, same-transaction READY, rollback, race, parent FK, legacy isolation.
+- Docs: [설계와 달성률](productization/tenant-payment-preparation.md).
+- No PG dispatch, provider idempotency, HTTP, or recovery.
 
 ### HB3b internal tenant order commands
 

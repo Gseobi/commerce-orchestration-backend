@@ -1,6 +1,6 @@
 # Product Readiness Review / 남은 설계와 트레이드오프
 
-- 점검일: 2026-11-08, base `fda2d99` + HB3b 작업 단위
+- 구현 기준: `0282fae` + HB3c-1 작업 단위
 - 기준: 코드/테스트/roadmap 대조. 출시 승인·법률 검토·비용 견적·부하 검증은 아닙니다.
 - P0는 In Progress, P1~P6는 Planned. 목표 기능 전체가 제품화된 상태는 아닙니다.
 
@@ -42,7 +42,7 @@ shipping을 MVP에서 빼려면 배송 지원을 제품 약속으로 표시하�
 |---|---|---|
 | HB1 | Complete, PR #8 | tenant event schema는 별도 HB3 |
 | HB2 | V9 + legacy runtime isolation 구현, PR #9 | historical scope FK VALIDATE, 큰 DB lock/upgrade 리허설 |
-| HB3 | In Progress: HB3a 조회, HB3b 내부 생성·취소와 V10 snapshot | HB3c~e: 하위 계약/worker/admin/audit, 생성 replay, write endpoint 공개 gate |
+| HB3 | In Progress: HB3a 조회, HB3b 생성·취소, HB3c-1 내부 결제 준비 | HB3c~e: 나머지 하위 계약/worker/admin/audit, 생성 replay, write endpoint 공개 gate |
 | HB4 | Planned, IdP 비교만 완료 | 제공자/계정 승인, 실제 연결, provisioning 감사 |
 | HB5 | Planned | payment intent/confirmation/callback/실패 보상/환불 |
 | HB6 | Planned | 실제 알림 채널/tenant 운영 정책/lease/observability |
@@ -50,6 +50,8 @@ shipping을 MVP에서 빼려면 배송 지원을 제품 약속으로 표시하�
 HB3은 schema 컬럼이 있다는 이유만으로 완료하지 않습니다. 기존 demo writer는 LEGACY로 남고
 신규 SaaS writer를 허용하기 전 모든 downstream 경로를 검증해야 합니다.
 HB4는 HB3과 설계 병행할 수 있지만 IdP를 선정하지 않은 상태에서 계정/유료 계약/설치를 자동 수행하지 않습니다.
+
+[달성률 집계 기준과 분모](tenant-payment-preparation.md)를 별도로 기록합니다.
 
 ## MVP Boundary / 제품 범위 결정
 

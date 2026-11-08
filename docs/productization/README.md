@@ -102,7 +102,7 @@ Current progress:
 - 읽기 전용 store HTTP slice와 `merchant::api` READ membership adapter
 
 아직 구현하지 않은 범위는 추가 HTTP tenant 적용, 실제 IdP production 연결 및 membership 관리 API,
-결제/알림/outbox 등의 owner-aware 하위 거래 계약과 event 전파입니다.
+결제/알림/outbox 등의 전체 owner-aware 하위 거래 계약과 event 전파입니다.
 주문 자체의 내부 조회·생성·결제 전 취소는 구현했지만 SaaS HTTP에는 공개하지 않았습니다.
 
 1. merchant/store 모델, 활성 상태, timezone, 기본 운영 정책
@@ -242,7 +242,8 @@ Resource Server 및 demo mode 분리는 [OIDC Resource Server](oidc-resource-ser
 첫 단위는 outbox 계약 결합 완화이며 이후 ownership migration/거래 vertical slice와 identity onboarding을 분리합니다.
 HB2 [소유권 migration](tenant-ownership-migration.md) 이후 HB3 전체 거래 경로를 진행합니다.
 HB3a [내부 주문 조회](tenant-order-read-boundary.md)와 HB3b [내부 생성·취소](tenant-order-write-boundary.md)를 구현했습니다.
-하위 모듈/event/worker/recovery/HTTP는 후속 HB3c~e이며 SaaS 주문 생성 API는 아직 공개하지 않습니다.
+[HB3c-1 내부 결제 준비](tenant-payment-preparation.md)를 구현했으며 나머지 하위 모듈/event/worker/recovery/HTTP는 미완료입니다.
+SaaS 주문 생성 API는 아직 공개하지 않습니다.
 [제품 완성도 점검](product-readiness-review.md)에 모듈별 남은 설계, 트레이드오프와 release blocker를 정리합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.
 

@@ -40,4 +40,15 @@ public class TenantOrderWriteRepository {
                 .param("orderId", orderId)
                 .update();
     }
+
+    public int claimPayment(long merchantId, long orderId) {
+        return jdbc.sql("""
+                update orders set status = 'PAYMENT_PENDING', updated_at = statement_timestamp()
+                where ownership_mode = 'TENANT' and merchant_id = :merchantId and id = :orderId
+                    and store_id is not null and status = 'CREATED'
+                """)
+                .param("merchantId", merchantId)
+                .param("orderId", orderId)
+                .update();
+    }
 }

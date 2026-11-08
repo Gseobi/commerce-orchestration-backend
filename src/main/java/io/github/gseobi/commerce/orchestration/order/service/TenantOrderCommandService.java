@@ -5,6 +5,7 @@ import io.github.gseobi.commerce.orchestration.common.error.ErrorCode;
 import io.github.gseobi.commerce.orchestration.merchant.api.OrderStoreAccess;
 import io.github.gseobi.commerce.orchestration.order.api.CreateTenantOrderCommand;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderCommands;
+import io.github.gseobi.commerce.orchestration.order.api.TenantOrderPaymentClaim;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderQuery;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderView;
 import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
@@ -12,12 +13,13 @@ import io.github.gseobi.commerce.orchestration.order.repository.TenantOrderWrite
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-class TenantOrderCommandService implements TenantOrderCommands {
+class TenantOrderCommandService implements TenantOrderCommands, TenantOrderPaymentClaim {
 
     private final OrderStoreAccess stores;
     private final TenantOrderWriteRepository orders;
@@ -55,6 +57,19 @@ class TenantOrderCommandService implements TenantOrderCommands {
         orders.cancelCreated(merchantId, orderId);
         TenantOrderView order = query.getOrder(merchantId, orderId);
         if (!OrderStatus.CANCELLED.name().equals(order.status())) {
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATE);
+        }
+        return order;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public TenantOrderView claimPayment(Long merchantId, Long orderId) {
+        requirePositive(merchantId);
+        requirePositive(orderId);
+        int updated = orders.claimPayment(merchantId, orderId);
+        TenantOrderView order = query.getOrder(merchantId, orderId);
+        if (updated != 1) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATE);
         }
         return order;
