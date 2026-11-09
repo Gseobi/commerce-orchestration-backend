@@ -42,6 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationSupport {
 
     @Autowired private TenantPaymentPreparation preparation;
+    @Autowired private TenantPaymentApproval approval;
     @Autowired private TenantOrderCommands commands;
     @Autowired private TenantOrderPaymentClaim claims;
     @Autowired private TenantOrderQuery query;
@@ -86,6 +87,17 @@ class TenantPaymentPreparationIntegrationTest extends TestcontainersIntegrationS
         assertError(() -> commands.cancelCreated(order.owner(), order.id()), ErrorCode.INVALID_ORDER_STATE);
         assertError(() -> preparation.prepare(order.owner(), order.id()), ErrorCode.INVALID_ORDER_STATE);
         assertThat(paymentCount()).isOne();
+        assertTraceCount(1);
+    }
+
+    @Test
+    void noProductionVerifierMeansReadyCannotBecomePaid() {
+        var order = order("A");
+        long payment = preparation.prepare(order.owner(), order.id());
+        assertError(() -> approval.confirm(order.owner(), order.id(), payment), ErrorCode.PAYMENT_FAILED);
+        assertThat(status(order)).isEqualTo("PAYMENT_PENDING");
+        assertThat(jdbc.queryForObject("select status from payments where id = ?", String.class, payment))
+                .isEqualTo("READY");
         assertTraceCount(1);
     }
 

@@ -3,7 +3,7 @@
 ## Latest Baseline / 최신 기준
 
 현재 구현 상태는 [Project Status](project-status.md), 이번 전체 재실행 결과는
-[HB3c-3 검증 보고서](verification/tenant-downstream-status-test-report.md)를 기준으로 확인합니다.
+[HB3c-4 검증 보고서](verification/tenant-payment-approval-test-report.md)를 기준으로 확인합니다.
 아래 reliability/observability 및 delivery별 결과는 당시 검증 기록입니다.
 과거 명령·테스트 수를 현재 전체 suite 수나 성능 개선 수치로 해석하지 않습니다.
 

@@ -6,6 +6,7 @@ import io.github.gseobi.commerce.orchestration.merchant.api.OrderStoreAccess;
 import io.github.gseobi.commerce.orchestration.order.api.CreateTenantOrderCommand;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderCommands;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderPaymentClaim;
+import io.github.gseobi.commerce.orchestration.order.api.TenantOrderPaymentTransition;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderQuery;
 import io.github.gseobi.commerce.orchestration.order.api.TenantOrderView;
 import io.github.gseobi.commerce.orchestration.order.entity.OrderStatus;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-class TenantOrderCommandService implements TenantOrderCommands, TenantOrderPaymentClaim {
+class TenantOrderCommandService implements TenantOrderCommands, TenantOrderPaymentClaim, TenantOrderPaymentTransition {
 
     private final OrderStoreAccess stores;
     private final TenantOrderWriteRepository orders;
@@ -73,6 +74,14 @@ class TenantOrderCommandService implements TenantOrderCommands, TenantOrderPayme
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATE);
         }
         return order;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void markPaid(long merchantId, long orderId, BigDecimal amount, String currency) {
+        if (orders.markPaid(merchantId, orderId, amount, currency) != 1) {
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATE);
+        }
     }
 
     private void requirePositive(Long id) {

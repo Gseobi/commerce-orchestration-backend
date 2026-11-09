@@ -16,13 +16,24 @@ class TenantOrderAuditService implements TenantOrderAuditRecorder {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordPaymentPrepared(long merchantId, long orderId) {
+        record(merchantId, orderId, "TENANT_PAYMENT_PREPARED", "Internal payment prepared; provider not called.");
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordPaymentApproved(long merchantId, long orderId) {
+        record(merchantId, orderId, "TENANT_PAYMENT_APPROVED", "Verified payment approval recorded.");
+    }
+
+    private void record(long merchantId, long orderId, String action, String detail) {
         jdbc.sql("""
                 insert into audit_logs (ownership_mode, merchant_id, order_id, action, detail, created_at, updated_at)
-                values ('TENANT', :merchantId, :orderId, 'TENANT_PAYMENT_PREPARED',
-                    'Internal payment prepared; provider not called.', statement_timestamp(), statement_timestamp())
+                values ('TENANT', :merchantId, :orderId, :action, :detail, statement_timestamp(), statement_timestamp())
                 """)
                 .param("merchantId", merchantId)
                 .param("orderId", orderId)
+                .param("action", action)
+                .param("detail", detail)
                 .update();
     }
 }

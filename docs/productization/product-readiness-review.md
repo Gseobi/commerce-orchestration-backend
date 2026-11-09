@@ -1,6 +1,6 @@
 # Product Readiness Review / 남은 설계와 트레이드오프
 
-- 구현 기준: `41e6c97` + HB3c-3 작업 단위
+- 구현 기준: `8bdebb3` + HB3c-4 작업 단위
 - 기준: 코드/테스트/roadmap 대조. 출시 승인·법률 검토·비용 견적·부하 검증은 아닙니다.
 - P0는 In Progress, P1~P6는 Planned. 목표 기능 전체가 제품화된 상태는 아닙니다.
 
@@ -51,7 +51,7 @@ HB3은 schema 컬럼이 있다는 이유만으로 완료하지 않습니다. 기
 신규 SaaS writer를 허용하기 전 모든 downstream 경로를 검증해야 합니다.
 HB4는 HB3과 설계 병행할 수 있지만 IdP를 선정하지 않은 상태에서 계정/유료 계약/설치를 자동 수행하지 않습니다.
 
-[최신 달성률과 검증 범위](tenant-downstream-status.md)를 별도로 기록합니다.
+[최신 달성률과 검증 범위](tenant-payment-approval.md)를 별도로 기록합니다.
 
 ## MVP Boundary / 제품 범위 결정
 
