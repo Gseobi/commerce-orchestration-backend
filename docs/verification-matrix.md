@@ -4,7 +4,13 @@
 긴 Markdown table 대신 capability별 block으로 유지해 raw diff에서 검토하기 쉽게 정리합니다.
 
 구현 기준은 [Project Status](project-status.md), 최신 재실행 수치는
-[HB3c-3 검증 보고서](verification/tenant-downstream-status-test-report.md)를 참고합니다.
+[HB3c-4 검증 보고서](verification/tenant-payment-approval-test-report.md)를 참고합니다.
+
+### HB3c-4 tenant approval application
+
+- Tests: `TenantPaymentApprovalIntegrationTest`, `TenantPaymentPreparationIntegrationTest`.
+- Boundary: verifier unavailable fail-closed, owner/payment/amount/currency match, transactional CAS and audit rollback.
+- Approval evidence comes from test-only verifier. No live PG, HTTP, or downstream execution.
 
 ### HB3c-3 tenant downstream status
 

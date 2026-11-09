@@ -4,4 +4,6 @@ package io.github.gseobi.commerce.orchestration.audit.api;
 public interface TenantOrderAuditRecorder {
 
     void recordPaymentPrepared(long merchantId, long orderId);
+
+    void recordPaymentApproved(long merchantId, long orderId);
 }

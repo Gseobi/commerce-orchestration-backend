@@ -244,7 +244,8 @@ HB2 [소유권 migration](tenant-ownership-migration.md) 이후 HB3 전체 거�
 HB3a [내부 주문 조회](tenant-order-read-boundary.md)와 HB3b [내부 생성·취소](tenant-order-write-boundary.md)를 구현했습니다.
 [HB3c-1 내부 결제 준비](tenant-payment-preparation.md)와 [HB3c-2 성공 감사·단계 기록](tenant-payment-preparation-trace.md)을 구현했습니다.
 [HB3c-3 내부 정산·알림 상태 조회](tenant-downstream-status.md)도 구현했습니다.
-결제 확인 이후의 하위 쓰기/event/worker/recovery/HTTP는 미완료입니다.
+[HB3c-4 승인 결과 적용](tenant-payment-approval.md)은 내부 경계만 구현했습니다.
+실제 provider 검증 및 하위 쓰기/event/worker/recovery/HTTP는 미완료입니다.
 SaaS 주문 생성 API는 아직 공개하지 않습니다.
 [제품 완성도 점검](product-readiness-review.md)에 모듈별 남은 설계, 트레이드오프와 release blocker를 정리합니다.
 catalog/inventory/payment/shipping은 P0의 tenant foundation이 완료된 이후 시작합니다.

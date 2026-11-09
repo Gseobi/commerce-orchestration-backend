@@ -48,6 +48,7 @@ native query에는 Hibernate restriction이 자동 적용되지 않으므로 sco
    [HB3c-1](tenant-payment-preparation.md)에서 주문 선점과 내부 결제 준비를 구현. 나머지 경계는 미완료.
    [HB3c-2](tenant-payment-preparation-trace.md)에서 결제 준비 성공의 감사·단계 기록을 구현.
    [HB3c-3](tenant-downstream-status.md)에서 정산·알림 owner-scoped 상태 조회를 구현. writer는 미완료.
+   [HB3c-4](tenant-payment-approval.md)에서 검증 결과의 원자적 적용을 구현. 실제 provider 검증 adapter는 미연결.
 3. HB3d: versioned tenant outbox envelope와 row/payload owner 일치, scheduler/claim/recovery owner 경계.
 4. HB3e: 인증·membership을 연결한 HTTP vertical slice와 전체 tenant negative/replay/동시성 테스트.
 

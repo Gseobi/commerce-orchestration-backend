@@ -1,6 +1,7 @@
 package io.github.gseobi.commerce.orchestration.order.repository;
 
 import io.github.gseobi.commerce.orchestration.order.api.CreateTenantOrderCommand;
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -49,6 +50,20 @@ public class TenantOrderWriteRepository {
                 """)
                 .param("merchantId", merchantId)
                 .param("orderId", orderId)
+                .update();
+    }
+
+    public int markPaid(long merchantId, long orderId, BigDecimal amount, String currency) {
+        return jdbc.sql("""
+                update orders set status = 'PAID', updated_at = statement_timestamp()
+                where ownership_mode = 'TENANT' and merchant_id = :merchantId and id = :orderId
+                    and store_id is not null and status = 'PAYMENT_PENDING'
+                    and total_amount = :amount and currency = :currency
+                """)
+                .param("merchantId", merchantId)
+                .param("orderId", orderId)
+                .param("amount", amount)
+                .param("currency", currency)
                 .update();
     }
 }
